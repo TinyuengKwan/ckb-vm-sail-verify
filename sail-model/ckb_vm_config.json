@@ -1,0 +1,29 @@
+{
+  "$comment": [
+    "Sail RISC-V configuration for CKB-VM instruction subset.",
+    "CKB-VM implements RV64IMCB (Zba+Zbb+Zbc+Zbs) + A (Zaamo+Zalrsc).",
+    "This config is used to generate the Coq specification and C++ emulator",
+    "that covers exactly the instructions CKB-VM supports."
+  ],
+  "base": {
+    "xlen": { "value": 64 }
+  },
+  "extensions": {
+    "I": { "supported": true },
+    "M": { "supported": true },
+    "Zca": { "supported": true },
+    "Zcd": { "supported": false },
+    "Zcf": { "supported": false },
+    "Zcb": { "supported": false },
+    "Zba": { "supported": true },
+    "Zbb": { "supported": true },
+    "Zbc": { "supported": true },
+    "Zbs": { "supported": true },
+    "Zaamo": { "supported": true },
+    "Zalrsc": { "supported": true },
+    "F": { "supported": false },
+    "D": { "supported": false },
+    "V": { "supported": false },
+    "H": { "supported": false }
+  }
+}

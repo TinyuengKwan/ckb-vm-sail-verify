@@ -1,0 +1,34 @@
+# Build artifacts
+/build/
+/target/
+
+# Coq generated/compiled files
+coq/CkbVmSpec.v
+coq/CkbVmSpec_types.v
+coq/*.vo
+coq/*.vok
+coq/*.vos
+coq/*.glob
+coq/.*.aux
+coq/.coqdeps.d
+coq/Makefile.coq
+coq/Makefile.coq.conf
+
+# Rust/Cargo
+differential-test/target/
+**/*.rs.bk
+
+# Sail build artifacts
+sail-model/build/
+
+# OS files
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+
+# Editor
+.vscode/
+.idea/
+*.code-workspace
