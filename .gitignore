@@ -16,6 +16,7 @@ coq/Makefile.coq.conf
 
 # Rust/Cargo
 differential-test/target/
+differential-test/Cargo.lock
 **/*.rs.bk
 
 # Sail build artifacts
