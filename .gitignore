@@ -3,8 +3,7 @@
 /target/
 
 # Coq generated/compiled files
-coq/CkbVmSpec.v
-coq/CkbVmSpec_types.v
+coq/generated/
 coq/*.vo
 coq/*.vok
 coq/*.vos
@@ -15,8 +14,8 @@ coq/Makefile.coq
 coq/Makefile.coq.conf
 
 # Rust/Cargo
-differential-test/target/
-differential-test/Cargo.lock
+Cargo.lock
+**/target/
 **/*.rs.bk
 
 # Sail build artifacts
