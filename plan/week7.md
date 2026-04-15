@@ -1,79 +1,120 @@
 # Week 7: Full Diff-Test Coverage & Semantic Gap Analysis
 
-## Objectives
+## Task 7.1: Run Per-Extension Differential Tests
 
-- Run differential tests against all CKB-VM supported extensions (I, M, C, B, A)
-- Document every semantic gap between CKB-VM and standard RISC-V
-- Produce the instruction mapping document as a deliverable
+```bash
+CKB_VM_SPEC="/tmp/ckb-vm-ref/tests/artifact/spec"
+SAIL_BIN="$HOME/workplace/sail-riscv/build/c_emulator/sail_riscv_sim"
 
-## Tasks
+echo "=== RV64I ===" && for f in "$CKB_VM_SPEC"/rv64ui-u-*; do
+    cargo run --release -p ckb-vm-diff-test -- --elf "$f" --sail-bin "$SAIL_BIN"; done
 
-1. **Expand diff-test to M, C, B, A extension tests**
-   - Add rv64um (multiply/divide) test ELFs
-   - Add rv64uc (compressed) test ELFs
-   - Add B-extension arch-test ELFs
-   - Add rv64ua (atomic) test ELFs
+echo "=== RV64M ===" && for f in "$CKB_VM_SPEC"/rv64um-u-*; do
+    cargo run --release -p ckb-vm-diff-test -- --elf "$f" --sail-bin "$SAIL_BIN"; done
 
-2. **Document semantic differences**
-   - CKB-VM VERSION0/1/2 behavioral diffs (load boundary check bug)
-   - x0 enforcement timing (per-instruction vs on-read)
-   - FENCE/FENCE.I as no-ops
-   - Simplified atomic reservation (single address)
-   - Memory: no MMU, flat 4MB, W^X
+echo "=== RV64C ===" && for f in "$CKB_VM_SPEC"/rv64uc-u-*; do
+    cargo run --release -p ckb-vm-diff-test -- --elf "$f" --sail-bin "$SAIL_BIN"; done
 
-3. **Complete instruction mapping document**
-   - Full table: all 158 CKB-VM opcodes → Sail function name (or "CKB-VM only")
-   - Annotate which are proved, which are diff-tested, which are neither
+echo "=== RV64A ===" && for f in "$CKB_VM_SPEC"/rv64ua-u-*; do
+    cargo run --release -p ckb-vm-diff-test -- --elf "$f" --sail-bin "$SAIL_BIN"; done
+```
 
-4. **Test edge cases**
-   - Division by zero behavior
-   - Maximum shift amounts
-   - Memory boundary access
-   - Misaligned access handling
+## Task 7.2: Add --extension Filter to CLI
 
-## Files to Add/Modify
+In `crates/diff-test/src/main.rs`:
+
+```rust
+#[arg(long)]
+extension: Option<String>,
+
+fn matches_extension(path: &Path, ext: &str) -> bool {
+    let name = path.file_name().unwrap_or_default().to_string_lossy();
+    match ext {
+        "I" => name.contains("rv64ui"),
+        "M" => name.contains("rv64um"),
+        "C" => name.contains("rv64uc"),
+        "A" => name.contains("rv64ua"),
+        _ => true,
+    }
+}
+```
+
+## Task 7.3: Write Semantic Gap Document
+
+Create `doc/semantic_gaps.md` documenting 8 categories:
+
+1. **x0 handling**: CKB-VM writes then clears vs Sail discards writes. Functionally equivalent.
+2. **ECALL**: CKB-VM dispatches via A7; Sail traps to M-mode.
+3. **Memory**: 4MB fixed, no MMU, W^X. Sail has full Sv39/48/57.
+4. **FENCE**: No-op in CKB-VM.
+5. **Atomics**: Single-address reservation vs reservation set.
+6. **Versions**: VERSION0/1/2 boundary check differences.
+7. **Cycles**: CKB-VM has per-instruction costs. Not in RISC-V spec.
+8. **MOP**: Custom fusion instructions.
+
+Each entry: what it is, how it differs, impact on verification.
+
+## Task 7.4: Test Edge Cases
+
+Write assembly tests for tricky behaviors:
+
+```bash
+# Division by zero: DIVU should return 0xFFFFFFFFFFFFFFFF
+cat > /tmp/div_zero.S << 'EOF'
+.global _start
+_start:
+    li a0, 42; li a1, 0; divu a2, a0, a1
+    li t0, -1; bne a2, t0, fail
+    li a0, 0; li a7, 93; ecall
+fail: li a0, 1; li a7, 93; ecall
+EOF
+riscv64-unknown-elf-gcc -nostdlib -static -o /tmp/div_zero /tmp/div_zero.S
+cargo run -p ckb-vm-diff-test -- --elf /tmp/div_zero --sail-bin $SAIL_BIN --verbose
+```
+
+Write similar for: max shift (SLLI x, x, 63), signed overflow.
+
+## Task 7.5: Complete Instruction Mapping
+
+Update `doc/instruction_mapping.md` with status columns:
+
+```markdown
+| Opcode | RISC-V | Coq Proved | Diff-Tested |
+|--------|--------|------------|-------------|
+| OP_ADD | ADD | Yes | Yes |
+| OP_DIV | DIV | No | Yes |
+| OP_WIDE_MUL | (MOP) | Partial | N/A |
+```
+
+## Files Added/Modified This Week
 
 | Action | Path | Description |
 |--------|------|-------------|
-| Modify | `doc/instruction_mapping.md` | Complete mapping table with verification status |
-| Add | `doc/semantic_gaps.md` | CKB-VM vs standard RISC-V differences |
-| Modify | `crates/diff-test/src/main.rs` | Extension-specific test filtering |
-| Modify | `scripts/run_differential.sh` | Support per-extension test runs |
-
-## Verification Criteria
-
-- [ ] Diff-test covers I, M, C, B, A extensions
-- [ ] All tests pass or divergences are documented with cause
-- [ ] `doc/instruction_mapping.md` covers all 158 opcodes
-- [ ] `doc/semantic_gaps.md` complete
+| Add | `doc/semantic_gaps.md` | Gap analysis |
+| Modify | `doc/instruction_mapping.md` | Status columns |
+| Modify | `crates/diff-test/src/main.rs` | --extension filter |
+| Modify | `scripts/run_differential.sh` | Per-extension runs |
 
 ---
 
 # 第七周：全面差分测试与语义差异分析
 
-## 目标
+## 任务 7.1：按扩展分组跑测试
 
-- 对 CKB-VM 支持的所有扩展（I, M, C, B, A）运行差分测试
-- 记录 CKB-VM 与标准 RISC-V 的每一处语义差异
-- 完成指令映射文档（交付物）
+对 I/M/C/A 四组 ELF 分别运行差分测试，记录每组通过率。
 
-## 任务
+## 任务 7.2：添加 --extension 过滤
 
-1. 将差分测试扩展到 M/C/B/A 扩展的测试 ELF
-2. 记录语义差异：版本行为差异、x0 处理方式、FENCE 处理、原子操作简化、内存模型差异
-3. 完成 158 个 opcode 的完整映射表，标注验证状态（已证明 / 已差分测试 / 未覆盖）
-4. 测试边界情况：除零、最大移位量、内存边界访问、非对齐访问
+CLI 新增参数按文件名前缀过滤扩展。
 
-## 新增/修改文件
+## 任务 7.3：编写语义差异文档
 
-| 操作 | 路径 | 说明 |
-|------|------|------|
-| 修改 | `doc/instruction_mapping.md` | 完成全量映射表 |
-| 新增 | `doc/semantic_gaps.md` | CKB-VM vs 标准 RISC-V 差异文档 |
-| 修改 | `crates/diff-test/src/main.rs` | 按扩展过滤测试 |
+`doc/semantic_gaps.md` 系统记录 8 类差异及其对验证的影响。
 
-## 验收标准
+## 任务 7.4：边界情况测试
 
-- 差分测试覆盖 I/M/C/B/A 全部扩展
-- 所有差异有文档记录
-- 158 个 opcode 映射表完成
+手写汇编测试除零、最大移位量、溢出等边界行为。
+
+## 任务 7.5：完善映射表
+
+给每个 opcode 标注"Coq 已证明"和"差分已测试"状态。

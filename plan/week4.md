@@ -1,87 +1,143 @@
 # Week 4: Core ALU Instruction Proofs
 
-## Objectives
+## Task 4.1: Build Reusable Tactics
 
-- Complete equivalence proofs for R-type and I-type ALU instructions
-- Establish reusable proof patterns and tactics
+Create `coq/Tactics.v`:
 
-## Target Instructions
+```coq
+Require Import Coq.ZArith.ZArith.
+Require Import Coq.micromega.Lia.
+Require Import CkbVmVerify.MachineState.
+Open Scope Z_scope.
 
-| Instruction | Type | Key semantic point |
-|-------------|------|--------------------|
-| ADD | R-type | Wrapping 64-bit addition |
-| SUB | R-type | Wrapping 64-bit subtraction |
-| ADDI | I-type | 12-bit sign-extended immediate |
-| SLLI | I-type | Left shift, 6-bit shamt |
-| SRLI | I-type | Logical right shift |
-| SRAI | I-type | Arithmetic right shift (sign-preserving) |
-| MUL | R-type (M-ext) | Lower 64 bits of 128-bit product |
+Ltac solve_truncate :=
+  unfold truncate_64, word_max;
+  try rewrite Z.mod_small by lia; try lia.
 
-## Tasks
+Ltac simplify_regs :=
+  repeat (
+    try rewrite get_set_reg_same by lia;
+    try rewrite get_set_reg_diff by lia;
+    try rewrite x0_always_zero;
+    simpl Nat.eqb).
+```
 
-1. **Establish proof template**
-   - Extract the common pattern: decode → read operands → compute → write-back → advance PC
-   - Build Ltac tactics for: bitvector arithmetic, register read/write, x0 enforcement
+## Task 4.2: Prove ADD
 
-2. **Prove ADD and SUB**
-   - Full proof (not Admitted): `ckb_add rd rs1 rs2 st ≡ sail_ADD rd rs1 rs2 st`
-   - Handle x0 corner case
+Two approaches depending on Week 3 results:
 
-3. **Prove ADDI**
-   - Sign extension of 12-bit immediate
-   - Verify Sail and CKB-VM agree on sign extension semantics
+**Approach A** (Sail bridging ready): Prove `state_equiv` preserved through ADD execution on both sides.
 
-4. **Prove shift instructions (SLLI, SRLI, SRAI)**
-   - Shift amount masking (& 63 for RV64)
-   - SRAI: sign bit preservation
+**Approach B** (pragmatic, recommended): Prove CKB-VM model properties independently, connect to Sail later.
 
-5. **Prove MUL**
-   - Lower-half multiply semantics
-   - Verify wrapping behavior matches
+```coq
+Theorem ckb_add_semantics : forall rd rs1 rs2 st,
+    rd <> 0%nat -> get_reg (ckb_add rd rs1 rs2 st) rd =
+    truncate_64 (get_reg st rs1 + get_reg st rs2).
+Proof.
+    intros. unfold ckb_add, next_pc, set_pc. simpl.
+    rewrite get_set_reg_same; [|assumption].
+    rewrite get_set_reg_same; [|assumption].
+    unfold truncate_64. rewrite Z.mod_mod; [reflexivity|lia].
+Qed.
 
-## Files to Add/Modify
+Theorem ckb_add_pc : forall rd rs1 rs2 st,
+    pc (ckb_add rd rs1 rs2 st) = truncate_64 (pc st + 4).
+Proof. intros. unfold ckb_add, next_pc, set_pc. simpl. reflexivity. Qed.
+
+Theorem ckb_add_other_regs : forall rd rs1 rs2 st r,
+    r <> rd -> get_reg (ckb_add rd rs1 rs2 st) r = get_reg st r.
+Proof. intros. unfold ckb_add, next_pc, set_pc. simpl. apply get_set_reg_diff. assumption. Qed.
+```
+
+## Task 4.3: Prove SUB
+
+```coq
+Theorem ckb_sub_semantics : forall rd rs1 rs2 st,
+    rd <> 0%nat -> get_reg (ckb_sub rd rs1 rs2 st) rd =
+    truncate_64 (get_reg st rs1 - get_reg st rs2).
+Proof.
+    intros. unfold ckb_sub, next_pc, set_pc. simpl.
+    rewrite get_set_reg_same; [|assumption].
+    rewrite get_set_reg_same; [|assumption].
+    unfold truncate_64. rewrite Z.mod_mod; [reflexivity|lia].
+Qed.
+```
+
+## Task 4.4: Prove ADDI
+
+```coq
+Theorem ckb_addi_semantics : forall rd rs1 imm st,
+    rd <> 0%nat -> get_reg (ckb_addi rd rs1 imm st) rd =
+    truncate_64 (get_reg st rs1 + sign_extend 12 imm).
+Proof.
+    intros. unfold ckb_addi, next_pc, set_pc. simpl.
+    rewrite get_set_reg_same; [|assumption].
+    rewrite get_set_reg_same; [|assumption].
+    unfold truncate_64. rewrite Z.mod_mod; [reflexivity|lia].
+Qed.
+```
+
+## Task 4.5: Prove SLLI, SRLI, SRAI
+
+SLLI and SRLI follow the same pattern. SRAI needs sign-bit reasoning:
+
+```coq
+Theorem ckb_slli_semantics : forall rd rs1 shamt st,
+    rd <> 0%nat -> get_reg (ckb_slli rd rs1 shamt st) rd =
+    truncate_64 (Z.shiftl (get_reg st rs1) (Z.land shamt 63)).
+Proof.
+    intros. unfold ckb_slli, next_pc, set_pc. simpl.
+    rewrite get_set_reg_same; [|assumption].
+    rewrite get_set_reg_same; [|assumption].
+    unfold truncate_64. rewrite Z.mod_mod; [reflexivity|lia].
+Qed.
+(* SRLI: identical structure with Z.shiftr *)
+(* SRAI: requires reasoning about to_signed_64 and Z.testbit *)
+```
+
+## Task 4.6: Prove MUL
+
+```coq
+Theorem ckb_mul_semantics : forall rd rs1 rs2 st,
+    rd <> 0%nat -> get_reg (ckb_mul rd rs1 rs2 st) rd =
+    truncate_64 (get_reg st rs1 * get_reg st rs2).
+Proof.
+    intros. unfold ckb_mul, next_pc, set_pc. simpl.
+    rewrite get_set_reg_same; [|assumption].
+    rewrite get_set_reg_same; [|assumption].
+    unfold truncate_64. rewrite Z.mod_mod; [reflexivity|lia].
+Qed.
+```
+
+## Task 4.7: Compile and Verify
+
+```bash
+make coq-check
+```
+
+Debug failures with `coqtop -R coq CkbVmVerify -R coq/generated Riscv`.
+
+## Files Added/Modified This Week
 
 | Action | Path | Description |
 |--------|------|-------------|
-| Add | `coq/Tactics.v` | Reusable proof tactics (bitvector, register) |
-| Modify | `coq/CkbVmModel.v` | Refine model if needed to match Sail interface |
-| Modify | `coq/InstructionEquiv.v` | 7 completed proofs |
+| Add | `coq/Tactics.v` | Proof tactics |
+| Modify | `coq/InstructionEquiv.v` | 7 instruction proofs |
 | Modify | `coq/_CoqProject` | Add Tactics.v |
-
-## Verification Criteria
-
-- [ ] `make coq` succeeds with 7 instruction proofs (no Admitted)
-- [ ] Proof template documented for reuse
 
 ---
 
 # 第四周：核心 ALU 指令证明
 
-## 目标
+## 任务 4.1：构建可复用策略
 
-- 完成 R-type 和 I-type ALU 指令的等价性证明
-- 建立可复用的证明模式和策略
+创建 `coq/Tactics.v`，封装 `solve_truncate` 和 `simplify_regs` 两个 Ltac。
 
-## 目标指令
+## 任务 4.2-4.6：逐一证明 ADD, SUB, ADDI, SLLI, SRLI, SRAI, MUL
 
-ADD, SUB, ADDI, SLLI, SRLI, SRAI, MUL（共 7 条）
+每条指令证三个属性：结果正确、PC+4、不影响其他寄存器。模式统一：`unfold → rewrite get_set_reg_same → Z.mod_mod → reflexivity`。SRAI 需要额外的符号位推理。
 
-## 任务
+## 任务 4.7：编译
 
-1. 建立证明模板：解码 → 读操作数 → 计算 → 写回 → PC+4
-2. 构建 Ltac 策略：bitvector 算术、寄存器读写、x0 强制清零
-3. 逐一证明 7 条指令，重点关注：12 位符号扩展、移位量截断（& 63）、SRAI 的符号位保持、MUL 的低半截取
-
-## 新增/修改文件
-
-| 操作 | 路径 | 说明 |
-|------|------|------|
-| 新增 | `coq/Tactics.v` | 可复用证明策略 |
-| 修改 | `coq/CkbVmModel.v` | 按需调整模型以对齐 Sail 接口 |
-| 修改 | `coq/InstructionEquiv.v` | 7 条指令完整证明 |
-| 修改 | `coq/_CoqProject` | 加入 Tactics.v |
-
-## 验收标准
-
-- `make coq` 通过，7 条指令证明无 Admitted
-- 证明模板文档化
+`make coq-check` 通过，7 条指令零 Admitted。

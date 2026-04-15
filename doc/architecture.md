@@ -75,17 +75,17 @@ The PoC models CKB-VM's simplified memory model directly.
 ```
 sail-riscv/model/*.sail
     │
-    ├─── sail --coq ──► coq/generated/CkbVmSpec.v      (formal spec)
+    ├─── sail --coq ──► coq/generated/CkbVmSpec.v         (formal spec)
     │
     └─── sail --cpp ──► sail_riscv_sim                   (C++ emulator)
                               │
                               └─── differential-test ──► compare traces
-                                        │
-ckb-vm/src/instructions/execute.rs      │
+                                         │
+ckb-vm/src/instructions/execute.rs       │
     │                                    │
-    ├─── manual abstraction ──► coq/CkbVmModel.v        (CKB-VM model)
+    ├─── manual abstraction ──► coq/CkbVmModel.v         (CKB-VM model)
     │                                    │
-    │                            coq/InstructionEquiv.v  (proofs)
+    │                            coq/InstructionEquiv.v        (proofs)
     │
     └─── ckb-vm Rust library ──► differential-test ──► compare traces
 ```

@@ -1,104 +1,141 @@
 # Week 8: Documentation, Deliverables & Roadmap
 
-## Objectives
+## Task 8.1: Clean-Room Build Test
 
-- Finalize all documentation for Spark submission
-- Ensure full reproducibility (clean-room build test)
-- Write Phase 2+ roadmap
+Test from a clean clone:
 
-## Tasks
+```bash
+cd /tmp
+git clone ~/workplace/ckb-vm-sail-verify test-clone
+cd test-clone
+export SAIL_RISCV_DIR=~/workplace/sail-riscv
+make all   # must succeed
+```
 
-1. **Clean-room build verification**
-   - Test on a fresh environment (Docker or new VM)
-   - Ensure `make all` works from a clean clone
-   - Fix any undocumented dependencies
+Or use Docker:
 
-2. **Finalize methodology document**
-   - Update `doc/methodology.md` with lessons learned
-   - Add concrete examples from completed proofs
-   - Document proof effort per instruction (lines of Coq, time spent)
+```dockerfile
+FROM ocaml/opam:ubuntu-24.04-ocaml-5.2
+RUN sudo apt-get update && sudo apt-get install -y cmake build-essential libgmp-dev gcc-riscv64-unknown-elf
+RUN opam update && opam install -y sail coq.9.0.0 coq-sail-stdpp
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH="/home/opam/.cargo/bin:${PATH}"
+RUN git clone --depth=1 https://github.com/riscv/sail-riscv /workspace/sail-riscv && \
+    cd /workspace/sail-riscv && cmake -S . -B build && \
+    cmake --build build --target generated_rocq_rv64d --target sail_riscv_sim
+COPY . /workspace/project
+WORKDIR /workspace/project
+ENV SAIL_RISCV_DIR=/workspace/sail-riscv
+RUN make all
+```
 
-3. **Write completion report**
-   - Summary of what was proved and what was tested
-   - Statistics: N instructions proved, M tests run, K lines of Coq
-   - Known limitations and assumptions
+## Task 8.2: Write Completion Report
 
-4. **Write Phase 2+ roadmap**
-   - Phase 2: Full RV64I (all ~50 instructions) — scope, estimate, funding
-   - Phase 3: M/C/B extensions — additional complexity
-   - Phase 4: ASM mode verification via Islaris — research needed
-   - Potential for Community Fund DAO proposal
+Create `doc/completion_report.md`:
 
-5. **Final code cleanup**
-   - Remove dead code, fix warnings
-   - Consistent formatting (rustfmt, coq style)
-   - License headers on all files
+```markdown
+# Completion Report
 
-## Files to Add/Modify
+## Summary
+First formal verification framework for CKB-VM, connecting to official Sail RISC-V spec.
+
+## Deliverables
+1. **Coq proofs**: N theorems for M instructions (K lines)
+2. **Diff-test framework**: X tests across I/M/C/A/B extensions
+3. **Documentation**: instruction mapping (158 opcodes), semantic gaps (8 categories)
+4. **Roadmap**: Phase 2-4 defined
+
+## How to Verify
+git clone <repo> && make all
+```
+
+Fill in actual numbers.
+
+## Task 8.3: Write Roadmap
+
+Create `doc/roadmap.md`:
+
+```markdown
+| Phase | Scope | Duration | Funding |
+|-------|-------|----------|---------|
+| PoC (done) | 10+ instructions, diff-test, docs | 8 weeks | Spark $2k |
+| Phase 2 | Full RV64I (~50 instructions) | 3 months | DAO ~$5k |
+| Phase 3 | M/C/B extensions | 4 months | DAO ~$8k |
+| Phase 4 | ASM mode (Islaris) | 6+ months | Grant ~$20k+ |
+```
+
+## Task 8.4: Code Cleanup
+
+```bash
+cargo fmt --all
+cargo clippy --workspace
+rm -f coq/TestImport.v
+grep -rn "TODO\|FIXME\|HACK" coq/ lib/ crates/
+make clean && make all
+```
+
+## Task 8.5: Update README
+
+Add actual results:
+
+```markdown
+## Results
+- **N Coq theorems** for M RISC-V instructions
+- **X ISA tests** passed in differential testing
+- **8 semantic gaps** documented
+- **158 opcodes** mapped
+```
+
+## Task 8.6: Submit to Spark
+
+Post to Nervos Talk:
+- Title: `[Spark] CKB-VM Sail Formal Verification PoC — Completion Report`
+- Body: from `doc/completion_report.md`
+- Tag: `Spark-Program`
+
+Checklist:
+```
+[ ] Code on GitHub under MIT
+[ ] make coq succeeds
+[ ] make diff-test succeeds
+[ ] "How to Verify" independently tested
+[ ] Report on Nervos Talk
+[ ] Phase 2 roadmap included
+```
+
+## Files Added/Modified This Week
 
 | Action | Path | Description |
 |--------|------|-------------|
-| Add | `doc/completion_report.md` | Spark completion report |
-| Add | `doc/roadmap.md` | Phase 2+ roadmap |
-| Modify | `doc/methodology.md` | Final version with lessons learned |
-| Modify | `doc/architecture.md` | Final version |
-| Modify | `README.md` | Update with final status and results |
-| Add | `Dockerfile` | (Optional) Reproducible build environment |
-
-## Verification Criteria
-
-- [ ] `git clone && make all` succeeds on fresh machine
-- [ ] All documentation reviewed and complete
-- [ ] Completion report ready for Spark submission
-- [ ] Roadmap defines clear next steps
-- [ ] Zero compiler warnings in Rust and Coq
-
-## Spark Submission Checklist
-
-- [ ] Project deliverables (code, proofs, tests) on GitHub
-- [ ] Completion report posted to Nervos Talk
-- [ ] "How to Verify" section tested by someone other than the author
-- [ ] All open-source under MIT license
+| Add | `doc/completion_report.md` | Spark report |
+| Add | `doc/roadmap.md` | Phase 2+ |
+| Add | `Dockerfile` | Optional |
+| Modify | `README.md` | Final numbers |
 
 ---
 
 # 第八周：文档完善、交付物与路线图
 
-## 目标
+## 任务 8.1：净室构建
 
-- 完成 Spark 提交所需的全部文档
-- 确保完全可复现（净室构建测试）
-- 撰写 Phase 2+ 路线图
+在 `/tmp` 下 clone 新副本测试 `make all`。或用 Docker。
 
-## 任务
+## 任务 8.2：完成报告
 
-1. 在全新环境测试 `make all`，修复未记录的依赖
-2. 完善方法论文档，加入实际证明经验和统计数据
-3. 撰写完成报告：证明了什么、测试了什么、统计数据、已知限制
-4. 撰写路线图：Phase 2（全 RV64I）、Phase 3（M/C/B 扩展）、Phase 4（ASM 验证）
-5. 代码清理：去除无用代码、格式统一、许可证头
+`doc/completion_report.md`，填入实际统计数字。
 
-## 新增/修改文件
+## 任务 8.3：路线图
 
-| 操作 | 路径 | 说明 |
-|------|------|------|
-| 新增 | `doc/completion_report.md` | Spark 完成报告 |
-| 新增 | `doc/roadmap.md` | Phase 2+ 路线图 |
-| 修改 | `doc/methodology.md` | 最终版（含经验教训） |
-| 修改 | `README.md` | 更新最终状态和结果 |
-| 新增 | `Dockerfile` | （可选）可复现构建环境 |
+`doc/roadmap.md`，规划 Phase 2（全 RV64I）、Phase 3（M/C/B）、Phase 4（ASM）。
 
-## 验收标准
+## 任务 8.4：代码清理
 
-- `git clone && make all` 在全新机器通过
-- 全部文档审查完成
-- 完成报告可提交 Nervos Talk
-- 路线图定义清晰的后续步骤
-- Rust 和 Coq 零编译警告
+`cargo fmt`、`clippy`、删临时文件、`make clean && make all`。
 
-## Spark 提交清单
+## 任务 8.5：更新 README
 
-- [ ] 项目交付物（代码、证明、测试）在 GitHub 公开
-- [ ] 完成报告发布到 Nervos Talk
-- [ ] "How to Verify" 经他人独立测试
-- [ ] 全部 MIT 许可
+填入实际证明/测试数量。
+
+## 任务 8.6：Spark 提交
+
+在 Nervos Talk 发帖，附 GitHub 链接，打 `Spark-Program` 标签。核对提交清单全部打勾。
