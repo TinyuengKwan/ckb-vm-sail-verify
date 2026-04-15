@@ -14,23 +14,19 @@ Responds to [ckb-vm#190](https://github.com/nervosnetwork/ckb-vm/issues/190) ("F
 ckb-vm-sail-verify/
 ├── Cargo.toml              # Workspace root
 ├── Makefile                 # Build orchestration
+├── deps/
+│   └── sail-riscv/          # Official Sail RISC-V model (git submodule)
 ├── lib/                     # Shared Rust library
 │   └── src/
-│       ├── lib.rs           # Re-exports
 │       ├── state.rs         # StepState, trace comparison
 │       └── runner.rs        # CKB-VM step-by-step driver
 ├── crates/
 │   └── diff-test/           # Differential testing CLI
-│       └── src/
-│           ├── main.rs      # CLI entry point
-│           └── sail_runner.rs
 ├── coq/                     # Coq formal proofs
-│   ├── _CoqProject
 │   ├── MachineState.v       # Machine state definitions
 │   ├── CkbVmModel.v         # CKB-VM interpreter model
 │   └── InstructionEquiv.v   # Equivalence proofs
-├── sail-model/              # Sail RISC-V configuration
-│   └── ckb_vm_config.json   # CKB-VM instruction subset
+├── sail-model/              # Sail config for CKB-VM subset
 ├── scripts/                 # Build & generation scripts
 ├── doc/                     # Technical documentation
 └── plan/                    # Weekly development plans
@@ -39,11 +35,22 @@ ckb-vm-sail-verify/
 ## Quick Start
 
 ```bash
-make help          # Show all targets
+# Clone with submodules
+git clone --recursive https://github.com/YourUser/ckb-vm-sail-verify
+cd ckb-vm-sail-verify
+
+# Or init submodules after clone
+make init
+
+# Build everything
+make all
+
+# Individual targets
 make coq-gen       # Generate Coq from Sail
 make coq           # Compile Coq proofs
+make sail-emu      # Build Sail C++ emulator
 make diff-test     # Run differential tests
-make all           # Everything
+make help          # Show all targets
 ```
 
 ## CKB-VM Instruction Subset
@@ -68,5 +75,7 @@ MIT
 本项目使用 RISC-V 官方 Sail 规范，对 CKB-VM 的指令执行语义进行形式化验证。
 
 回应 [ckb-vm#190](https://github.com/nervosnetwork/ckb-vm/issues/190)（自 2021 年以来一直开放）。
+
+sail-riscv 模型作为 git submodule 位于 `deps/sail-riscv/`，首次克隆时使用 `git clone --recursive`。
 
 详细计划见 `plan/` 目录。

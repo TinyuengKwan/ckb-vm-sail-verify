@@ -2,6 +2,9 @@
 /build/
 /target/
 
+# Sail build (inside submodule)
+deps/sail-riscv/build/
+
 # Coq generated/compiled files
 coq/generated/
 coq/*.vo

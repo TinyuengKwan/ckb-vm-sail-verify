@@ -1,10 +1,12 @@
 # CKB-VM Sail Formal Verification PoC
 # ====================================
 
-SAIL_RISCV_DIR ?= $(HOME)/workplace/sail-riscv
+SAIL_RISCV_DIR := deps/sail-riscv
 COQ_OUTPUT_DIR := coq/generated
+SAIL_BUILD     := $(SAIL_RISCV_DIR)/build
+SAIL_BIN       := $(SAIL_BUILD)/c_emulator/sail_riscv_sim
 
-.PHONY: all coq-gen coq diff-test sail-emu clean report help
+.PHONY: all init coq-gen coq diff-test sail-emu clean report help
 
 all: coq diff-test ## Build everything
 
@@ -12,10 +14,17 @@ help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
 
+# --- Submodule init ---
+init: ## Initialize git submodules
+	git submodule update --init --recursive
+
+$(SAIL_RISCV_DIR)/model/riscv.sail_project:
+	git submodule update --init --recursive
+
 # --- Sail -> Coq generation ---
 coq-gen: $(COQ_OUTPUT_DIR)/CkbVmSpec.v ## Generate Coq from Sail
 
-$(COQ_OUTPUT_DIR)/CkbVmSpec.v: sail-model/ckb_vm_config.json
+$(COQ_OUTPUT_DIR)/CkbVmSpec.v: sail-model/ckb_vm_config.json $(SAIL_RISCV_DIR)/model/riscv.sail_project
 	@mkdir -p $(COQ_OUTPUT_DIR)
 	./scripts/generate_coq.sh $(SAIL_RISCV_DIR) $(COQ_OUTPUT_DIR)
 
@@ -35,7 +44,7 @@ diff-test-verbose: ## Diff tests with verbose output
 	cargo run --release -p ckb-vm-diff-test -- --verbose
 
 # --- Sail emulator ---
-sail-emu: ## Build Sail C++ emulator
+sail-emu: $(SAIL_RISCV_DIR)/model/riscv.sail_project ## Build Sail C++ emulator
 	./scripts/build_sail_emulator.sh $(SAIL_RISCV_DIR)
 
 # --- Report ---
@@ -46,5 +55,6 @@ report: ## Print verification status
 # --- Clean ---
 clean: ## Remove all build artifacts
 	rm -rf $(COQ_OUTPUT_DIR)
+	rm -rf $(SAIL_BUILD)
 	$(MAKE) -C coq clean 2>/dev/null || true
 	cargo clean 2>/dev/null || true

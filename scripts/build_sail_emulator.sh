@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
 # Build the Sail RISC-V C++ emulator for differential testing.
 #
-# Usage: ./scripts/build_sail_emulator.sh <sail-riscv-dir>
-#
-# This builds the sail_riscv_sim binary that can be used for:
-# 1. Direct ELF execution with --trace flag
-# 2. RVFI-DII protocol for instruction-level comparison
+# Usage: ./scripts/build_sail_emulator.sh [sail-riscv-dir]
+# Default: deps/sail-riscv
 
 set -euo pipefail
 
-SAIL_RISCV_DIR="${1:?Usage: $0 <sail-riscv-dir>}"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
+
+SAIL_RISCV_DIR="${1:-$PROJECT_DIR/deps/sail-riscv}"
 
 if [ ! -f "$SAIL_RISCV_DIR/CMakeLists.txt" ]; then
     echo "ERROR: sail-riscv not found at $SAIL_RISCV_DIR"
+    echo "Run: git submodule update --init --recursive"
     exit 1
 fi
 
 echo "==> Building Sail RISC-V emulator..."
 echo "    Source: $SAIL_RISCV_DIR"
 
-# Configure if needed
 if [ ! -d "$SAIL_RISCV_DIR/build" ]; then
     echo "==> Configuring cmake..."
     cmake -S "$SAIL_RISCV_DIR" -B "$SAIL_RISCV_DIR/build" \
@@ -27,17 +27,12 @@ if [ ! -d "$SAIL_RISCV_DIR/build" ]; then
         -DDOWNLOAD_GMP=TRUE
 fi
 
-# Build
 cmake --build "$SAIL_RISCV_DIR/build" -j"$(nproc)" --target sail_riscv_sim
 
 SAIL_BIN="$SAIL_RISCV_DIR/build/c_emulator/sail_riscv_sim"
 if [ -f "$SAIL_BIN" ]; then
-    echo ""
-    echo "==> Build successful!"
-    echo "    Binary: $SAIL_BIN"
-    echo ""
-    echo "    Test with: $SAIL_BIN --help"
+    echo "==> Build successful: $SAIL_BIN"
 else
-    echo "ERROR: Build completed but binary not found at $SAIL_BIN"
+    echo "ERROR: Binary not found at $SAIL_BIN"
     exit 1
 fi
