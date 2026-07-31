@@ -1,0 +1,12 @@
+[package]
+name = "ckb-vm-sail-riscv-runner"
+description = "Sail RISC-V process and RVFI parser with a planned RVFI-DII adapter"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+ckb-vm-sail-core = { workspace = true }
+anyhow = { workspace = true }

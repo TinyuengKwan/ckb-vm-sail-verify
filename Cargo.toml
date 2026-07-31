@@ -1,21 +1,23 @@
 [workspace]
 resolver = "2"
-members = [
-    "lib",
-    "crates/diff-test",
-]
+members = ["crates/*"]
+exclude = ["deps/ckb-vm"]
 
 [workspace.package]
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
+rust-version = "1.95"
 license = "MIT"
 authors = ["TinyuengKwan <kwantinyueng@gmail.com>"]
 
 [workspace.dependencies]
-ckb-vm = { git = "https://github.com/nervosnetwork/ckb-vm", branch = "develop" }
-ckb-vm-definitions = { git = "https://github.com/nervosnetwork/ckb-vm", branch = "develop" }
-ckb-vm-sail-lib = { path = "lib" }
+# The parent repository's submodule gitlink pins the exact production source
+# revision used by both runtime tests and proof extraction.
+ckb-vm = { path = "deps/ckb-vm" }
+ckb-vm-sail-core = { path = "crates/core" }
+ckb-vm-sail-ckb-runner = { path = "crates/ckb-runner" }
+ckb-vm-sail-riscv-runner = { path = "crates/sail-runner" }
 anyhow = "1"
+clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-clap = { version = "4", features = ["derive"] }

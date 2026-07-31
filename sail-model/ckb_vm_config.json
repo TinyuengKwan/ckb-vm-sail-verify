@@ -1,29 +1,51 @@
 {
-  "$comment": [
-    "Sail RISC-V configuration for CKB-VM instruction subset.",
-    "CKB-VM implements RV64IMCB (Zba+Zbb+Zbc+Zbs) + A (Zaamo+Zalrsc).",
-    "This config is used to generate the Coq specification and C++ emulator",
-    "that covers exactly the instructions CKB-VM supports."
-  ],
   "base": {
-    "xlen": { "value": 64 }
+    "xlen": 64,
+    "mstatus": {
+      "fs_legal_states": "ExtContext_Off",
+      "vs_legal_states": "ExtContext_Off"
+    }
   },
   "extensions": {
-    "I": { "supported": true },
     "M": { "supported": true },
+    "A": { "supported": false },
+    "B": { "supported": true },
     "Zca": { "supported": true },
-    "Zcd": { "supported": false },
-    "Zcf": { "supported": false },
-    "Zcb": { "supported": false },
     "Zba": { "supported": true },
     "Zbb": { "supported": true },
     "Zbc": { "supported": true },
     "Zbs": { "supported": true },
-    "Zaamo": { "supported": true },
-    "Zalrsc": { "supported": true },
     "F": { "supported": false },
     "D": { "supported": false },
-    "V": { "supported": false },
-    "H": { "supported": false }
+    "Zfa": { "supported": false },
+    "Zfbfmin": { "supported": false },
+    "Zfh": { "supported": false },
+    "Zfhmin": { "supported": false },
+    "Zfinx": { "supported": false },
+    "Zdinx": { "supported": false },
+    "Zhinx": { "supported": false },
+    "Zhinxmin": { "supported": false },
+    "V": {
+      "support_level": "Disabled",
+      "vlen_exp": 3,
+      "elen_exp": 3,
+      "max_index_eew_exp": 3,
+      "vl_use_ceil": false
+    },
+    "Zvabd": { "supported": false },
+    "Zvfbfmin": { "supported": false },
+    "Zvfbfwma": { "supported": false },
+    "Zvfh": { "supported": false },
+    "Zvfhmin": { "supported": false },
+    "Zvbb": { "supported": false },
+    "Zvbc": { "supported": false },
+    "Zvkb": { "supported": false },
+    "Zvkg": { "supported": false },
+    "Zvkned": { "supported": false },
+    "Zvknha": { "supported": false },
+    "Zvknhb": { "supported": false },
+    "Zvksed": { "supported": false },
+    "Zvksh": { "supported": false },
+    "Zvkt": { "supported": false }
   }
 }

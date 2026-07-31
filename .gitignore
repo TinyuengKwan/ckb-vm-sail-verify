@@ -5,24 +5,17 @@
 # Sail build (inside submodule)
 deps/sail-riscv/build/
 
-# Coq generated/compiled files
-coq/generated/
-coq/*.vo
-coq/*.vok
-coq/*.vos
-coq/*.glob
-coq/.*.aux
-coq/.coqdeps.d
-coq/Makefile.coq
-coq/Makefile.coq.conf
-
-# Rust/Cargo
-Cargo.lock
+# Rust/Cargo (Cargo.lock is intentionally tracked for evidence reproducibility)
 **/target/
 **/*.rs.bk
 
 # Sail build artifacts
 sail-model/build/
+proof/lean/generated/
+proof/rocq/generated/
+
+# Failure artifacts stay local until minimized/promoted.
+artifacts/*/
 
 # OS files
 .DS_Store

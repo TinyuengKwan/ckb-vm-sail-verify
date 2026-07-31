@@ -1,3 +1,7 @@
 [submodule "deps/sail-riscv"]
 	path = deps/sail-riscv
 	url = https://github.com/riscv/sail-riscv.git
+[submodule "deps/ckb-vm"]
+	path = deps/ckb-vm
+	url = https://github.com/nervosnetwork/ckb-vm.git
+	branch = develop

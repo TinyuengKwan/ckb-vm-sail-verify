@@ -1,107 +1,149 @@
-//! CKB-VM Differential Test Runner
-//!
-//! Executes RISC-V ELF binaries on CKB-VM and a reference implementation,
-//! comparing execution traces to detect semantic differences.
-
-mod sail_runner;
-
-use anyhow::Result;
-use ckb_vm_sail_lib::{state::CompareResult, StepState};
+use anyhow::{bail, Context, Result};
+use ckb_vm_sail_ckb_runner::{run_elf, RunnerConfig};
+use ckb_vm_sail_core::{CompareResult, TerminalPolicy};
+use ckb_vm_sail_riscv_runner::execute_elf as run_sail_elf;
 use clap::Parser;
-use std::path::PathBuf;
+use serde::Serialize;
+use std::path::{Path, PathBuf};
 
-#[derive(Parser, Debug)]
-#[command(name = "ckb-vm-diff-test")]
-#[command(about = "Differential testing: CKB-VM vs Sail RISC-V")]
-struct Args {
-    /// Path to a single RISC-V ELF binary
-    #[arg(short, long)]
+#[derive(Debug, Parser)]
+#[command(about = "Strict architectural trace comparison for CKB-VM and Sail")]
+struct Arguments {
+    /// Run one ELF file.
+    #[arg(long, conflicts_with = "test_dir")]
     elf: Option<PathBuf>,
 
-    /// Directory containing test ELF binaries
-    #[arg(short, long)]
+    /// Run every *.elf regular file in this directory.
+    #[arg(long, conflicts_with = "elf")]
     test_dir: Option<PathBuf>,
 
-    /// Path to Sail RISC-V emulator binary
-    #[arg(short, long, default_value = "sail_riscv_sim")]
+    #[arg(
+        long,
+        default_value = "deps/sail-riscv/build/c_emulator/sail_riscv_sim"
+    )]
     sail_bin: PathBuf,
 
-    /// Verbose output
-    #[arg(short, long)]
-    verbose: bool,
+    #[arg(long, default_value = "sail-model/build/ckb_vm_config.json")]
+    sail_config: PathBuf,
 
-    /// Maximum instructions per test
-    #[arg(short, long, default_value = "1000000")]
+    #[arg(long, default_value_t = 100_000)]
     max_steps: u64,
+
+    /// Compare only terminal categories. Exact termination is the default.
+    #[arg(long)]
+    terminal_category_only: bool,
+
+    #[arg(long)]
+    json: bool,
 }
 
-fn run_single_test(elf_path: &std::path::Path, args: &Args) -> Result<bool> {
-    println!("Testing: {}", elf_path.display());
-
-    let ckb_trace = ckb_vm_sail_lib::runner::execute_elf(elf_path, args.max_steps)?;
-    if args.verbose {
-        println!("  CKB-VM: {} steps", ckb_trace.len());
-    }
-
-    let sail_trace = sail_runner::execute_elf(elf_path, &args.sail_bin, args.max_steps)?;
-    if args.verbose {
-        println!("  Sail:   {} steps", sail_trace.len());
-    }
-
-    let result = CompareResult::compare(&ckb_trace, &sail_trace);
-    if result.passed() {
-        println!("  PASS ({} steps)", result.total_steps);
-        Ok(true)
-    } else if let Some(ref m) = result.first_mismatch {
-        println!("  FAIL at step {}:", m.step);
-        println!("    CKB-VM: {}", m.ckb_state);
-        println!("    Sail:   {}", m.ref_state);
-        Ok(false)
-    } else {
-        Ok(true)
-    }
+#[derive(Debug, Serialize)]
+struct TestReport {
+    elf: PathBuf,
+    passed: bool,
+    comparison: Option<CompareResult>,
+    error: Option<String>,
 }
 
 fn main() -> Result<()> {
-    let args = Args::parse();
-    println!("=== CKB-VM Differential Test ===\n");
+    let arguments = Arguments::parse();
+    let files = collect_elfs(&arguments)?;
+    let policy = if arguments.terminal_category_only {
+        TerminalPolicy::CategoryOnly
+    } else {
+        TerminalPolicy::Exact
+    };
 
-    let mut total = 0u32;
-    let mut passed = 0u32;
+    let reports: Vec<_> = files
+        .iter()
+        .map(|elf| run_one(elf, &arguments, policy))
+        .collect();
+    let failed = reports.iter().filter(|report| !report.passed).count();
 
-    if let Some(ref elf) = args.elf {
-        total += 1;
-        if run_single_test(elf, &args)? {
-            passed += 1;
-        }
-    }
-
-    if let Some(ref dir) = args.test_dir {
-        let mut entries: Vec<_> = std::fs::read_dir(dir)?
-            .filter_map(|e| e.ok())
-            .filter(|e| e.path().is_file())
-            .collect();
-        entries.sort_by_key(|e| e.file_name());
-        for entry in entries {
-            total += 1;
-            match run_single_test(&entry.path(), &args) {
-                Ok(true) => passed += 1,
-                Ok(false) => {}
-                Err(e) => println!("  ERROR: {e}"),
+    if arguments.json {
+        println!("{}", serde_json::to_string_pretty(&reports)?);
+    } else {
+        for report in &reports {
+            if let Some(error) = &report.error {
+                println!("ERROR {}: {error}", report.elf.display());
+            } else if let Some(comparison) = &report.comparison {
+                if comparison.passed() {
+                    println!(
+                        "PASS  {} ({} committed steps)",
+                        report.elf.display(),
+                        comparison.compared_steps
+                    );
+                } else {
+                    let mismatch = comparison.mismatch.as_ref().expect("failed comparison");
+                    println!(
+                        "FAIL  {} step={:?} field={} ckb={} sail={}",
+                        report.elf.display(),
+                        mismatch.step,
+                        mismatch.field,
+                        mismatch.left,
+                        mismatch.right
+                    );
+                }
             }
         }
+        println!("{} test(s), {failed} failure(s)", reports.len());
     }
 
-    if total == 0 {
-        println!("No tests. Use --elf <path> or --test-dir <dir>.");
-    } else {
-        println!(
-            "\nTotal: {total}  Passed: {passed}  Failed: {}",
-            total - passed
-        );
-        if passed < total {
-            std::process::exit(1);
-        }
+    if failed != 0 {
+        std::process::exit(1);
     }
     Ok(())
+}
+
+fn collect_elfs(arguments: &Arguments) -> Result<Vec<PathBuf>> {
+    if let Some(elf) = &arguments.elf {
+        return Ok(vec![elf.clone()]);
+    }
+    let Some(directory) = &arguments.test_dir else {
+        bail!("one of --elf or --test-dir is required");
+    };
+    let mut files = std::fs::read_dir(directory)
+        .with_context(|| format!("failed to read {}", directory.display()))?
+        .filter_map(|entry| entry.ok().map(|entry| entry.path()))
+        .filter(|path| path.is_file() && path.extension().is_some_and(|ext| ext == "elf"))
+        .collect::<Vec<_>>();
+    files.sort();
+    if files.is_empty() {
+        bail!("{} contains no *.elf files", directory.display());
+    }
+    Ok(files)
+}
+
+fn run_one(elf: &Path, arguments: &Arguments, policy: TerminalPolicy) -> TestReport {
+    let result = (|| -> Result<CompareResult> {
+        let ckb = run_elf(
+            elf,
+            RunnerConfig {
+                max_steps: arguments.max_steps,
+                ..RunnerConfig::default()
+            },
+        )?;
+        let sail = run_sail_elf(
+            elf,
+            &arguments.sail_bin,
+            &arguments.sail_config,
+            arguments.max_steps,
+        )?;
+        Ok(CompareResult::compare_with_policy(&ckb, &sail, policy))
+    })();
+
+    match result {
+        Ok(comparison) => TestReport {
+            elf: elf.to_path_buf(),
+            passed: comparison.passed(),
+            comparison: Some(comparison),
+            error: None,
+        },
+        Err(error) => TestReport {
+            elf: elf.to_path_buf(),
+            passed: false,
+            comparison: None,
+            error: Some(format!("{error:#}")),
+        },
+    }
 }

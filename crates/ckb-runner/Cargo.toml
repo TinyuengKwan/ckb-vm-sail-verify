@@ -1,6 +1,6 @@
 [package]
-name = "ckb-vm-sail-diff"
-description = "Strict CKB-VM versus Sail architectural trace comparator"
+name = "ckb-vm-sail-ckb-runner"
+description = "CKB-VM VERSION2 adapter and provisional extraction target"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,9 +9,6 @@ authors.workspace = true
 
 [dependencies]
 ckb-vm-sail-core = { workspace = true }
-ckb-vm-sail-ckb-runner = { workspace = true }
-ckb-vm-sail-riscv-runner = { workspace = true }
+ckb-vm = { workspace = true }
 anyhow = { workspace = true }
-clap = { workspace = true }
 serde = { workspace = true }
-serde_json = { workspace = true }

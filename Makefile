@@ -1,60 +1,31 @@
-# CKB-VM Sail Formal Verification PoC
-# ====================================
+.PHONY: check test verify-env sail-emu sail-config diff proof-gen clean-generated
 
-SAIL_RISCV_DIR := deps/sail-riscv
-COQ_OUTPUT_DIR := coq/generated
-SAIL_BUILD     := $(SAIL_RISCV_DIR)/build
-SAIL_BIN       := $(SAIL_BUILD)/c_emulator/sail_riscv_sim
+BACKEND ?= lean
 
-.PHONY: all init coq-gen coq diff-test sail-emu clean report help
+check:
+	cargo fmt --all -- --check
+	cargo check --workspace --all-targets --locked
+	cargo clippy --workspace --all-targets --locked -- -D warnings
 
-all: coq diff-test ## Build everything
+test:
+	cargo test --workspace --locked
 
-help: ## Show this help
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-20s\033[0m %s\n", $$1, $$2}'
+verify-env: sail-config
+	./scripts/verify_environment.sh
 
-# --- Submodule init ---
-init: ## Initialize git submodules
-	git submodule update --init --recursive
+sail-emu:
+	./scripts/build_sail_emulator.sh
 
-$(SAIL_RISCV_DIR)/model/riscv.sail_project:
-	git submodule update --init --recursive
+sail-config: sail-emu
+	./scripts/prepare_sail_config.sh
 
-# --- Sail -> Coq generation ---
-coq-gen: $(COQ_OUTPUT_DIR)/CkbVmSpec.v ## Generate Coq from Sail
+diff:
+	@test -n "$(ELF)" || (echo "usage: make diff ELF=path/to/test.elf"; exit 2)
+	./scripts/run_differential.sh "$(ELF)"
 
-$(COQ_OUTPUT_DIR)/CkbVmSpec.v: sail-model/ckb_vm_config.json $(SAIL_RISCV_DIR)/model/riscv.sail_project
-	@mkdir -p $(COQ_OUTPUT_DIR)
-	./scripts/generate_coq.sh $(SAIL_RISCV_DIR) $(COQ_OUTPUT_DIR)
+proof-gen: sail-config
+	./scripts/generate_proof_model.sh "$(BACKEND)"
 
-# --- Coq proofs ---
-coq: coq-gen ## Compile Coq proofs
-	$(MAKE) -C coq
-
-coq-check: ## Check proofs without regenerating
-	$(MAKE) -C coq
-
-# --- Differential testing ---
-diff-test: ## Run differential tests
-	cargo build --release -p ckb-vm-diff-test
-	cargo run  --release -p ckb-vm-diff-test
-
-diff-test-verbose: ## Diff tests with verbose output
-	cargo run --release -p ckb-vm-diff-test -- --verbose
-
-# --- Sail emulator ---
-sail-emu: $(SAIL_RISCV_DIR)/model/riscv.sail_project ## Build Sail C++ emulator
-	./scripts/build_sail_emulator.sh $(SAIL_RISCV_DIR)
-
-# --- Report ---
-report: ## Print verification status
-	@echo "=== Coq ===" && find coq/ -name '*.vo' 2>/dev/null | head -20 || echo "  (none)"
-	@echo "=== Rust ===" && cargo test --workspace --no-run 2>&1 | tail -3
-
-# --- Clean ---
-clean: ## Remove all build artifacts
-	rm -rf $(COQ_OUTPUT_DIR)
-	rm -rf $(SAIL_BUILD)
-	$(MAKE) -C coq clean 2>/dev/null || true
-	cargo clean 2>/dev/null || true
+clean-generated:
+	@echo "Generated proof and Sail build directories are intentionally not removed automatically."
+	@echo "Delete the exact proof/*/generated or sail-model/build target after reviewing it."

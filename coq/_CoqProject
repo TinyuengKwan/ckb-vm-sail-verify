@@ -1,7 +1,0 @@
--R . CkbVmVerify
--R generated Riscv
-
-# Hand-written files (order matters)
-MachineState.v
-CkbVmModel.v
-InstructionEquiv.v
