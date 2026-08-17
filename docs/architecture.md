@@ -31,7 +31,7 @@ CommitEvent {
 }
 ```
 
-CKB-VM 适配器必须包住真实 VERSION2 Rust interpreter。Sail 适配器优先消费 RVFI-DII 二进制包；foundation 阶段允许解析 `--trace-rvfi`，但 parser 必须有固定 fixture 测试。
+CKB-VM 适配器必须包住真实 VERSION2 Rust interpreter。Sail 适配器消费 RVFI-DII 二进制包（v1，88 字节）；文本 `--trace-rvfi` parser 保留给专用 exporter，并有固定 fixture 测试。
 
 比较器遵循以下规则：
 
@@ -158,11 +158,13 @@ proof/{lean,rocq}/theorems/
 
 旧 `coq/CkbVmModel.v` 等手写状态/语义文件不继续作为证明入口。Rocq 路线迁移到 `proof/rocq/`，只有同时引用 Rust 与 Sail 生成物的关系定理才计入覆盖。
 
-## 8. 当前 foundation 的硬限制
+## 8. 当前的硬限制
 
-- sail-riscv 的 `--trace-rvfi` 只有在 RVFI-DII socket 模式下才产生包；直接 ELF 空输出必须报错。
-- CKB runner 已采集 PC、raw instruction 与 GPR delta，但尚无 committed data-memory observer。
+- sail-riscv 的 `--trace-rvfi` 只有在 RVFI-DII socket 模式下才产生包；直接 ELF 空输出必须报错。差分闭环因此建立在指令注入而不是 ELF 上。
+- RVFI-DII 不从内存取指：第 k 条注入字就是第 k 步执行的指令。CKB 侧镜像在每步之前把该字写到当前 PC 并让解码缓存失效，所以两端跑的是同一条指令流，但这不是对取指路径的测试。
+- CKB runner 已采集 PC、raw instruction 与 GPR delta，但尚无 committed data-memory observer；load/store/AMO/SYSTEM 因此被支持子集拒绝。
+- 寄存器观察的分辨率是架构状态变化：写回寄存器已有值在两端都不可观察。
 - `crates/ckb-runner/src/semantics.rs` 目前是临时 extraction target，尚未接入生产 CKB-VM 调用图。
 - proof 目录目前没有定理或 Rust 翻译生成物。
 
-因此当前结论是“可构建的验证骨架”，不是 runtime differential closed loop，也不是形式化验证完成。
+因此当前结论是“运行时差分闭环 + 可构建的证明骨架”，不是形式化验证完成。

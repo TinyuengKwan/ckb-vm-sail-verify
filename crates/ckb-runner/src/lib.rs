@@ -7,11 +7,17 @@ use ckb_vm::{
     Bytes, CoreMachine, DefaultCoreMachine, Memory, RustDefaultMachineBuilder, SparseMemory,
     SupportMachine, ISA_B, ISA_IMC, ISA_MOP,
 };
-use ckb_vm_sail_core::{CommitEvent, ExecutionTrace, RegisterWrite, TraceEnd};
+use ckb_vm_sail_core::{
+    normalize_instruction_width, CommitEvent, ExecutionTrace, RegisterWrite, TraceEnd,
+};
 use std::path::Path;
 
+pub mod injection;
 pub mod semantics;
 
+pub use injection::{
+    run_program as run_injected_program, InjectionConfig, InjectionOutcome, INJECTION_WINDOW,
+};
 pub use semantics::{
     execute as execute_pure, ArchitecturalState, Operation, SemanticsError, StepInput,
 };
@@ -68,7 +74,9 @@ pub fn run_bytes(program: Bytes, config: RunnerConfig) -> Result<ExecutionTrace>
         let pc_before = *machine.pc();
         let before = capture_registers(&machine);
         let instruction = match machine.memory_mut().execute_load32(pc_before) {
-            Ok(bits) => bits,
+            // A raw 32-bit fetch also contains the following instruction when
+            // the current one is compressed; both sides report only its half.
+            Ok(bits) => normalize_instruction_width(bits),
             Err(error) => {
                 return Ok(ExecutionTrace::new(
                     events,
@@ -129,7 +137,7 @@ where
     registers
 }
 
-fn changed_registers(before: &[u64; 32], after: &[u64; 32]) -> Vec<RegisterWrite> {
+pub(crate) fn changed_registers(before: &[u64; 32], after: &[u64; 32]) -> Vec<RegisterWrite> {
     before
         .iter()
         .zip(after)

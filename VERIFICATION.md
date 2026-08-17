@@ -9,6 +9,8 @@
 - Rust：MSRV 1.95；当前 foundation 验证版本 1.97.1
 - Sail compiler：0.20.2
 - sail-riscv：0.13.1，commit `27224ccb2290f022e46213c05b3e72e8a9ea635e`
+- RVFI-DII 线格式：v1，88 字节；`crates/sail-runner/tests/fixtures/sail-rvfi-dii-v1.hex`
+  是从该 commit 捕获的实包，默认测试套件解析它，端到端测试再核对它没有过期
 - ISA：`rv64imcb_zca_zba_zbb_zbc_zbs`
 - 合并配置 SHA-256：`41a0facde4f83210f6c0857c67ba38edc5221f0926d75ab4213a33465d85e024`
 
@@ -24,20 +26,30 @@ git submodule update --init --recursive
 make check
 make test
 make verify-env
+make verify-dii
 make proof-gen BACKEND=lean
 make proof-gen BACKEND=rocq
 ```
 
-当前基线可以构建 Rust workspace、运行比较器/parser 单元测试、构建 Sail
-模拟器、验证固定环境，并生成固定配置下的 Sail Lean/Rocq 模型。模型生成不等于
-kernel 编译或等价证明。
+当前基线可以构建 Rust workspace、运行单元测试、构建 Sail 模拟器、验证固定环境、
+通过 RVFI-DII 完成 CKB-VM 与 Sail 的端到端注入差分，并生成固定配置下的 Sail
+Lean/Rocq 模型。模型生成不等于 kernel 编译或等价证明。
+
+`make verify-dii` 的语义：
+
+- `cargo test -p ckb-vm-sail-diff -- --ignored` 运行 7 个需要真实模拟器的端到端
+  测试，其中 4 个是负向的：指令流分歧、末尾事件缺失、trap 分歧、引擎失败，全部
+  必须被定位而不是被吞掉；另有压缩指令宽度规范化，以及 packet fixture 与实时
+  模拟器输出的一致性检查；
+- `make diff-corpus` 运行 32 个注入案例（ADD 13、ADDI 10、BEQ 9，共 395 个提交
+  步），并把每个案例的 artifact 写到 `artifacts/corpus/`。
 
 当前尚未完成：
 
-- RVFI-DII client，因此不能把端到端 CKB/Sail 差分标记为闭环；
 - 生产路径对纯 Rust `ADD` 语义的调用连接；
 - Rust 侧 Lean 4 生成、双方导入和 `ADD` 定理；
-- Rocq/Coq 的 Rust 侧生成、双方导入、状态桥接与 GO/NO-GO 报告。
+- Rocq/Coq 的 Rust 侧生成、双方导入、状态桥接与 GO/NO-GO 报告；
+- mutation 注入框架与 CI（Week 3）。
 
 直接 ELF 模式得到空 RVFI 流必须返回失败，不能当作空程序或 PASS。
 
@@ -90,6 +102,15 @@ Rocq/Coq spike 只有在定理由 Rocq kernel 检查通过时才计入额外证�
 
 ## 6. Artifact 与 Mismatch
 
+`--artifact-dir` 为每个案例写一份 JSON（`crates/diff-test/src/artifact.rs`），
+包含 schema 版本、案例身份与 seed、双方 commit、模拟器版本、合并配置 SHA-256、
+初始状态、双方规范化事件、比较结果与首个不一致字段、原始 88 字节 v1 RVFI-DII 包，
+以及两条重放命令。`--replay <artifact>` 只依赖 artifact 本身，不依赖语料生成器；
+artifact 中的十六进制程序与记录的案例不一致时直接报错，不会静默重放别的程序。
+
+自动分类只产出 `match`、`unclassified_mismatch`、`runner_error` 与 `unsupported`。
+把 mismatch 判成 CKB 候选缺陷、配置差异还是 adapter 缺陷仍然是人工判断。
+
 每个运行至少记录：
 
 - CKB-VM、sail-riscv 和工具链版本；
@@ -104,6 +125,10 @@ Rocq/Coq spike 只有在定理由 Rocq kernel 检查通过时才计入额外证�
 
 ## 7. 保证边界
 
-运行时差分只说明固定版本和公开语料中的有限输入一致。Lean 4 定理只说明 ADD 在列出前提下满足精化关系。Rocq/Coq spike 只说明该后端路线的可行性，除非另有 kernel 检查通过的定理。
+运行时差分只说明固定版本和当前语料中的有限输入一致。注入差分另有三条边界：
+两端只比较提交效果，因此“写回寄存器已有值”这类不改变架构状态的写在两端都不可
+观察；RVFI-DII 不从内存取指，CKB 侧镜像在每步前把指令写到当前 PC，所以这不是对
+取指路径的测试；缺少 CKB 侧观察的指令（load/store/AMO/SYSTEM）被拒绝执行而不是
+被比较。Lean 4 定理只说明 ADD 在列出前提下满足精化关系。Rocq/Coq spike 只说明该后端路线的可行性，除非另有 kernel 检查通过的定理。
 
 本项目不证明完整 CKB-VM，也不覆盖 ASM/JIT、VERSION0/1、load/store 完整内存语义、MOP、A、ECALL/syscall、cycle accounting、并发/原子模型或整条 CKB 链安全性。

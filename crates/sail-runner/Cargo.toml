@@ -1,6 +1,6 @@
 [package]
 name = "ckb-vm-sail-riscv-runner"
-description = "Sail RISC-V process and RVFI parser with a planned RVFI-DII adapter"
+description = "Sail RISC-V process, RVFI parser and binary RVFI-DII client"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true

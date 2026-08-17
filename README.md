@@ -7,7 +7,14 @@
 
 ## 当前状态
 
-仓库已进入新架构的 foundation 阶段。`CommitEvent`、严格 trace 比较、纯 Rust 语义内核、CKB runner 和 Sail RVFI parser 已搭建；它们是后续接入生产路径和证明工具的骨架，不代表 CKB-VM 已完成形式化验证。
+运行时差分闭环已经建立（Week 2）。`crates/sail-runner/src/dii.rs` 实现了二进制
+RVFI-DII 客户端，`crates/ckb-runner/src/injection.rs` 用同一条指令流驱动真实
+VERSION2 解释器，双方都从架构复位态（整数寄存器全零、PC = `0x80000000`）出发，
+因此比较不再经过 ELF loader 与平台栈。当前 32 个注入语料案例、395 个提交步在
+两端逐字段一致，每个案例都可以从自己的 artifact 重放。
+
+这只是运行时证据，不是形式化验证：证明轨仍然停在 Sail 侧模型生成，没有 Rust
+侧生成、状态桥接或等价定理。
 
 固定配置下的 Sail→Lean 4 与 Sail→Rocq 模型生成入口均已验证可重现；
 生成物位于忽略目录，仍不包含 Rust 翻译、状态桥接或等价定理，不能计入
@@ -58,7 +65,20 @@ make test
 # 构建模拟器、合并配置并核对当前 foundation 工具链
 make verify-env
 
-# 对单个 ELF 做运行时差分（当前会在缺少 DII RVFI 记录时明确失败）
+# 运行 RVFI-DII 注入语料并写出可重放 artifact
+make diff-corpus
+
+# 语料 + 负向端到端测试（证明比较器仍然会失败）
+make verify-dii
+
+# 单个案例、指定 seed、JSON 报告
+cargo run -p ckb-vm-sail-diff -- --corpus --case add-signed-overflow --json
+
+# 只用 artifact 重放，不依赖语料生成器
+cargo run -p ckb-vm-sail-diff -- --replay artifacts/corpus/add-signed-overflow.json
+
+# 对单个 ELF 做运行时差分（上游锁定版本在直接 ELF 模式下不产生 RVFI，
+# 因此这条路径当前必然明确失败，而不是返回空 PASS）
 cargo run -p ckb-vm-sail-diff -- \
   --elf path/to/test.elf \
   --sail-bin deps/sail-riscv/build/c_emulator/sail_riscv_sim \
@@ -78,10 +98,10 @@ make proof-gen BACKEND=rocq
 
 ```text
 crates/
-  core/          后端无关的 CommitEvent 与严格比较
-  ckb-runner/    CKB-VM VERSION2 adapter；含临时 extraction scaffold
-  sail-runner/   Sail 进程、RVFI parser 与待接入 DII client
-  diff-test/     CLI、目录遍历与 JSON 报告
+  core/          后端无关的 CommitEvent、严格比较与注入程序支持子集
+  ckb-runner/    CKB-VM VERSION2 adapter 与 DII 镜像；含临时 extraction scaffold
+  sail-runner/   Sail 进程、RVFI parser 与二进制 RVFI-DII 客户端
+  diff-test/     指令编码、注入语料、可重放 artifact、CLI 与 JSON 报告
 deps/
   ckb-vm/        被验证的生产 Rust 实现
   sail-riscv/    权威 Sail RISC-V 模型
@@ -102,7 +122,12 @@ scripts/
 `crates/ckb-runner/src/semantics.rs` 仍是临时翻译原型。只有在生产
 CKB-VM 路径实际调用同一函数，或存在机器检查的连接证明后，它才可能成为
 证明证据；最终生产语义位置由 CKB-VM 上游 patch/PR 决定。
-注意：锁定的上游 sail-riscv 只有在 RVFI-DII socket 模式下才真正产生 RVFI 包。当前 CLI 已故意拒绝直接 ELF 运行得到的空 RVFI 流；Week 2 必须接入 DII client 或稳定 exporter，详见 `docs/semantic-gaps.md`。因此 foundation 阶段可运行 Rust 测试与 parser fixture，但尚未形成 ELF 两端差分闭环。
+注意：锁定的上游 sail-riscv 只有在 RVFI-DII socket 模式下才真正产生 RVFI 包，
+所以差分闭环走的是指令注入而不是 ELF；直接 ELF 模式得到的空 RVFI 流仍然被明确
+拒绝。注入意味着 Sail 不从内存取指，CKB 侧镜像的做法是在每一步之前把该条指令写
+到当前 PC，因此这不是对取指路径的测试。load/store、ECALL 等缺少 CKB 侧观察的指令
+被 `core::program::validate_program` 拒绝，而不是与缺失字段比较。完整边界见
+`docs/semantic-gaps.md`。
 
 ## 当前六周 MVP 范围
 

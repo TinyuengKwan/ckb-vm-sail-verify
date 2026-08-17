@@ -1,13 +1,18 @@
-//! Sail adapter for textual RVFI records.
+//! Sail adapters.
 //!
-//! Upstream sail-riscv currently emits RVFI only while an RVFI-DII socket is
-//! active. Consequently `execute_elf` rejects an empty RVFI stream instead of
-//! silently treating it as a passing trace. The parser is also usable with a
-//! dedicated trace exporter while the binary DII client is being integrated.
+//! Upstream sail-riscv only emits RVFI while an RVFI-DII socket is active, so
+//! the binary client in [`dii`] is the supported way to obtain a Sail-side
+//! trace. The textual parser below remains for a dedicated trace exporter and
+//! for the pinned fixture test; `execute_elf` rejects an empty RVFI stream
+//! instead of silently treating it as a passing trace.
 
 use anyhow::{bail, Context, Result};
 use ckb_vm_sail_core::{CommitEvent, ExecutionTrace, MemoryAccess, RegisterWrite, TraceEnd};
 use std::{path::Path, process::Command};
+
+pub mod dii;
+
+pub use dii::{run_program as run_injected_program, DiiConfig, DiiOutcome, V1Packet};
 
 pub fn execute_elf(
     elf_path: &Path,
@@ -47,8 +52,9 @@ pub fn execute_elf(
     if events.is_empty() {
         bail!(
             "Sail produced no RVFI records. In this sail-riscv revision, \
-             --trace-rvfi only prints packets in RVFI-DII mode; use the \
-             planned DII client/exporter rather than accepting an empty trace"
+             --trace-rvfi only prints packets in RVFI-DII mode; drive the \
+             model through the RVFI-DII client (see `dii`) or a dedicated \
+             exporter rather than accepting an empty trace"
         );
     }
 
