@@ -40,6 +40,16 @@ CKB-VM 适配器必须包住真实 VERSION2 Rust interpreter。Sail 适配器消
 - x0 写回统一规范化为无写回。
 - memory 观察缺失不能自动视为相等。
 - mismatch 保存 seed、ELF、双方事件和工具版本，允许重放。
+- RVFI-DII 会话必须从架构复位态开始：首个执行包的 `rvfi_order` 为 0、`pc_rdata` 为 `0x80000000`，否则直接报错。上游模拟器只 `accept` 一次就关闭监听套接字，两个客户端争抢同一端口时，输的一方可能连到别人已经推进过的模拟器；这个检查使那种情况成为错误，而不是一条看起来合理的错误 trace。
+
+比较器的检出能力本身要有证据，否则“全部一致”与“比较器失效”无法区分。
+`crates/diff-test/src/mutation.rs` 因此在真实记录的 trace 上注入 6 类 mutation，
+并要求每一类都被检测到、且第一个不一致字段正是被注入的字段；baseline 未通过、
+某一类在整个语料中从未被覆盖、以及注入后未被检出，都判定失败。规格见
+`VERIFICATION.md` §4。
+
+CI 按成本分层：不需要模拟器的检查每次都跑，需要固定版本 Sail 模拟器的差分层跑
+在缓存命中的 job 与每日定时任务上，见 `VERIFICATION.md` §8。
 
 ### 2.2 形式化证明轨
 
@@ -164,7 +174,10 @@ proof/{lean,rocq}/theorems/
 - RVFI-DII 不从内存取指：第 k 条注入字就是第 k 步执行的指令。CKB 侧镜像在每步之前把该字写到当前 PC 并让解码缓存失效，所以两端跑的是同一条指令流，但这不是对取指路径的测试。
 - CKB runner 已采集 PC、raw instruction 与 GPR delta，但尚无 committed data-memory observer；load/store/AMO/SYSTEM 因此被支持子集拒绝。
 - 寄存器观察的分辨率是架构状态变化：写回寄存器已有值在两端都不可观察。
+- 注入路径的 CKB ISA 已收敛到 `ISA_IMC | ISA_B`。开启 `ISA_MOP` 会让解码器走 `decode_mop` 并向前读取注入流之外的字节，融合命中时一步退休多条指令；两侧对"一步"的定义必须一致，因此宏操作融合不在范围内。
 - `crates/ckb-runner/src/semantics.rs` 目前是临时 extraction target，尚未接入生产 CKB-VM 调用图。
 - proof 目录目前没有定理或 Rust 翻译生成物。
+
+- mutation 矩阵证明的是**比较器**会失败，不是语料覆盖了 CKB-VM 的输入空间；两者是不同的命题。
 
 因此当前结论是“运行时差分闭环 + 可构建的证明骨架”，不是形式化验证完成。

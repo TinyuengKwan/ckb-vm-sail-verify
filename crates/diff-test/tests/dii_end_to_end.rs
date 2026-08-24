@@ -11,10 +11,13 @@
 //! engine.
 
 use ckb_vm_sail_ckb_runner::{run_injected_program as run_ckb, InjectionConfig};
+use ckb_vm_sail_core::TerminalPolicy as Policy;
 use ckb_vm_sail_core::{CompareResult, TerminalPolicy, TraceEnd};
 use ckb_vm_sail_diff::{
     corpus::{week2_corpus, DEFAULT_SEED},
     encode::{add, addi},
+    mutation::{run_mutations, MANDATORY_MUTATIONS},
+    run::RunOptions,
 };
 use ckb_vm_sail_riscv_runner::{
     dii::parse_packet_hex, run_injected_program as run_sail, DiiConfig,
@@ -243,4 +246,97 @@ fn a_failing_engine_is_an_error_rather_than_a_pass() {
     let load = [0x0001_3083];
     assert!(run_ckb(&load, InjectionConfig::default()).is_err());
     assert!(run_sail(&load, &dii()).is_err());
+}
+
+/// The mandatory mutation matrix, run against real recorded traces.
+///
+/// This is the Week 3 exit gate in test form: every category must be applied
+/// somewhere in the corpus, detected, and reported against the field it
+/// damaged. A category that never applies is a corpus gap, not a pass.
+#[test]
+#[ignore = "needs the built Sail emulator; run with `make verify-negative`"]
+fn every_mandatory_mutation_is_detected_and_located_on_real_traces() {
+    let options = RunOptions {
+        dii: dii(),
+        ckb: InjectionConfig::default(),
+        terminal_policy: Policy::Exact,
+        artifact_dir: None,
+        seed: DEFAULT_SEED,
+    };
+    let summary = run_mutations(&week2_corpus(DEFAULT_SEED), &options);
+
+    assert!(
+        summary.baseline_failures.is_empty(),
+        "mutation results are meaningless without a passing baseline: {:?}",
+        summary.baseline_failures
+    );
+    assert!(
+        summary.undetected.is_empty(),
+        "the comparator missed: {:?}",
+        summary.undetected
+    );
+    assert!(
+        summary.mislocated.is_empty(),
+        "detected but blamed on the wrong field: {:?}",
+        summary.mislocated
+    );
+    for kind in MANDATORY_MUTATIONS {
+        let entry = summary
+            .coverage
+            .iter()
+            .find(|entry| entry.mutation == kind.id())
+            .unwrap_or_else(|| panic!("{} is missing from the coverage table", kind.id()));
+        assert!(
+            entry.located > 0,
+            "{} was never applied and located anywhere in the corpus",
+            kind.id()
+        );
+    }
+    assert!(summary.passed);
+    assert_eq!(summary.cases, week2_corpus(DEFAULT_SEED).len());
+}
+
+/// A mutation applied to a trace the comparator is *not* comparing against
+/// must not be reported as located. This pins the direction the matrix could
+/// silently break in: a summary that passes without doing any work.
+#[test]
+#[ignore = "needs the built Sail emulator; run with `make verify-negative`"]
+fn a_mutation_matrix_over_no_cases_does_not_pass() {
+    let options = RunOptions {
+        dii: dii(),
+        ckb: InjectionConfig::default(),
+        terminal_policy: Policy::Exact,
+        artifact_dir: None,
+        seed: DEFAULT_SEED,
+    };
+    let summary = run_mutations(&[], &options);
+    assert!(!summary.passed, "an empty matrix must not pass");
+    assert_eq!(summary.applied, 0);
+}
+
+/// Sixteen sessions at once.
+///
+/// The RVFI-DII port is reserved by binding and releasing a loopback socket,
+/// so concurrent sessions race for it and the loser's emulator exits before
+/// accepting. That is an infrastructure failure, and reporting it as a Sail
+/// failure would make the differential flaky — which is indistinguishable, in
+/// CI, from a real divergence appearing and disappearing.
+#[test]
+#[ignore = "needs the built Sail emulator; run with `make verify-negative`"]
+fn concurrent_sessions_survive_the_port_race() {
+    const SESSIONS: usize = 16;
+    let program = [addi(1, 0, 5), addi(2, 0, 7), add(3, 1, 2)];
+
+    let handles: Vec<_> = (0..SESSIONS)
+        .map(|_| std::thread::spawn(move || run_sail(&program, &dii())))
+        .collect();
+
+    for (index, handle) in handles.into_iter().enumerate() {
+        let outcome = handle
+            .join()
+            .unwrap_or_else(|_| panic!("session {index} panicked"))
+            .unwrap_or_else(|error| panic!("session {index} failed: {error:#}"));
+        assert_eq!(outcome.trace.events.len(), program.len());
+        assert_eq!(outcome.trace.events[2].register_writes[0].value, 12);
+    }
 }

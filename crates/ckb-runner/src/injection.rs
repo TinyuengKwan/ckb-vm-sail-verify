@@ -281,3 +281,20 @@ mod tests {
         assert!(outcome.trace.events[0].register_writes.is_empty());
     }
 }
+
+#[cfg(test)]
+mod isa_tests {
+    use super::*;
+
+    /// Macro-operation fusion makes the CKB-VM decoder read past the word that
+    /// was injected, so a fused step would retire several instructions against
+    /// a Sail side that retires one. The injected default must not enable it.
+    #[test]
+    fn the_injection_default_does_not_enable_macro_op_fusion() {
+        assert_eq!(InjectionConfig::default().isa & ckb_vm::ISA_MOP, 0);
+        assert_eq!(
+            InjectionConfig::default().isa,
+            ckb_vm::ISA_IMC | ckb_vm::ISA_B
+        );
+    }
+}

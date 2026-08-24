@@ -5,7 +5,7 @@ use ckb_vm::{
     decoder::{DefaultDecoder, InstDecoder},
     machine::VERSION2,
     Bytes, CoreMachine, DefaultCoreMachine, Memory, RustDefaultMachineBuilder, SparseMemory,
-    SupportMachine, ISA_B, ISA_IMC, ISA_MOP,
+    SupportMachine, ISA_B, ISA_IMC,
 };
 use ckb_vm_sail_core::{
     normalize_instruction_width, CommitEvent, ExecutionTrace, RegisterWrite, TraceEnd,
@@ -22,7 +22,21 @@ pub use semantics::{
     execute as execute_pure, ArchitecturalState, Operation, SemanticsError, StepInput,
 };
 
-pub const DEFAULT_ISA: u8 = ISA_IMC | ISA_B | ISA_MOP;
+/// The ISA both engines are configured for.
+///
+/// Deliberately without `ISA_MOP`. Macro-operation fusion is not merely an
+/// extension the Sail configuration lacks: with it enabled, `DefaultDecoder`
+/// dispatches to `decode_mop`, which reads ahead at `pc + 4`, `pc + 8` and
+/// `pc + 12` to fuse several instructions into one. Under direct instruction
+/// injection those addresses hold whatever a previous step left there, so the
+/// decoder would be reading bytes that are not part of the injected stream,
+/// and a fused step would retire several instructions at once against a Sail
+/// side that retires one. Keeping it off makes the two decoders agree on what
+/// a step is.
+///
+/// This must stay equal to the Sail ISA string checked by
+/// `scripts/verify_environment.sh` (`rv64imcb_zca_zba_zbb_zbc_zbs`).
+pub const DEFAULT_ISA: u8 = ISA_IMC | ISA_B;
 pub const DEFAULT_MEMORY_SIZE: usize = 4 * 1024 * 1024;
 
 #[derive(Debug, Clone, Copy)]

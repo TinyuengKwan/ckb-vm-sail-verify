@@ -21,13 +21,14 @@
 use anyhow::{bail, Context, Result};
 use ckb_vm_sail_core::{
     normalize_instruction_width, program::validate_program, CommitEvent, ExecutionTrace,
-    MemoryAccess, RegisterShadow, TraceEnd,
+    MemoryAccess, RegisterShadow, TraceEnd, INJECTION_ENTRY,
 };
 use std::{
     io::{Read, Write},
     net::{Ipv4Addr, SocketAddr, SocketAddrV4, TcpListener, TcpStream},
     path::PathBuf,
     process::{Child, Command, Stdio},
+    sync::Mutex,
     thread::sleep,
     time::{Duration, Instant},
 };
@@ -98,9 +99,65 @@ struct DiiSession {
     raw_packets: Vec<[u8; V1_PACKET_BYTES]>,
 }
 
+/// Why a session could not be started.
+enum StartFailure {
+    /// Another process bound the reserved port first. Nothing has been
+    /// injected yet, so the same program can be started again on a fresh port.
+    LostPortRace(anyhow::Error),
+    Fatal(anyhow::Error),
+}
+
+/// How many times a lost port race is retried before giving up.
+///
+/// The lock below removes the race between sessions in one process; the retry
+/// covers the remaining case of two independent processes running at once.
+const START_ATTEMPTS: usize = 5;
+
+/// Serializes the window between reserving a port and the emulator binding it.
+static STARTUP: Mutex<()> = Mutex::new(());
+
+/// What the emulator prints when it cannot bind the port it was given.
+///
+/// Captured from the pinned emulator; `a_lost_port_race_is_recognized` pins
+/// the string so a change upstream turns into a failing test rather than into
+/// a flaky differential.
+const BIND_FAILURE: &str = "Unable to set bind socket";
+
 impl DiiSession {
+    /// Start the emulator, retrying a lost port race.
+    ///
+    /// The port is reserved by binding and releasing a socket, so there is an
+    /// unavoidable window before the emulator binds it. Under a parallel test
+    /// run that window is lost often enough to matter, and the result is an
+    /// emulator that exits immediately — an infrastructure failure that must
+    /// not be reported as a differential result.
     fn start(config: &DiiConfig) -> Result<Self> {
-        let port = reserve_port()?;
+        let mut lost_race = None;
+        for _ in 0..START_ATTEMPTS {
+            match Self::start_once(config) {
+                Ok(session) => return Ok(session),
+                Err(StartFailure::LostPortRace(error)) => lost_race = Some(error),
+                Err(StartFailure::Fatal(error)) => return Err(error),
+            }
+        }
+        Err(lost_race
+            .expect("the loop only ends here after recording a lost race")
+            .context(format!(
+                "the Sail emulator lost the RVFI-DII port race {START_ATTEMPTS} times in a row"
+            )))
+    }
+
+    fn start_once(config: &DiiConfig) -> std::result::Result<Self, StartFailure> {
+        // Held until the emulator owns the port. Two sessions in one process
+        // would otherwise be able to reserve the same port, and the loser
+        // connects to the winner's emulator: upstream accepts exactly once and
+        // then closes its listening socket, so the second client gets someone
+        // else's session or a reset connection. A poisoned lock still
+        // serializes correctly, so it is recovered rather than propagated.
+        let _startup = STARTUP
+            .lock()
+            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let port = reserve_port().map_err(StartFailure::Fatal)?;
         let mut child = Command::new(&config.sail_bin)
             .arg("--config")
             .arg(&config.sail_config)
@@ -115,16 +172,19 @@ impl DiiSession {
                     "failed to spawn Sail emulator {}",
                     config.sail_bin.display()
                 )
-            })?;
+            })
+            .map_err(StartFailure::Fatal)?;
 
         match connect(port, config.timeout, &mut child) {
             Ok(stream) => {
                 stream
                     .set_read_timeout(Some(config.timeout))
-                    .context("failed to set the RVFI-DII read timeout")?;
+                    .context("failed to set the RVFI-DII read timeout")
+                    .map_err(StartFailure::Fatal)?;
                 stream
                     .set_write_timeout(Some(config.timeout))
-                    .context("failed to set the RVFI-DII write timeout")?;
+                    .context("failed to set the RVFI-DII write timeout")
+                    .map_err(StartFailure::Fatal)?;
                 Ok(Self {
                     child,
                     stream,
@@ -133,9 +193,23 @@ impl DiiSession {
             }
             Err(error) => {
                 let _ = child.kill();
-                Err(error.context(format!(
-                    "failed to reach the Sail RVFI-DII socket on port {port}"
-                )))
+                // The child has already exited or has just been killed, so
+                // reading its pipes to end-of-file cannot deadlock. Its
+                // diagnostics are what distinguish a lost port race from a
+                // genuinely broken emulator, so they are reported either way.
+                let stdout = drain(child.stdout.take());
+                let stderr = drain(child.stderr.take());
+                let _ = child.wait();
+                let lost_race = lost_port_race(&stderr);
+                let error = error.context(format!(
+                    "failed to reach the Sail RVFI-DII socket on port {port}; \
+                     stdout: {stdout}; stderr: {stderr}"
+                ));
+                Err(if lost_race {
+                    StartFailure::LostPortRace(error)
+                } else {
+                    StartFailure::Fatal(error)
+                })
             }
         }
     }
@@ -151,6 +225,9 @@ impl DiiSession {
             let packet = self
                 .receive()
                 .with_context(|| format!("no execution packet for instruction {index}"))?;
+            if index == 0 {
+                started_from_reset(&packet)?;
+            }
             if packet.halt {
                 // The pinned model has no HTIF write path in DII mode, so this
                 // is reported rather than folded into a normal termination.
@@ -234,6 +311,28 @@ impl Drop for DiiSession {
     }
 }
 
+/// Refuse a session that did not begin at the architectural reset state.
+///
+/// The whole comparison rests on both engines starting from the same state.
+/// A client that reached an emulator another client had already advanced
+/// would otherwise produce a trace that looks plausible and is wrong, which is
+/// worse than a failure.
+fn started_from_reset(first: &V1Packet) -> Result<()> {
+    anyhow::ensure!(
+        first.order == 0 && first.pc_rdata == INJECTION_ENTRY,
+        "the first RVFI-DII packet is not from a reset emulator: \
+         rvfi_order {} at pc {:#x}, expected order 0 at {INJECTION_ENTRY:#x}",
+        first.order,
+        first.pc_rdata
+    );
+    Ok(())
+}
+
+/// Whether the emulator's diagnostics say it could not bind its port.
+fn lost_port_race(stderr: &str) -> bool {
+    stderr.contains(BIND_FAILURE)
+}
+
 fn drain<R: Read>(source: Option<R>) -> String {
     let Some(mut source) = source else {
         return String::new();
@@ -246,8 +345,9 @@ fn drain<R: Read>(source: Option<R>) -> String {
 /// Ask the kernel for a free loopback port, then release it for the emulator.
 ///
 /// The emulator binds the port itself, so there is an unavoidable window
-/// between the probe and its `bind`. It sets `SO_REUSEADDR`, and a lost race
-/// surfaces as a connection failure rather than as a wrong result.
+/// between the probe and its `bind`. A lost race can never produce a wrong
+/// result — the emulator exits before accepting — and [`DiiSession::start`]
+/// retries it on a fresh port.
 fn reserve_port() -> Result<u16> {
     let listener = TcpListener::bind(SocketAddrV4::new(Ipv4Addr::LOCALHOST, 0))
         .context("failed to reserve a loopback port for RVFI-DII")?;
@@ -393,6 +493,27 @@ pub fn parse_packet_hex(text: &str) -> Result<Vec<[u8; V1_PACKET_BYTES]>> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Captured from the pinned emulator when another process already holds
+    /// the port it was given. A change to this diagnostic upstream must break
+    /// this test rather than silently turn the retry back into a flake.
+    const LOST_RACE_STDERR: &str = "using 43091 as RVFI port.\n\
+         Unable to set bind socket: Address already in use\n\
+         Reading RVFI DII command failed: Bad file descriptor";
+
+    #[test]
+    fn a_lost_port_race_is_recognized() {
+        assert!(lost_port_race(LOST_RACE_STDERR));
+    }
+
+    #[test]
+    fn an_unrelated_startup_failure_is_not_retried_as_a_port_race() {
+        assert!(!lost_port_race(""));
+        assert!(!lost_port_race(
+            "Failed to parse configuration file: unexpected token"
+        ));
+    }
+
     use ckb_vm_sail_core::{RegisterWrite, TraceEnd};
 
     /// Captured from the pinned emulator for `add x3, x1, x2` with x1=5, x2=7.
@@ -405,6 +526,24 @@ mod tests {
         bytes[48..56].copy_from_slice(&12u64.to_le_bytes()); // rd_wdata
         bytes[84] = 3; // rd_addr
         bytes
+    }
+
+    /// The third instruction of a program is not a reset state: a session that
+    /// received this as its *first* packet reached an emulator someone else
+    /// had already advanced.
+    #[test]
+    fn a_session_that_did_not_start_from_reset_is_refused() {
+        let advanced = V1Packet::parse(&add_packet());
+        let error = started_from_reset(&advanced).expect_err("order 2 is not a reset state");
+        assert!(
+            error.to_string().contains("not from a reset emulator"),
+            "{error}"
+        );
+
+        let mut first = add_packet();
+        first[0..8].copy_from_slice(&0u64.to_le_bytes());
+        first[8..16].copy_from_slice(&INJECTION_ENTRY.to_le_bytes());
+        assert!(started_from_reset(&V1Packet::parse(&first)).is_ok());
     }
 
     #[test]

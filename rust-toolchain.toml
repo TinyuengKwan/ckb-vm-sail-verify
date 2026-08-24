@@ -1,0 +1,7 @@
+# Pinned so the evidence in every artifact names a toolchain that can be
+# reinstalled, and so CI does not silently move when the runner image updates.
+# `Cargo.toml` still declares rust-version = "1.95" as the supported minimum;
+# this is the version the baseline is verified on.
+[toolchain]
+channel = "1.97.1"
+components = ["rustfmt", "clippy"]

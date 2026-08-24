@@ -7,7 +7,9 @@
 pub mod artifact;
 pub mod corpus;
 pub mod encode;
+pub mod mutation;
 pub mod run;
 
 pub use corpus::{week2_corpus, TestProgram, DEFAULT_SEED};
+pub use mutation::{run_mutations, MutationKind, MutationSummary, MANDATORY_MUTATIONS};
 pub use run::{run_case, CaseReport, RunOptions};

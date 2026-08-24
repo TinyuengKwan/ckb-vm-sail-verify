@@ -26,6 +26,13 @@ RVFI-DII, with every case replayable from its own artifact.
 for replayable inputs. It says nothing about inputs outside the corpus, and it
 is not extraction or proof evidence.
 
+The equality above is only worth reading because the comparison has been shown
+to fail: `make verify-negative` applies the six mandatory mutation categories
+of `VERIFICATION.md` §4 to the recorded traces — 188 injections over the 32
+cases — and every one is detected and reported against the field it damaged.
+Four injections do not apply, because `add-zero` and `addi-zero` commit no
+register write at all; they are listed with that reason rather than counted.
+
 SLLI appears in almost every case because `encode::materialize` builds operands
 with it. That is real execution on both engines, but it was not chosen for
 boundary coverage, so it stays `unsupported` rather than claiming a scope the

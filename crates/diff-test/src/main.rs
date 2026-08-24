@@ -1,9 +1,16 @@
+//! Command line entry point.
+//!
+//! Every mode prints the same top-level JSON envelope under `--json` so a CI
+//! job can read one shape regardless of what was run, and every mode exits
+//! non-zero the moment anything fails to pass.
+
 use anyhow::{bail, Context, Result};
 use ckb_vm_sail_ckb_runner::{run_elf, InjectionConfig, RunnerConfig};
 use ckb_vm_sail_core::{CompareResult, TerminalPolicy};
 use ckb_vm_sail_diff::{
-    artifact::{Artifact, Environment},
+    artifact::{write_mutation_summary, Artifact, Environment},
     corpus::{week2_corpus, TestProgram, DEFAULT_SEED},
+    mutation::{run_mutations, MutationSummary},
     run::{compare_traces, run_case, CaseReport, RunOptions},
 };
 use ckb_vm_sail_riscv_runner::{execute_elf as run_sail_elf, DiiConfig};
@@ -14,12 +21,24 @@ use std::{
     time::Duration,
 };
 
+/// Bumped whenever the report envelope changes in a way a reader must notice.
+///
+/// 2 added the build toolchain to `environment`.
+const REPORT_SCHEMA_VERSION: u32 = 2;
+
 #[derive(Debug, Parser)]
 #[command(about = "Strict architectural trace comparison for CKB-VM and Sail")]
 struct Arguments {
     /// Run the built-in Week 2 corpus over RVFI-DII.
     #[arg(long, conflicts_with_all = ["elf", "test_dir", "replay"])]
     corpus: bool,
+
+    /// Also run the mandatory mutation matrix over the corpus traces.
+    ///
+    /// Each mutation is applied to a real recorded trace and the comparator
+    /// must both notice it and name the field that was damaged.
+    #[arg(long, requires = "corpus")]
+    mutate: bool,
 
     /// Restrict the corpus to these case identifiers.
     #[arg(long = "case", value_name = "ID", requires = "corpus")]
@@ -93,6 +112,37 @@ impl Report {
     }
 }
 
+/// The stable top-level shape of `--json`.
+#[derive(Debug, Serialize)]
+struct RunReport {
+    schema_version: u32,
+    mode: &'static str,
+    /// Present for corpus runs; a replay takes its program from the artifact.
+    seed: Option<u64>,
+    terminal_policy: &'static str,
+    environment: Option<Environment>,
+    results: Vec<Report>,
+    mutations: Option<MutationSummary>,
+    summary: Summary,
+}
+
+#[derive(Debug, Serialize)]
+struct Summary {
+    total: usize,
+    failures: usize,
+    /// `null` when the mutation matrix was not requested.
+    mutations_passed: Option<bool>,
+    passed: bool,
+}
+
+struct Outcome {
+    mode: &'static str,
+    results: Vec<Report>,
+    environment: Option<Environment>,
+    mutations: Option<MutationSummary>,
+    mutation_artifact: Option<PathBuf>,
+}
+
 fn main() -> Result<()> {
     let arguments = Arguments::parse();
     let policy = if arguments.terminal_category_only {
@@ -101,29 +151,58 @@ fn main() -> Result<()> {
         TerminalPolicy::Exact
     };
 
-    let reports = if arguments.corpus || arguments.replay.is_some() {
+    let outcome = if arguments.corpus || arguments.replay.is_some() {
         run_injected(&arguments, policy)?
     } else {
         run_elfs(&arguments, policy)?
     };
 
-    let failed = reports.iter().filter(|report| !report.passed()).count();
+    let failures = outcome
+        .results
+        .iter()
+        .filter(|report| !report.passed())
+        .count();
+    let mutations_passed = outcome.mutations.as_ref().map(|summary| summary.passed);
+    let passed = failures == 0 && mutations_passed.unwrap_or(true);
+
+    let report = RunReport {
+        schema_version: REPORT_SCHEMA_VERSION,
+        mode: outcome.mode,
+        seed: arguments.corpus.then_some(arguments.seed),
+        terminal_policy: match policy {
+            TerminalPolicy::Exact => "exact",
+            TerminalPolicy::CategoryOnly => "category_only",
+        },
+        environment: outcome.environment,
+        summary: Summary {
+            total: outcome.results.len(),
+            failures,
+            mutations_passed,
+            passed,
+        },
+        results: outcome.results,
+        mutations: outcome.mutations,
+    };
+
     if arguments.json {
-        println!("{}", serde_json::to_string_pretty(&reports)?);
+        println!("{}", serde_json::to_string_pretty(&report)?);
     } else {
-        for report in &reports {
-            print_report(report);
+        for result in &report.results {
+            print_report(result);
         }
-        println!("{} test(s), {failed} failure(s)", reports.len());
+        println!("{} test(s), {failures} failure(s)", report.results.len());
+        if let Some(mutations) = &report.mutations {
+            print_mutations(mutations, outcome.mutation_artifact.as_deref());
+        }
     }
 
-    if failed != 0 {
+    if !passed {
         std::process::exit(1);
     }
     Ok(())
 }
 
-fn run_injected(arguments: &Arguments, policy: TerminalPolicy) -> Result<Vec<Report>> {
+fn run_injected(arguments: &Arguments, policy: TerminalPolicy) -> Result<Outcome> {
     let cases = select_cases(arguments)?;
     let options = RunOptions {
         dii: DiiConfig {
@@ -143,10 +222,38 @@ fn run_injected(arguments: &Arguments, policy: TerminalPolicy) -> Result<Vec<Rep
         options.ckb.version,
     );
 
-    Ok(cases
+    let results = cases
         .iter()
         .map(|case| Report::Case(run_case(case, &options, &environment)))
-        .collect())
+        .collect();
+
+    let (mutations, mutation_artifact) = if arguments.mutate {
+        let summary = run_mutations(&cases, &options);
+        let artifact = match &arguments.artifact_dir {
+            Some(directory) => Some(write_mutation_summary(
+                directory,
+                &environment,
+                arguments.seed,
+                &summary,
+            )?),
+            None => None,
+        };
+        (Some(summary), artifact)
+    } else {
+        (None, None)
+    };
+
+    Ok(Outcome {
+        mode: if arguments.replay.is_some() {
+            "replay"
+        } else {
+            "corpus"
+        },
+        results,
+        environment: Some(environment),
+        mutations,
+        mutation_artifact,
+    })
 }
 
 fn select_cases(arguments: &Arguments) -> Result<Vec<TestProgram>> {
@@ -171,12 +278,18 @@ fn select_cases(arguments: &Arguments) -> Result<Vec<TestProgram>> {
     Ok(selected)
 }
 
-fn run_elfs(arguments: &Arguments, policy: TerminalPolicy) -> Result<Vec<Report>> {
+fn run_elfs(arguments: &Arguments, policy: TerminalPolicy) -> Result<Outcome> {
     let files = collect_elfs(arguments)?;
-    Ok(files
-        .iter()
-        .map(|elf| Report::Elf(run_one_elf(elf, arguments, policy)))
-        .collect())
+    Ok(Outcome {
+        mode: "elf",
+        results: files
+            .iter()
+            .map(|elf| Report::Elf(run_one_elf(elf, arguments, policy)))
+            .collect(),
+        environment: None,
+        mutations: None,
+        mutation_artifact: None,
+    })
 }
 
 fn collect_elfs(arguments: &Arguments) -> Result<Vec<PathBuf>> {
@@ -269,5 +382,66 @@ fn print_report(report: &Report) {
             }
             (None, None) => println!("ERROR {}: no comparison and no error", elf.elf.display()),
         },
+    }
+}
+
+fn print_mutations(summary: &MutationSummary, artifact: Option<&Path>) {
+    println!();
+    for entry in &summary.coverage {
+        let verdict = if entry.located > 0 {
+            "LOCATED"
+        } else {
+            "MISSING"
+        };
+        println!(
+            "{verdict:<8} {:<16} field={:<16} applied={:<3} located={:<3} example={}",
+            entry.mutation,
+            entry.expected_field,
+            entry.applied,
+            entry.located,
+            entry.example_case.as_deref().unwrap_or("-")
+        );
+    }
+    // Skipped mutations are printed rather than hidden: a category that never
+    // applied is a gap in the corpus, not a silent pass.
+    if summary.skipped != 0 {
+        println!(
+            "{} mutation(s) did not apply to their case:",
+            summary.skipped
+        );
+        for report in summary.reports.iter().filter(|report| !report.applied) {
+            println!(
+                "  SKIP  {}/{}: {}",
+                report.case_id,
+                report.mutation,
+                report
+                    .skipped_because
+                    .as_deref()
+                    .unwrap_or("no reason given")
+            );
+        }
+    }
+    for undetected in &summary.undetected {
+        println!("UNDETECTED {undetected}");
+    }
+    for mislocated in &summary.mislocated {
+        println!("MISLOCATED {mislocated}");
+    }
+    for baseline in &summary.baseline_failures {
+        println!("BASELINE-FAILED {baseline}");
+    }
+    println!(
+        "{} mutation(s) applied over {} case(s), {} category/categories located, {}",
+        summary.applied,
+        summary.cases,
+        summary
+            .coverage
+            .iter()
+            .filter(|entry| entry.located > 0)
+            .count(),
+        if summary.passed { "PASS" } else { "FAIL" }
+    );
+    if let Some(path) = artifact {
+        println!("mutation report: {}", path.display());
     }
 }

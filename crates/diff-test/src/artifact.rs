@@ -16,10 +16,13 @@ use std::{
     process::Command,
 };
 
-use crate::corpus::TestProgram;
+use crate::{corpus::TestProgram, mutation::MutationSummary};
 
 /// Bumped whenever the artifact layout changes in a way a reader must notice.
-pub const ARTIFACT_SCHEMA_VERSION: u32 = 1;
+///
+/// 2 added the build toolchain: without it a replayer cannot tell which
+/// compilers produced the evidence, which `VERIFICATION.md` §6 requires.
+pub const ARTIFACT_SCHEMA_VERSION: u32 = 2;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Environment {
@@ -35,6 +38,12 @@ pub struct Environment {
     pub ckb_vm_isa_bits: u8,
     pub ckb_vm_isa: String,
     pub ckb_vm_version: u32,
+    /// The build toolchain. `sail_model_version` above is the sail-riscv model
+    /// release reported by the emulator; `sail_compiler` is the Sail compiler
+    /// that generated it, which is a different version and a different pin.
+    pub rustc: Option<String>,
+    pub cargo: Option<String>,
+    pub sail_compiler: Option<String>,
 }
 
 impl Environment {
@@ -50,6 +59,9 @@ impl Environment {
             ckb_vm_isa_bits: isa,
             ckb_vm_isa: describe_isa(isa),
             ckb_vm_version,
+            rustc: tool_version("rustc", &["--version"]),
+            cargo: tool_version("cargo", &["--version"]),
+            sail_compiler: tool_version("sail", &["--version"]),
         }
     }
 }
@@ -153,6 +165,43 @@ impl Artifact {
     }
 }
 
+/// Replayable record of one mutation matrix run.
+///
+/// The per-case artifacts record what the two engines did; this records what
+/// the comparator did when the recorded traces were deliberately damaged.
+#[derive(Debug, Clone, Serialize)]
+pub struct MutationArtifact<'a> {
+    pub schema_version: u32,
+    pub environment: &'a Environment,
+    pub seed: u64,
+    /// The single command that reproduces this run locally.
+    pub replay: String,
+    pub summary: &'a MutationSummary,
+}
+
+pub fn write_mutation_summary(
+    directory: &Path,
+    environment: &Environment,
+    seed: u64,
+    summary: &MutationSummary,
+) -> Result<PathBuf> {
+    std::fs::create_dir_all(directory)
+        .with_context(|| format!("failed to create {}", directory.display()))?;
+    let artifact = MutationArtifact {
+        schema_version: ARTIFACT_SCHEMA_VERSION,
+        environment,
+        seed,
+        replay: format!("cargo run -p ckb-vm-sail-diff -- --corpus --mutate --seed {seed}"),
+        summary,
+    };
+    let path = directory.join("mutations.json");
+    let json =
+        serde_json::to_string_pretty(&artifact).context("failed to serialize the mutation run")?;
+    std::fs::write(&path, json + "\n")
+        .with_context(|| format!("failed to write {}", path.display()))?;
+    Ok(path)
+}
+
 pub fn hex_words(instructions: &[u32]) -> Vec<String> {
     instructions
         .iter()
@@ -185,6 +234,20 @@ fn describe_isa(isa: u8) -> String {
     names.join("+")
 }
 
+/// First line of `<tool> <args>`, or `None` when the tool is not on `PATH`.
+///
+/// `None` is recorded rather than substituted: an artifact that cannot say
+/// which compiler produced it must say so. `make verify-env` and the CI report
+/// gate both require these to be present.
+fn tool_version(tool: &str, arguments: &[&str]) -> Option<String> {
+    let output = Command::new(tool).args(arguments).output().ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let text = String::from_utf8_lossy(&output.stdout);
+    Some(text.lines().next()?.trim().to_owned())
+}
+
 fn git_head(directory: &str) -> Option<String> {
     let output = Command::new("git")
         .args(["-C", directory, "rev-parse", "HEAD"])
@@ -212,6 +275,19 @@ fn file_sha256(path: &Path) -> Option<String> {
 
 #[cfg(test)]
 mod tests {
+    /// A recorded toolchain must be the real one, and a tool that is not there
+    /// must be recorded as absent rather than as a plausible default.
+    #[test]
+    fn the_build_toolchain_is_read_from_the_tools_themselves() {
+        let rustc = super::tool_version("rustc", &["--version"]).expect("rustc runs the tests");
+        assert!(rustc.starts_with("rustc "), "{rustc}");
+        assert!(
+            !rustc.contains('\n'),
+            "only the first line is recorded: {rustc}"
+        );
+        assert!(super::tool_version("ckb-vm-sail-no-such-tool", &["--version"]).is_none());
+    }
+
     use super::*;
     use ckb_vm_sail_core::TraceEnd;
 
@@ -236,8 +312,11 @@ mod tests {
                 sail_config: PathBuf::from("config.json"),
                 sail_config_sha256: None,
                 ckb_vm_isa_bits: 3,
-                ckb_vm_isa: "IMC+B+MOP".into(),
+                ckb_vm_isa: "IMC+B".into(),
                 ckb_vm_version: 2,
+                rustc: Some("rustc 1.97.1".into()),
+                cargo: Some("cargo 1.97.1".into()),
+                sail_compiler: Some("Sail 0.20.2".into()),
             },
             initial_state: InitialState::default(),
             passed: true,

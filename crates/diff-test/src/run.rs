@@ -6,7 +6,7 @@
 
 use ckb_vm_sail_ckb_runner::{run_injected_program as run_ckb, InjectionConfig};
 use ckb_vm_sail_core::{CompareResult, ExecutionTrace, TerminalPolicy};
-use ckb_vm_sail_riscv_runner::{run_injected_program as run_sail, DiiConfig};
+use ckb_vm_sail_riscv_runner::{dii::V1_PACKET_BYTES, run_injected_program as run_sail, DiiConfig};
 use serde::Serialize;
 use std::path::PathBuf;
 
@@ -46,6 +46,32 @@ pub const CLASSIFICATION_MATCH: &str = "match";
 pub const CLASSIFICATION_MISMATCH: &str = "unclassified_mismatch";
 pub const CLASSIFICATION_RUNNER_ERROR: &str = "runner_error";
 pub const CLASSIFICATION_UNSUPPORTED: &str = "unsupported";
+
+/// Both engines' traces for one case.
+#[derive(Debug, Clone)]
+pub struct EnginePair {
+    pub ckb: ExecutionTrace,
+    pub sail: ExecutionTrace,
+    pub packets: Vec<[u8; V1_PACKET_BYTES]>,
+}
+
+/// Run one case on both engines, failing if either engine fails.
+///
+/// [`run_case`] keeps whichever side succeeded so a runner error can still be
+/// reported with partial evidence; this is the stricter entry point used by
+/// the mutation matrix, which has nothing to say about a case that did not
+/// produce two traces.
+pub fn run_pair(case: &TestProgram, options: &RunOptions) -> anyhow::Result<EnginePair> {
+    let ckb = run_ckb(&case.instructions, options.ckb)
+        .map_err(|error| anyhow::anyhow!("CKB-VM runner: {error:#}"))?;
+    let sail = run_sail(&case.instructions, &options.dii)
+        .map_err(|error| anyhow::anyhow!("Sail runner: {error:#}"))?;
+    Ok(EnginePair {
+        ckb: ckb.trace,
+        sail: sail.trace,
+        packets: sail.raw_packets,
+    })
+}
 
 pub fn run_case(case: &TestProgram, options: &RunOptions, environment: &Environment) -> CaseReport {
     let ckb = run_ckb(&case.instructions, options.ckb).map(|outcome| outcome.trace);

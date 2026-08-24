@@ -7,11 +7,17 @@
 
 ## 当前状态
 
-运行时差分闭环已经建立（Week 2）。`crates/sail-runner/src/dii.rs` 实现了二进制
-RVFI-DII 客户端，`crates/ckb-runner/src/injection.rs` 用同一条指令流驱动真实
-VERSION2 解释器，双方都从架构复位态（整数寄存器全零、PC = `0x80000000`）出发，
-因此比较不再经过 ELF loader 与平台栈。当前 32 个注入语料案例、395 个提交步在
-两端逐字段一致，每个案例都可以从自己的 artifact 重放。
+运行时差分闭环已经建立并接入 CI（Week 3）。`crates/sail-runner/src/dii.rs`
+实现了二进制 RVFI-DII 客户端，`crates/ckb-runner/src/injection.rs` 用同一条指令
+流驱动真实 VERSION2 解释器，双方都从架构复位态（整数寄存器全零、
+PC = `0x80000000`）出发，因此比较不再经过 ELF loader 与平台栈。当前 32 个注入
+语料案例、395 个提交步在两端逐字段一致，每个案例都可以从自己的 artifact 重放。
+
+差分本身也被验证过会失败：`crates/diff-test/src/mutation.rs` 把 6 类 mutation
+注入真实记录的 trace，共 188 次，每一次都必须被检测到并定位到被注入的那个
+字段，任何一类在整个语料中没有被覆盖都算失败。CI 分两层，快速检查与差分层都跑
+在每个 PR 上，差分层的模拟器构建按 sail-riscv commit 缓存，未命中时冷构建而不
+跳过。
 
 这只是运行时证据，不是形式化验证：证明轨仍然停在 Sail 侧模型生成，没有 Rust
 侧生成、状态桥接或等价定理。
@@ -66,9 +72,12 @@ make test
 make verify-env
 
 # 运行 RVFI-DII 注入语料并写出可重放 artifact
-make diff-corpus
+make verify-smoke
 
-# 语料 + 负向端到端测试（证明比较器仍然会失败）
+# mutation 矩阵 + 负向端到端测试（证明比较器仍然会失败）
+make verify-negative
+
+# 两者的合并入口，也是 CI 调用的单条命令
 make verify-dii
 
 # 单个案例、指定 seed、JSON 报告
@@ -89,6 +98,10 @@ make proof-gen BACKEND=lean
 make proof-gen BACKEND=rocq
 ```
 
+Rust 工具链由 `rust-toolchain.toml` 固定为 1.97.1（`Cargo.toml` 声明的 MSRV
+仍是 1.95）；每份 artifact 记录 `rustc`、`cargo` 与 Sail 编译器版本，因此一份
+证据可以说出是哪套工具链产生的。
+
 当前生产实现固定为 `deps/ckb-vm` submodule 的
 `1ffba3977da9dcdef8092e9ab1fd2516b27ec939`（拉取时为远程 `develop`
 最新 HEAD），Rust MSRV 为 1.95，当前 foundation 基线在 Rust 1.97.1
@@ -101,7 +114,7 @@ crates/
   core/          后端无关的 CommitEvent、严格比较与注入程序支持子集
   ckb-runner/    CKB-VM VERSION2 adapter 与 DII 镜像；含临时 extraction scaffold
   sail-runner/   Sail 进程、RVFI parser 与二进制 RVFI-DII 客户端
-  diff-test/     指令编码、注入语料、可重放 artifact、CLI 与 JSON 报告
+  diff-test/     指令编码、注入语料、mutation 矩阵、可重放 artifact、CLI 与 JSON 报告
 deps/
   ckb-vm/        被验证的生产 Rust 实现
   sail-riscv/    权威 Sail RISC-V 模型
@@ -112,6 +125,8 @@ docs/            架构、方法、覆盖、语义缺口与 Week 1–6 计划
 artifacts/       失败案例格式；大体积本地生成物默认忽略
 sail-model/
   ckb_vm_config.json 叠加到 sail-riscv 默认配置的 override
+.github/
+  workflows/ci.yml 分层 CI：快速检查每次跑，差分层按缓存与定时任务跑
 scripts/
   prepare_sail_config.sh
   generate_proof_model.sh

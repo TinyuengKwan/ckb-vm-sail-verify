@@ -16,6 +16,8 @@ proof/rocq/generated/
 
 # Failure artifacts stay local until minimized/promoted.
 artifacts/*/
+# Generated run report; regenerate with --json rather than committing it.
+artifacts/report.json
 
 # OS files
 .DS_Store

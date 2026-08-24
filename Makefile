@@ -1,4 +1,4 @@
-.PHONY: check test verify-env verify-dii sail-emu sail-config diff diff-corpus proof-gen clean-generated
+.PHONY: check test verify-env verify-smoke verify-negative verify-dii sail-emu sail-config diff diff-corpus proof-gen clean-generated
 
 BACKEND ?= lean
 
@@ -23,14 +23,24 @@ diff:
 	@test -n "$(ELF)" || (echo "usage: make diff ELF=path/to/test.elf"; exit 2)
 	./scripts/run_differential.sh "$(ELF)"
 
-# Week 2 evidence: the RVFI-DII corpus and the negative tests that prove the
-# comparator can still fail.
-diff-corpus: sail-config
+# `VERIFICATION.md` §3 acceptance interface.
+#
+# verify-smoke:    strict two-sided comparison over the mandatory corpus.
+# verify-negative: the mutation matrix plus the end-to-end tests that show the
+#                  harness locating a real divergence. Neither target can pass
+#                  without the other's evidence being meaningful, so CI runs
+#                  both.
+verify-smoke: sail-config
 	cargo run --locked -p ckb-vm-sail-diff -- --corpus --artifact-dir artifacts/corpus
 
-verify-dii: sail-config
+verify-negative: sail-config
 	cargo test --locked -p ckb-vm-sail-diff -- --ignored
-	$(MAKE) diff-corpus
+	cargo run --locked -p ckb-vm-sail-diff -- --corpus --mutate --artifact-dir artifacts/corpus
+
+# Kept as the Week 2 entry point and as the single command CI invokes.
+verify-dii: verify-smoke verify-negative
+
+diff-corpus: verify-smoke
 
 proof-gen: sail-config
 	./scripts/generate_proof_model.sh "$(BACKEND)"

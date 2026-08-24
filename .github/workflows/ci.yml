@@ -1,0 +1,211 @@
+# Layered CI.
+#
+# The two halves of this project's verification differ in cost by orders of
+# magnitude, so they run as separate jobs — but both run on every pull request.
+#
+# `fast` needs only the ckb-vm submodule and finishes in seconds, so it is the
+# feedback loop. `differential` needs the pinned Sail emulator; its build is
+# cached on the pinned sail-riscv commit, and a cache miss pays for a cold
+# build rather than skipping the job. A pull request that changes the
+# comparator or the mutation matrix must not be able to go green without the
+# differential having run against that pull request's own commit — a scheduled
+# run cannot stand in for it, because a schedule always runs the default
+# branch.
+#
+# Nothing here decides whether the evidence is good: `make verify-env` checks
+# the pinned commits, the Sail version and the configuration hash, and the diff
+# tool exits non-zero on any mismatch, undetected mutation or runner error.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  schedule:
+    # Catches drift that no commit triggered: a moved upstream release, an
+    # expired cache, a runner image change.
+    - cron: "17 3 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CARGO_TERM_COLOR: always
+  # Pinned Sail compiler. `make verify-env` fails if this disagrees with what
+  # the pinned sail-riscv commit requires, so a drift here cannot pass quietly.
+  SAIL_VERSION: "0.20.2"
+  # One corpus case, replayed from the uploaded evidence at the end of the run.
+  REPLAY_CASE: add-signed-overflow
+
+jobs:
+  fast:
+    name: fmt, clippy, unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      # The Rust workspace depends on the ckb-vm source through a path
+      # dependency. sail-riscv is not needed to compile or to run the default
+      # test suite.
+      #
+      # Not --depth 1: the pinned commit is not necessarily the tip of the
+      # submodule's tracked branch, and a shallow fetch can miss it.
+      - name: Check out the ckb-vm submodule
+        run: git submodule update --init deps/ckb-vm
+
+      # rust-toolchain.toml pins the version and its components; this installs
+      # it up front and prints what the rest of the job will use.
+      - name: Install the pinned toolchain
+        run: |
+          rustup show active-toolchain
+          rustc --version
+          cargo --version
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-fast-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: cargo-${{ runner.os }}-fast-
+
+      - run: make check
+      - run: make test
+
+  differential:
+    name: RVFI-DII differential and mutation matrix
+    needs: [fast]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+          # The emulator build reads the sail-riscv history.
+          fetch-depth: 0
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            pkg-config libgmp-dev ninja-build jq
+
+      # Upstream ships the pinned Sail compiler as a binary release, so no opam
+      # switch has to be built here.
+      - name: Install Sail ${{ env.SAIL_VERSION }}
+        run: |
+          curl --location --fail \
+            "https://github.com/rems-project/sail/releases/download/${SAIL_VERSION}-binary/sail-$(uname)-$(arch).tar.gz" \
+            | sudo tar xz --directory=/usr/local --strip-components=1
+          sail --version
+
+      - name: Install the pinned toolchain
+        run: |
+          rustup show active-toolchain
+          rustc --version
+          cargo --version
+
+      - name: Emulator cache key
+        id: key
+        run: |
+          commit="$(git rev-parse HEAD:deps/sail-riscv)"
+          script="$(sha256sum scripts/build_sail_emulator.sh | cut -c1-12)"
+          echo "key=sail-emulator-${{ runner.os }}-$commit-sail-$SAIL_VERSION-$script" >> "$GITHUB_OUTPUT"
+
+      # A miss pays for a cold build; it never skips the job.
+      - name: Restore the emulator build
+        id: emulator
+        uses: actions/cache/restore@v4
+        with:
+          path: deps/sail-riscv/build
+          key: ${{ steps.key.outputs.key }}
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-differential-${{ hashFiles('Cargo.lock', 'rust-toolchain.toml') }}
+          restore-keys: cargo-${{ runner.os }}-differential-
+
+      - name: Build the emulator
+        run: make sail-emu
+
+      # Saved right after the build: the build is valid evidence for the next
+      # run whether or not the verification below passes.
+      - name: Save the emulator build
+        if: steps.emulator.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: deps/sail-riscv/build
+          key: ${{ steps.key.outputs.key }}
+
+      # Pinned commits, Sail version, configuration hash and ISA string.
+      - run: make verify-env
+
+      # The corpus, the end-to-end negative tests and the mutation matrix.
+      - run: make verify-dii
+
+      - name: Record the machine-readable report
+        run: |
+          cargo run --locked -p ckb-vm-sail-diff -- \
+            --corpus --mutate --json --artifact-dir artifacts/corpus \
+            > artifacts/report.json
+
+      # The command above already exits non-zero on failure. This re-reads its
+      # own report so a future change to the exit code cannot turn a failure
+      # into a green run, and so a report that does not name its toolchain
+      # cannot pass as evidence.
+      - name: Check the recorded report
+        run: |
+          jq -e '.schema_version == 2
+                 and .summary.passed == true
+                 and .summary.failures == 0
+                 and .mutations.passed == true
+                 and ([.mutations.coverage[] | select(.located == 0)] | length) == 0
+                 and (.environment.rustc | type) == "string"
+                 and (.environment.cargo | type) == "string"
+                 and (.environment.sail_compiler | type) == "string"
+                 and (.environment.ckb_vm_commit | type) == "string"
+                 and (.environment.sail_riscv_commit | type) == "string"
+                 and (.environment.sail_config_sha256 | type) == "string"' \
+            artifacts/report.json > /dev/null
+          jq -r '"cases: \(.summary.total), failures: \(.summary.failures), " +
+                 "mutations applied: \(.mutations.applied)\n" +
+                 "toolchain: \(.environment.rustc) / \(.environment.sail_compiler)"' \
+            artifacts/report.json
+
+      - name: Upload the replayable evidence
+        id: upload
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: differential-artifacts-${{ github.run_id }}
+          path: |
+            artifacts/report.json
+            artifacts/corpus/*.json
+          # The jq gate above is what decides pass or fail; a missing upload on
+          # an already-failing run must not mask the real error.
+          if-no-files-found: warn
+
+      # "CI artifact 能在本地用一个命令重放" is only true if the bytes that were
+      # uploaded are the ones that replay. This downloads the artifact back and
+      # replays a case from the downloaded copy, not from the working tree.
+      - name: Replay a case from the uploaded artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: differential-artifacts-${{ github.run_id }}
+          path: downloaded
+
+      - name: Check the downloaded evidence
+        run: |
+          report="$(find downloaded -name report.json -print -quit)"
+          case_file="$(find downloaded -name "${REPLAY_CASE}.json" -print -quit)"
+          test -n "$report" || { echo "no report.json in the artifact"; exit 1; }
+          test -n "$case_file" || { echo "no ${REPLAY_CASE}.json in the artifact"; exit 1; }
+          cmp "$report" artifacts/report.json
+          cargo run --locked -p ckb-vm-sail-diff -- --replay "$case_file"
