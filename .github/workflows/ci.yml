@@ -89,11 +89,17 @@ jobs:
           # The emulator build reads the sail-riscv history.
           fetch-depth: 0
 
+      # z3 is required because the pinned Sail is built from source: generating
+      # the C++ model discharges type-level constraints through an SMT solver.
+      # Upstream's sail-setup installs it on exactly the `sail-version: latest`
+      # path for the same reason. The binary-release path this workflow used
+      # before did not need it, which is why a cached emulator hid the gap.
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            pkg-config libgmp-dev ninja-build jq
+            pkg-config libgmp-dev ninja-build jq z3
+          z3 --version
 
       # The pinned Sail is built from source, so the opam switch and the build
       # are cached on the pinned commit. A cache miss pays for the build.

@@ -28,7 +28,11 @@ require_command() {
     command -v "$1" >/dev/null 2>&1 || fail "required command not found: $1"
 }
 
-for command in awk cargo cmake git head jq rustc sail sed sha256sum sort; do
+# z3 belongs here because Sail is built from source: generating the model
+# discharges type-level constraints through an SMT solver. A machine without it
+# gets a build failure minutes in rather than a missing-dependency message, so
+# the environment check is where it should surface.
+for command in awk cargo cmake git head jq rustc sail sed sha256sum sort z3; do
     require_command "$command"
 done
 
@@ -101,6 +105,9 @@ cargo metadata \
 echo "Environment verified:"
 echo "  Rust:       $actual_rust_version (minimum $MINIMUM_RUST_VERSION)"
 echo "  Sail:       $actual_sail_build"
+# Not pinned: Sail uses z3 to decide type-level constraints, so any version that
+# answers is acceptable. Recorded because a solver difference is worth seeing.
+echo "  z3:         $(z3 --version 2>/dev/null | head -n 1)"
 echo "  ckb-vm:     $actual_ckb_vm"
 echo "  sail-riscv: $actual_sail_riscv"
 echo "  ISA:        $actual_isa"
