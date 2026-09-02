@@ -34,9 +34,11 @@ concurrency:
 
 env:
   CARGO_TERM_COLOR: always
-  # Pinned Sail compiler. `make verify-env` fails if this disagrees with what
-  # the pinned sail-riscv commit requires, so a drift here cannot pass quietly.
-  SAIL_VERSION: "0.20.2"
+  # Pinned Sail compiler commit. It is built from source: sail-riscv's Lean
+  # target needs a Sail newer than any release, and `make verify-env` pins the
+  # full version string, so a release install of the same version number is
+  # rejected rather than silently accepted.
+  SAIL_COMMIT: "8eb1fb6b5bf9f18c0f89f71e94ff0c5894acd7c1"
   # One corpus case, replayed from the uploaded evidence at the end of the run.
   REPLAY_CASE: add-signed-overflow
 
@@ -93,14 +95,37 @@ jobs:
           sudo apt-get install -y --no-install-recommends \
             pkg-config libgmp-dev ninja-build jq
 
-      # Upstream ships the pinned Sail compiler as a binary release, so no opam
-      # switch has to be built here.
-      - name: Install Sail ${{ env.SAIL_VERSION }}
+      # The pinned Sail is built from source, so the opam switch and the build
+      # are cached on the pinned commit. A cache miss pays for the build.
+      - name: Restore the Sail compiler
+        id: sail
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.opam
+            ~/.local/share/sail-src
+          key: sail-${{ runner.os }}-${{ env.SAIL_COMMIT }}
+
+      - name: Build Sail from source
+        if: steps.sail.outputs.cache-hit != 'true'
         run: |
-          curl --location --fail \
-            "https://github.com/rems-project/sail/releases/download/${SAIL_VERSION}-binary/sail-$(uname)-$(arch).tar.gz" \
-            | sudo tar xz --directory=/usr/local --strip-components=1
-          sail --version
+          sudo apt-get install -y --no-install-recommends opam
+          opam init --yes --no-setup --shell=sh --compiler=5.4.1
+          ./scripts/build_sail.sh
+
+      - name: Save the Sail compiler
+        if: steps.sail.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            ~/.opam
+            ~/.local/share/sail-src
+          key: sail-${{ runner.os }}-${{ env.SAIL_COMMIT }}
+
+      - name: Put the pinned Sail on PATH
+        run: |
+          echo "$HOME/.local/share/sail-src/bin" >> "$GITHUB_PATH"
+          "$HOME/.local/share/sail-src/bin/sail" --version
 
       - name: Install the pinned toolchain
         run: |
@@ -113,7 +138,7 @@ jobs:
         run: |
           commit="$(git rev-parse HEAD:deps/sail-riscv)"
           script="$(sha256sum scripts/build_sail_emulator.sh | cut -c1-12)"
-          echo "key=sail-emulator-${{ runner.os }}-$commit-sail-$SAIL_VERSION-$script" >> "$GITHUB_OUTPUT"
+          echo "key=sail-emulator-${{ runner.os }}-$commit-sail-$SAIL_COMMIT-$script" >> "$GITHUB_OUTPUT"
 
       # A miss pays for a cold build; it never skips the job.
       - name: Restore the emulator build

@@ -96,7 +96,8 @@ MOP 的定理目标是其观察效果等于标准指令序列的组合，不修�
 ```text
 instruction:
 ckb source function:
-pure kernel function:
+extraction root (crates/proof-extract):
+generated lean definition:
 sail generated function:
 preconditions:
 state relation:

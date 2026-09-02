@@ -13,13 +13,10 @@ use ckb_vm_sail_core::{
 use std::path::Path;
 
 pub mod injection;
-pub mod semantics;
 
 pub use injection::{
-    run_program as run_injected_program, InjectionConfig, InjectionOutcome, INJECTION_WINDOW,
-};
-pub use semantics::{
-    execute as execute_pure, ArchitecturalState, Operation, SemanticsError, StepInput,
+    run_program as run_injected_program, InjectedMachine, InjectionConfig, InjectionOutcome,
+    INJECTION_WINDOW,
 };
 
 /// The ISA both engines are configured for.

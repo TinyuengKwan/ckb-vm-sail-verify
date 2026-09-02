@@ -17,6 +17,7 @@ ckb-vm = { path = "deps/ckb-vm" }
 ckb-vm-sail-core = { path = "crates/core" }
 ckb-vm-sail-ckb-runner = { path = "crates/ckb-runner" }
 ckb-vm-sail-riscv-runner = { path = "crates/sail-runner" }
+ckb-vm-sail-extract = { path = "crates/proof-extract" }
 anyhow = "1"
 clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }

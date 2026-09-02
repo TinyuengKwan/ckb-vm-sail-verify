@@ -7,8 +7,12 @@
 - CKB-VM：`1ffba3977da9dcdef8092e9ab1fd2516b27ec939`
 - CKB-VM crate：0.24.0
 - Rust：MSRV 1.95；当前 foundation 验证版本 1.97.1
-- Sail compiler：0.20.2
-- sail-riscv：0.13.1，commit `27224ccb2290f022e46213c05b3e72e8a9ea635e`
+- Sail compiler：**从源码构建**，commit `8eb1fb6b5bf9f18c0f89f71e94ff0c5894acd7c1`
+  （2026-08-17）。版本号仍自称 0.20.2，与发布版**同号不同物**，因此
+  `scripts/verify_environment.sh` 钉的是完整版本串
+  `Sail 0.20.2 (HEAD @ 8eb1fb6b…)`，发布版会被拒绝。用 `make sail-compiler`
+  构建。为什么不能用发布版见下方与 `proof/lean/expected_build_status.txt`
+- sail-riscv：0.13.1，commit `8f91355eee63a85738723603e23d32eecdd763dc`（2026-08-14）
 - RVFI-DII 线格式：v1，88 字节；`crates/sail-runner/tests/fixtures/sail-rvfi-dii-v1.hex`
   是从该 commit 捕获的实包，默认测试套件解析它，端到端测试再核对它没有过期
 - ISA：`rv64imcb_zca_zba_zbb_zbc_zbs`
@@ -16,8 +20,30 @@
 
 依赖或配置变化属于证据变化，必须重新运行运行时差分、mutation、Lean 4 证明与 Rocq/Coq spike。
 
-Aeneas/Charon、Lean 4 与 Rocq/OPAM 尚未进入当前 foundation 执行门禁；
-它们必须在 Week 4 首次生成 Rust 侧定义或检查定理前固定版本，不能沿用浮动最新版。
+**为什么 Sail 是源码构建而不是发布版**：sail-riscv 的 Lean target 需要比任何已发布
+Sail 都新的编译器。在上一版基线（sail-riscv `27224cc` + 发布版 0.20.2）下，生成的
+Lean 模型在第 10/131 个目标失败于 `unknown namespace LeanRV64D.Defs`。上游本身就把
+两个 target 跑在两个不同的 Sail 上（`compile-lean.yml` 用 `sail-version: "latest"`，
+而 `cmake/sail_required_version.txt` 为 C 模拟器钉 0.20.2），因此从未测过我们钉的那
+个组合。本项目改为**一个** Sail 同时服务两个 target 并按 commit 钉死，两个 pin 必须
+一起移动。
+
+这次移动的实测结果：**物化配置 SHA-256、ISA 串、RVFI-DII 线格式与全部差分结果均未
+改变**——32/32 语料、395 提交步、188 次 mutation、10 个端到端测试（含 packet fixture
+与实时模拟器的一致性检查）在新基线上全部通过。改变的只是模拟器二进制与 Sail 构建。
+
+证明轨工具链已固定（Rust 侧定义已生成，见 §2）：
+
+- Charon：`0.1.247 (89ac118194b978d8cf753222c19f313521377aa0)`
+- Aeneas：`aeneas nightly-2026.09.01-379890b`
+- Lean（Sail 侧模型）：`leanprover/lean4:v4.29.0`
+- Lean（Rust 侧模型 / Aeneas 库）：`leanprover/lean4:v4.31.0`，依赖 mathlib4
+
+`scripts/generate_rust_model.sh` 在生成前核对 Charon/Aeneas 的完整版本串，不符即失败。
+两侧 Lean 工具链版本**不同**，因此 Week 5 的精化定理无法直接放进任一现有工程，
+需要先解决工具链统一或跨工程引用；这是已知的下一个结构性问题。
+
+Rocq/OPAM 尚未进入门禁。
 
 ## 2. 当前可运行基线
 
@@ -30,11 +56,55 @@ make verify-smoke
 make verify-negative
 make proof-gen BACKEND=lean
 make proof-gen BACKEND=rocq
+make proof-build BACKEND=lean
 ```
 
 当前基线可以构建 Rust workspace、运行单元测试、构建 Sail 模拟器、验证固定环境、
 通过 RVFI-DII 完成 CKB-VM 与 Sail 的端到端注入差分，并生成固定配置下的 Sail
 Lean/Rocq 模型。模型生成不等于 kernel 编译或等价证明。
+
+`make proof-gen-rust` 生成 **Rust 侧**定义：Charon 从 `crates/proof-extract` 的
+根出发提取生产调用图，Aeneas 译成 Lean 4。那个 crate 是普通 Rust，一行调用
+`ckb_vm::instructions::execute`，机器类型直接 import 自 `ckb-runner` 的
+`InjectedMachine` 而不是重新拼写 —— 差分驱动的机器和证明提取的机器因此不可能
+漂移。`ckb_vm::instructions::common::add` 出现在生成物里是因为生产**到达**它，
+不是脚本点名它。
+
+**Week 4 要求记录的结论:提取不需要修改 `deps/ckb-vm`，因此本轮不需要上游
+patch 或 PR。** 原计划设想的是先重构生产代码去调用抽出的纯内核；实测表明
+Charon/Aeneas 直接吃得下生产形状，那次重构因此没有发生 —— 被翻译的就是跑差分
+的那份代码，不存在"重构是否改变了被验证对象"的问题。早期那个手写的
+`crates/ckb-runner/src/semantics.rs` 原型已删除：它是第二份手写 RISC-V 语义，
+按 §5 不能计入证明证据，留在树里只会被误当成提取目标。生成物同样要过编译检查（记录在
+`proof/lean/expected_rust_build_status.txt`），当前状态 **ok**：279 个 `def`、
+65 个 `axiom`。exit gate 要求的"重新生成不需要编辑生成文件"已实测——连跑两次逐
+字节相同。
+
+`make proof-gen` 在生成之后调用 `scripts/check_proof_model.sh` 编译生成物，并把
+结果与 `proof/lean/expected_build_status.txt` 的记录对照。这个检查**双向失败**：
+出现记录之外的失败是回归；编译突然成功而记录仍写着 blocked 也判失败，因为那意味
+着记录和引用它的文档都过期了 —— 陈旧的“已阻塞”会低报已证明的内容，和高报一样是
+错的。四个方向都实测过。
+
+当前记录的状态是 **ok**：Lean 模型编译通过，产出 125 个 `.olean`，24 核冷构建约
+十分钟。这个状态是在把两个 pin 一起前移之后达到的（见 §1）；之前它是 blocked，
+历史与原因保留在 `proof/lean/expected_build_status.txt` 里，因为那正是这两个 pin
+现在是这个取值的理由。
+
+模型能编译**不等于**存在定理。Rust 侧生成、状态桥接与 ADD 精化定理都还没有。
+
+Lean 支持库（`rems-project/lean-sail`）在生成的 lakefile 里是按**分支**引用的，同一
+个 session 内实测解析到过两个不同 revision（`79b4d085` 与 `07946313`）。检查脚本因此
+在解析前把 lakefile 钉到记录的 revision，并在 manifest 不符时失败。
+
+Rocq 侧的结论是 **NO-GO**，两半各自卡在不同的、实测到的地方：Aeneas 的 Rocq
+`Primitives.v` 定义的 `result A` 被 Rocq 9.1 prelude 的 `result A E` 遮蔽，生成物
+在第 17 行第一个 trait 声明就失败（最小复现 `proof/rocq/spike/result_shadowing.v`）；
+Sail 侧 `rv64d.v` 需要 `e_div`，而发布版 `rocq-sail-stdpp 0.20.2` 不提供它 ——
+和 Lean 那次逼着移 pin 的问题同一形状。完整证据、信任假设与"什么会改变结论"见
+`proof/rocq/SPIKE.md`，`make proof-spike` 重现它，且任一半开始成功也会判失败。
+
+按计划，NO-GO **不替代** Lean 主线；Lean 两侧都已生成并编译通过。
 
 `make verify-smoke` 运行 32 个注入案例（ADD 13、ADDI 10、BEQ 9，共 395 个提交
 步），并把每个案例的 artifact 写到 `artifacts/corpus/`。
@@ -58,7 +128,7 @@ Lean/Rocq 模型。模型生成不等于 kernel 编译或等价证明。
 - 生产路径对纯 Rust `ADD` 语义的调用连接；
 - Rust 侧 Lean 4 生成、双方导入和 `ADD` 定理；
 - Rocq/Coq 的 Rust 侧生成、双方导入、状态桥接与 GO/NO-GO 报告；
-- `proof-check`、`proof-spike` 与 `audit-release`（Week 4–6）。
+- `proof-check` 与 `audit-release`（Week 5–6）。
 
 直接 ELF 模式得到空 RVFI 流必须返回失败，不能当作空程序或 PASS。
 
@@ -68,15 +138,15 @@ RVFI-DII 会话必须从架构复位态开始，首包不是 `rvfi_order` 0 / `p
 
 ## 3. 六周 MVP 验收接口
 
-以下接口是稳定验收面。`verify-smoke` 与 `verify-negative` 已实现并可直接验收；
-`proof-check`、`proof-spike` 与 `audit-release` 仍是计划中的接口，只有相应实现
+以下接口是稳定验收面。`verify-smoke`、`verify-negative` 与 `proof-spike` 已实现
+并可直接验收；`proof-check` 与 `audit-release` 仍是计划中的接口，只有相应实现
 合入后才能按本节验收：
 
 ```bash
 make verify-smoke
 make verify-negative
 make proof-check BACKEND=lean
-make proof-spike BACKEND=rocq
+make proof-spike
 make audit-release
 ```
 
@@ -85,7 +155,7 @@ make audit-release
 - `verify-smoke`：对 ADD、ADDI、BEQ 的至少 10 个案例完成严格双端比较；
 - `verify-negative`：至少 5 类 mutation 全部被检测；
 - `proof-check BACKEND=lean`：生成两侧 Lean 4 定义并由 kernel 检查生产关联的 ADD 定理；
-- `proof-spike BACKEND=rocq`：重现双侧 Rocq 生成/导入并明确输出 GO 或 NO-GO；
+- `make proof-spike`：重现双侧 Rocq 生成/导入并核对已记录的 GO/NO-GO；
 - `audit-release`：检查版本、哈希、覆盖、重放 artifact、占位符与保证边界。
 
 任一 runner error、空 trace、事件长度差异、字段差异或终止差异都不能返回 PASS。
@@ -129,6 +199,20 @@ make audit-release
 ## 5. 证明审计
 
 Lean 4 主定理和关键连接层不得包含未说明的 `sorry` 或 `axiom`。
+
+**当前已知的信任基与 allowlist**（实测，非推断）：
+
+- Aeneas 的 Lean 支持库在构建中报告 4 处 `sorry`：`Aeneas/Std/Slice.lean:359`
+  （`core.slice.Slice.get_unchecked`）、同文件 615（其 spec 定理），以及
+  `Aeneas/Std/StringIter.lean:12,15`。ADD 路径用的是 `Slice.index_usize`，
+  它与其 spec **不含** `sorry`。这四处在信任基里但不在 ADD 定理会走的路径上；
+  任何触及它们的定理必须显式声明。
+- Rust 侧生成物含 65 个 `axiom`，全部来自被显式设为 opaque 的部分：内存实现、
+  `DefaultMachine`（因 `dyn` 无法翻译）、以及四个 `bool -> u64` 比较辅助函数。
+  理由逐条记录在 `proof/lean/expected_rust_build_status.txt`。
+- **`DefaultMachine` 到 `DefaultCoreMachine` 的委托是 axiom 而不是被翻译的
+  body**，这是生产机器与被提取定义之间唯一未被提取覆盖的一环。ADD 不触及它承载
+  的 `dyn` 字段，但这一点必须作为前提写进定理，不能默认成立。
 
 Rocq/Coq spike 只有在定理由 Rocq kernel 检查通过时才计入额外证明覆盖；GO/NO-GO 报告本身不等于证明。若生成代码依赖公理或抽象接口，必须进入审计 allowlist 并解释影响。
 

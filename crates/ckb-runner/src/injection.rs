@@ -33,6 +33,15 @@ use crate::{changed_registers, DEFAULT_ISA};
 /// the entry point.
 pub const INJECTION_WINDOW: u64 = 64 * 1024;
 
+/// The exact machine type [`run_program`] drives.
+///
+/// Named so the proof track can extract the production call graph starting
+/// from *this* type rather than from a hand-copied spelling of it: if this
+/// alias and the machine built below ever diverge, `run_program` stops
+/// compiling.
+pub type InjectedMachine =
+    ckb_vm::machine::DefaultMachine<DefaultCoreMachine<u64, SparseMemory<u64>>, DefaultDecoder>;
+
 #[derive(Debug, Clone, Copy)]
 pub struct InjectionConfig {
     pub isa: u8,
@@ -75,7 +84,7 @@ pub fn run_program(program: &[u32], config: InjectionConfig) -> Result<Injection
         config.max_cycles,
         memory_size,
     );
-    let mut machine = RustDefaultMachineBuilder::new(core).build();
+    let mut machine: InjectedMachine = RustDefaultMachineBuilder::new(core).build();
     machine.update_pc(INJECTION_ENTRY);
     machine.commit_pc();
     machine.set_running(true);

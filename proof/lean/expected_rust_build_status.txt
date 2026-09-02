@@ -1,0 +1,46 @@
+# Recorded outcome of compiling the generated Rust-side Lean model: the
+# production CKB-VM execution path, extracted by Charon from the roots in
+# crates/proof-extract and translated by Aeneas.
+#
+# Same two-directional contract as the Sail side: an unexpected failure is a
+# regression, and an unexpectedly successful build means this record and the
+# documents citing it are stale.
+#
+# What the compiled definitions contain: `ckb_vm.instructions.execute.execute`
+# (the production entry, including the program-counter advance),
+# `execute_instruction` (the dispatch), `ckb_vm.instructions.common.add`, and
+# `DefaultCoreMachine`'s CoreMachine methods with real bodies. `common::add` is
+# present because production reaches it from the root, not because the script
+# names it.
+#
+# Deliberately opaque, each for a stated reason:
+#
+#   ckb_vm::memory::_   ADD touches no memory, and SparseMemory::load uses
+#                       Iterator::skip, which the Aeneas Lean library does not
+#                       model.
+#   DefaultMachine      Carries Box<dyn Syscalls>, Box<dyn Debugger> and a
+#                       dyn Fn cycle hook; Aeneas reports "Dynamic trait types
+#                       are not supported yet". ADD touches none of them, but
+#                       the wrapper's delegation to DefaultCoreMachine is
+#                       therefore an axiom rather than a translated body. This
+#                       is the one link between the production machine and the
+#                       extracted definitions that this track does not cover.
+#   Register<u64>::{eq,lt,lt_s,logical_not}
+#                       All four are `bool -> u64` via `.into()`; Aeneas emits
+#                       `core.convert.FromU64Bool`, which its Lean library does
+#                       not define, and the file does not compile with them in.
+#                       ADD uses none of them. BEQ does, so a comparison
+#                       theorem must resolve this first.
+#
+# Trust boundary, per VERIFICATION.md section 5: the Aeneas Lean library itself
+# reports four `sorry`s during this build --
+#   Aeneas/Std/Slice.lean:359      core.slice.Slice.get_unchecked
+#   Aeneas/Std/Slice.lean:615      its spec theorem
+#   Aeneas/Std/StringIter.lean:12,15
+# The ADD path uses `Slice.index_usize`, which together with its spec carries
+# no `sorry`. These four are therefore in the trust base but not on the path
+# any future ADD theorem would use; a theorem that reaches them must say so.
+status=ok
+# 279 defs, 65 axioms. About 15s once mathlib is cached; mathlib itself is the
+# expensive part of a cold setup.
+target=CkbVmProduction

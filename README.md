@@ -22,7 +22,28 @@ PC = `0x80000000`）出发，因此比较不再经过 ELF loader 与平台栈。
 这只是运行时证据，不是形式化验证：证明轨仍然停在 Sail 侧模型生成，没有 Rust
 侧生成、状态桥接或等价定理。
 
-固定配置下的 Sail→Lean 4 与 Sail→Rocq 模型生成入口均已验证可重现；
+固定配置下的 Sail→Lean 4 与 Sail→Rocq 模型生成入口均已验证可重现，且 **Lean 模型
+现在编译通过**(125 个 `.olean`)。`make proof-gen` 在生成之后会真正编译它生成的
+东西并与 `proof/lean/expected_build_status.txt` 的记录双向核对 —— 生成可重现不等于
+生成物可用,这两件事在这里是分开检查的。
+
+这一步需要**从源码构建的 Sail**(`make sail-compiler`)：sail-riscv 的 Lean target
+需要比任何已发布 Sail 都新的编译器,上游自己也是这么做的。源码构建与发布版同样
+自称 0.20.2,所以环境检查钉的是完整版本串,发布版会被明确拒绝。Rocq 侧尚无编译
+检查。
+
+**Rust 侧生成也已建立**(Week 4):`crates/proof-extract` 用普通 Rust 命名生产
+提取根 —— 一行调用 `ckb_vm::instructions::execute`,机器类型 import 自 ckb-runner
+的 `InjectedMachine`,和差分驱动的是同一个类型。Charon 从这个根提取生产调用图,
+Aeneas 译成 Lean 4,`make proof-gen-rust` 生成并编译(279 个 `def`/65 个 `axiom`),
+连跑两次逐字节相同。`ckb_vm::instructions::common::add` 出现在生成物里是因为
+生产**到达**它。
+
+模型能编译不等于存在定理:状态桥接与 ADD 精化定理都还没有,而且两侧 Lean 工具链
+版本不同(v4.29.0 / v4.31.0),定理无法直接放进任一现有工程。被显式设为 opaque
+的部分(内存、`DefaultMachine` 的 `dyn` 字段、四个 `bool -> u64` 比较辅助)逐条
+记录在 `proof/lean/expected_rust_build_status.txt`。
+
 生成物位于忽略目录，仍不包含 Rust 翻译、状态桥接或等价定理，不能计入
 形式化证明覆盖。
 
@@ -43,7 +64,7 @@ CKB-VM interpreter ──► CommitEvent ◄── Sail --trace-rvfi / RVFI-DII
                               │
                        diff + fuzz + replay
 
-production-called pure Rust semantics ──► Charon/Aeneas ──► Lean 4
+production Rust execution path ─────────► Charon/Aeneas ──► Lean 4
 Sail RISC-V subset ─────────────────────── Sail Lean ──────► Lean 4
                                                         │
                                                  refinement theorem
@@ -63,6 +84,10 @@ Rust/Sail generated definitions ──► Rocq/Coq compatibility GO/NO-GO
 ```bash
 # 初始化固定版本的 CKB-VM 与 Sail RISC-V 源码
 git submodule update --init --recursive
+
+# 从源码构建固定 commit 的 Sail 编译器（发布版不够新，见 VERIFICATION.md §1）
+make sail-compiler
+export PATH="$HOME/.local/share/sail-src/bin:$PATH"
 
 # Rust foundation
 make check
@@ -93,9 +118,12 @@ cargo run -p ckb-vm-sail-diff -- \
   --sail-bin deps/sail-riscv/build/c_emulator/sail_riscv_sim \
   --sail-config sail-model/build/ckb_vm_config.json
 
-# 生成 Sail 侧证明后端模型；这一步本身不建立等价定理
+# 生成 Sail 侧证明后端模型并编译它；生成成功不等于能用，这一步会把两者分开
 make proof-gen BACKEND=lean
 make proof-gen BACKEND=rocq
+
+# 只跑编译检查（对照 proof/lean/expected_build_status.txt 的双向核对）
+make proof-build BACKEND=lean
 ```
 
 Rust 工具链由 `rust-toolchain.toml` 固定为 1.97.1（`Cargo.toml` 声明的 MSRV
@@ -112,9 +140,10 @@ Rust 工具链由 `rust-toolchain.toml` 固定为 1.97.1（`Cargo.toml` 声明�
 ```text
 crates/
   core/          后端无关的 CommitEvent、严格比较与注入程序支持子集
-  ckb-runner/    CKB-VM VERSION2 adapter 与 DII 镜像；含临时 extraction scaffold
+  ckb-runner/    CKB-VM VERSION2 adapter 与 DII 镜像
   sail-runner/   Sail 进程、RVFI parser 与二进制 RVFI-DII 客户端
   diff-test/     指令编码、注入语料、mutation 矩阵、可重放 artifact、CLI 与 JSON 报告
+  proof-extract/ 证明轨的生产提取根（普通 Rust，一行调用生产解释器）
 deps/
   ckb-vm/        被验证的生产 Rust 实现
   sail-riscv/    权威 Sail RISC-V 模型
@@ -134,9 +163,11 @@ scripts/
 ```
 
 
-`crates/ckb-runner/src/semantics.rs` 仍是临时翻译原型。只有在生产
-CKB-VM 路径实际调用同一函数，或存在机器检查的连接证明后，它才可能成为
-证明证据；最终生产语义位置由 CKB-VM 上游 patch/PR 决定。
+证明轨翻译的是**生产代码本身**，不为证明改写它：提取根在
+`crates/proof-extract`，一行调用 `ckb_vm::instructions::execute`。因此
+**本轮不需要 CKB-VM 上游 patch 或 PR** —— 这是 Week 4 计划要求记录的结论。
+早期那个手写的 `semantics.rs` 原型已删除：它是第二份手写 RISC-V 语义，
+`VERIFICATION.md` §5 明确规定这种东西不能计入证明证据，留在树里只会误导。
 注意：锁定的上游 sail-riscv 只有在 RVFI-DII socket 模式下才真正产生 RVFI 包，
 所以差分闭环走的是指令注入而不是 ELF；直接 ELF 模式得到的空 RVFI 流仍然被明确
 拒绝。注入意味着 Sail 不从内存取指，CKB 侧镜像的做法是在每一步之前把该条指令写

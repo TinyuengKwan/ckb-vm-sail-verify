@@ -7,8 +7,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
 EXPECTED_CKB_VM="1ffba3977da9dcdef8092e9ab1fd2516b27ec939"
-EXPECTED_SAIL_RISCV="27224ccb2290f022e46213c05b3e72e8a9ea635e"
+EXPECTED_SAIL_RISCV="8f91355eee63a85738723603e23d32eecdd763dc"
+# Sail is built from source, not installed from a release: sail-riscv's Lean
+# target needs a Sail newer than any release (see
+# proof/lean/expected_build_status.txt). A source build and the 0.20.2 release
+# both report the number 0.20.2, so the number alone cannot tell them apart --
+# the full version string, which carries the commit, is what is pinned.
 EXPECTED_SAIL_VERSION="0.20.2"
+EXPECTED_SAIL_BUILD="Sail 0.20.2 (HEAD @ 8eb1fb6b5bf9f18c0f89f71e94ff0c5894acd7c1)"
 MINIMUM_RUST_VERSION="1.95.0"
 EXPECTED_CONFIG_HASH="41a0facde4f83210f6c0857c67ba38edc5221f0926d75ab4213a33465d85e024"
 EXPECTED_ISA="rv64imcb_zca_zba_zbb_zbc_zbs"
@@ -32,9 +38,16 @@ if [ "$oldest_rust_version" != "$MINIMUM_RUST_VERSION" ]; then
     fail "Rust $actual_rust_version is older than required $MINIMUM_RUST_VERSION"
 fi
 
-actual_sail_version="$(sail --version | sed -n 's/^Sail \([^ ]*\).*/\1/p')"
+actual_sail_build="$(sail --version)"
+actual_sail_version="$(printf '%s' "$actual_sail_build" | sed -n 's/^Sail \([^ ]*\).*/\1/p')"
 if [ "$actual_sail_version" != "$EXPECTED_SAIL_VERSION" ]; then
     fail "Sail version is $actual_sail_version; expected $EXPECTED_SAIL_VERSION"
+fi
+if [ "$actual_sail_build" != "$EXPECTED_SAIL_BUILD" ]; then
+    fail "Sail build is '$actual_sail_build'; expected '$EXPECTED_SAIL_BUILD'.
+       A release build reports the same number as the pinned source build, so
+       this exact string is what distinguishes them. Build Sail from source at
+       the pinned commit; see README.md."
 fi
 
 read_submodule_commit() {
@@ -87,7 +100,7 @@ cargo metadata \
 
 echo "Environment verified:"
 echo "  Rust:       $actual_rust_version (minimum $MINIMUM_RUST_VERSION)"
-echo "  Sail:       $actual_sail_version"
+echo "  Sail:       $actual_sail_build"
 echo "  ckb-vm:     $actual_ckb_vm"
 echo "  sail-riscv: $actual_sail_riscv"
 echo "  ISA:        $actual_isa"

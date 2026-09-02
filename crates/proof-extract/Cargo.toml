@@ -1,0 +1,15 @@
+[package]
+name = "ckb-vm-sail-extract"
+description = "Production entry points the proof track extracts from"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+ckb-vm = { workspace = true }
+ckb-vm-sail-ckb-runner = { workspace = true }
+
+[dev-dependencies]
+ckb-vm-sail-core = { workspace = true }

@@ -145,6 +145,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "ckb-vm-sail-extract"
+version = "0.2.0"
+dependencies = [
+ "ckb-vm",
+ "ckb-vm-sail-ckb-runner",
+ "ckb-vm-sail-core",
+]
+
+[[package]]
 name = "ckb-vm-sail-riscv-runner"
 version = "0.2.0"
 dependencies = [

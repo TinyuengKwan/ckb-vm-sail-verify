@@ -53,33 +53,41 @@ CI 按成本分层：不需要模拟器的检查每次都跑，需要固定版�
 
 ### 2.2 形式化证明轨
 
-证明目标不是直接翻译整个 CKB-VM。首先从生产路径抽取一个无 I/O、无 trait object、无全局状态的纯函数层：
+证明目标不是直接翻译整个 CKB-VM，而是**直接翻译生产代码本身**，不为证明改写它。
+
+原设计是先从生产路径抽出一个无 I/O、无 trait object 的纯函数层，再让生产解释器
+调用它。Week 4 实测推翻了这个前提：Charon/Aeneas 能直接吃下生产形状 ——
+`ckb_vm::instructions::execute`（trait 泛型 + `&mut Mac`）提取只用 25 秒，
+`DefaultCoreMachine` 的寄存器方法带真实 body。因此不需要重构 `deps/ckb-vm`，
+也就不存在"重构是否改变了被验证对象"这个问题。
+
+提取根写在 `crates/proof-extract` 里，是普通 Rust：
 
 ```rust
-fn execute_pure(
-    instruction: DecodedInstruction,
-    state: ArchitecturalState,
-) -> Result<ArchitecturalState, SemanticsError>;
-```
-
-内存指令扩展为显式效果：
-
-```rust
-StepEffect {
-    register_write,
-    next_pc,
-    memory_request,
+pub fn execute_production(inst: Instruction, machine: &mut InjectedMachine) -> Result<(), Error> {
+    execute(inst, machine)   // ckb_vm::instructions::execute
 }
 ```
 
-生产解释器执行这个效果；证明器翻译同一个函数。这样消除“Rust 一份、手写证明模型一份”的双重实现。
+`InjectedMachine` 由 `ckb-runner` 导出并被差分实际驱动，这里 import 而不是重新
+拼写，两者因此不可能漂移。Charon 从这个根提取调用图，
+`ckb_vm::instructions::common::add` 出现在生成物里是因为生产**到达**它。
+
+代价是有三处必须设为 opaque，每一处都有实测原因（内存的 `Iterator::skip`、
+`DefaultMachine` 的 `dyn` 字段、四个 `bool -> u64` 转换），逐条记录在
+`proof/lean/expected_rust_build_status.txt`。其中 `DefaultMachine` 到
+`DefaultCoreMachine` 的委托是 axiom 而非翻译出的 body，这是生产与被提取定义之间
+唯一未被提取覆盖的一环，必须作为定理前提写出。
+
+这条路线不引入"Rust 一份、手写证明模型一份"的双重实现，因为被翻译的就是生产
+那一份。
 
 ## 3. 后端选择
 
 当前六周 MVP 的强制主路线：
 
 ```text
-Rust pure kernel ──Charon/Aeneas──► Lean 4
+production Rust path ─Charon/Aeneas─► Lean 4
 Sail model ───────────Sail Lean───► Lean 4
 ```
 
@@ -88,7 +96,7 @@ Sail model ───────────Sail Lean───► Lean 4
 Rocq/Coq 保留为兼容性与原 Issue #190 路线的可行性 spike：
 
 ```text
-Rust pure kernel ──Aeneas/Rocq-of-Rust──► Rocq
+production Rust path ──Aeneas/Rocq-of-Rust──► Rocq
 Sail model ─────────────Sail Coq backend► Rocq
 ```
 
@@ -129,7 +137,7 @@ state_rel ckb sail
 - Rust compiler/Charon/Aeneas 的翻译正确性假设；
 - Sail compiler 对 Lean 4/Rocq 后端的翻译；
 - 强制证明使用的 Lean 4 kernel，以及兼容性 spike 使用的 Rocq kernel；
-- CKB-VM 生产路径确实调用纯语义内核的代码连接；
+- `DefaultMachine` 到 `DefaultCoreMachine` 的委托：它因 `dyn` 字段无法翻译，在生成物里是 axiom；
 - RVFI 适配器只影响测试观察，不影响 VM 行为。
 
 翻译器生成代码应固定 commit，CI 重新生成后必须保持 clean diff。
@@ -152,7 +160,6 @@ state_rel ckb sail
 ```text
 crates/core/
   后端无关的事件协议与严格比较器
-crates/ckb-runner/src/semantics.rs
   临时证明翻译目标；最终必须移入生产调用边界或由生产路径调用
 crates/ckb-runner/src/lib.rs
   只读 CKB-VM 观察 adapter，不属于被证明语义
@@ -175,7 +182,8 @@ proof/{lean,rocq}/theorems/
 - CKB runner 已采集 PC、raw instruction 与 GPR delta，但尚无 committed data-memory observer；load/store/AMO/SYSTEM 因此被支持子集拒绝。
 - 寄存器观察的分辨率是架构状态变化：写回寄存器已有值在两端都不可观察。
 - 注入路径的 CKB ISA 已收敛到 `ISA_IMC | ISA_B`。开启 `ISA_MOP` 会让解码器走 `decode_mop` 并向前读取注入流之外的字节，融合命中时一步退休多条指令；两侧对"一步"的定义必须一致，因此宏操作融合不在范围内。
-- `crates/ckb-runner/src/semantics.rs` 目前是临时 extraction target，尚未接入生产 CKB-VM 调用图。
+- Rust 侧生成物已存在且可编译，但**没有定理**：状态桥接与 ADD 精化定理都还没有，且两侧 Lean 工具链版本不同（v4.29.0 / v4.31.0），定理暂时放不进任一现有工程。
+- 提取不需要修改 `deps/ckb-vm`，因此本轮不需要上游 patch/PR。
 - proof 目录目前没有定理或 Rust 翻译生成物。
 
 - mutation 矩阵证明的是**比较器**会失败，不是语料覆盖了 CKB-VM 的输入空间；两者是不同的命题。
