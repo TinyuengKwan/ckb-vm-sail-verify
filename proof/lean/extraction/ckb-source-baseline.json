@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "baseline_id": "ckb-vm-1ffba3977da9-runtime-container-v1",
+  "upstream_commit": "1ffba3977da9dcdef8092e9ab1fd2516b27ec939",
+  "patch": "patches/ckb-vm/runtime-container.patch",
+  "patch_sha256": "5ae9ec54d43034d9e4010e7373a516283f86a54519f9d79391f1c0c4f5883d2a",
+  "added_files": [
+    "tests/runtime_container_probe.rs"
+  ],
+  "upstream_tree_sha256": "15ddfb236e32d6d8790e4b799d11e34c4eaf015b465eb4c3ad5741a09c2a4ecc",
+  "source_tree_sha256": "12b4df6daacf83f95980eba8eecbbf117f3ec2efaab845405efe242b95ef4c14",
+  "extraction_inputs": {
+    "Cargo.toml": "6f42dc0d41c2a4aedbbe54950eead00f3250f79a61e8c8567d953e6b54ea706a",
+    "Cargo.lock": "ffb4507546b5b9f559458acde714bd722f393838b2b4d55d5aa15ef3adfddfcf",
+    "rust-toolchain.toml": "8bcedc10ef995d3fe0fe92c101676a47d4075e616ce7a527ac02143362277953",
+    "crates/proof-extract/Cargo.toml": "2679ee74dc652641456dba0de3a1d40df093587e63a0cf7a90f9099295fcf980",
+    "crates/proof-extract/src/lib.rs": "9468247e7dce9d8a84bd5d67b8d22809d0ac31cc683061197bc7a7acca4ba8a7",
+    "crates/ckb-runner/Cargo.toml": "70fa093b83b1eb4ac2ae6fb6d3dd1eae42c2720644034fd2d7c77065e37c6aa4",
+    "crates/ckb-runner/src/injection.rs": "ef93ee1dfd1aec75ea8701ca47c091052fc394b178c5b51801d5060f544a4cc8",
+    "scripts/generate_rust_model.sh": "06478e4f5d7f15544fb2a51df2497ec8ca6584cf9910867b02cca2de5cf9e80e",
+    "scripts/ckb_source_baseline.py": "5b553ec35a6146aa55ac6532953d432748e0bd90fee7c805fb0828b9542eef40",
+    "proof/lean/extraction/ckb-vm.json": "376381a95376b9fdf39c12b930f921f321243bb01f66b71bf3c7fb81dde2d0db"
+  },
+  "proof_acceptance": "pending-formal-contract-and-policy-migration",
+  "source_refactor_equivalence_proved": false
+}

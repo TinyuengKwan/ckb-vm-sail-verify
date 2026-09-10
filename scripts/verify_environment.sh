@@ -32,7 +32,7 @@ require_command() {
 # discharges type-level constraints through an SMT solver. A machine without it
 # gets a build failure minutes in rather than a missing-dependency message, so
 # the environment check is where it should surface.
-for command in awk cargo cmake git head jq rustc sail sed sha256sum sort z3; do
+for command in awk cargo cmake git head jq python3 rustc sail sed sha256sum sort z3; do
     require_command "$command"
 done
 
@@ -67,6 +67,7 @@ actual_ckb_vm="$(read_submodule_commit "$PROJECT_DIR/deps/ckb-vm" ckb-vm)"
 if [ "$actual_ckb_vm" != "$EXPECTED_CKB_VM" ]; then
     fail "ckb-vm commit is $actual_ckb_vm; expected $EXPECTED_CKB_VM"
 fi
+ckb_source_identity="$(python3 "$SCRIPT_DIR/ckb_source_baseline.py")"
 
 actual_sail_riscv="$(read_submodule_commit "$PROJECT_DIR/deps/sail-riscv" sail-riscv)"
 if [ "$actual_sail_riscv" != "$EXPECTED_SAIL_RISCV" ]; then
@@ -108,7 +109,8 @@ echo "  Sail:       $actual_sail_build"
 # Not pinned: Sail uses z3 to decide type-level constraints, so any version that
 # answers is acceptable. Recorded because a solver difference is worth seeing.
 echo "  z3:         $(z3 --version 2>/dev/null | head -n 1)"
-echo "  ckb-vm:     $actual_ckb_vm"
+echo "  ckb-vm upstream anchor: $actual_ckb_vm"
+echo "  ckb-vm source identity: $ckb_source_identity"
 echo "  sail-riscv: $actual_sail_riscv"
 echo "  ISA:        $actual_isa"
 echo "  config:     $actual_config_hash"

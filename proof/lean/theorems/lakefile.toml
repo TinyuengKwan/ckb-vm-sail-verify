@@ -1,0 +1,76 @@
+name = "CkbSailProofs"
+defaultTargets = ["SmokeImports"]
+
+# check_lean_imports.sh points this ignored link at the local Aeneas library.
+# The lock therefore contains no machine-specific absolute installation path.
+[[require]]
+name = "Aeneas"
+path = ".lake/aeneas"
+
+[[require]]
+name = "CkbVmProduction"
+path = "../generated/rust"
+
+[[require]]
+name = "Lean_RV64D"
+path = "../generated/sail"
+
+[[lean_lib]]
+name = "SmokeImports"
+
+[[lean_lib]]
+name = "ExtractedConstants"
+
+[[lean_lib]]
+name = "AddPremises"
+
+[[lean_lib]]
+name = "StateRel"
+
+[[lean_lib]]
+name = "SailRegisters"
+
+[[lean_lib]]
+name = "RustAdd"
+
+[[lean_lib]]
+name = "AddRegisters"
+
+[[lean_lib]]
+name = "AddRegisterAxioms"
+
+[[lean_lib]]
+name = "RegisterRegression"
+
+[[lean_lib]]
+name = "RustDispatch"
+
+[[lean_lib]]
+name = "SailStepSupport"
+
+[[lean_lib]]
+name = "SailDispatch"
+
+[[lean_lib]]
+name = "SailRetirement"
+
+[[lean_lib]]
+name = "AddStep"
+
+[[lean_lib]]
+name = "AddStepAxioms"
+
+[[lean_lib]]
+name = "StepRegression"
+
+[[lean_lib]]
+name = "WrapperContracts"
+
+[[lean_lib]]
+name = "ProductionAdd"
+
+[[lean_lib]]
+name = "SailContractWitness"
+
+[[lean_lib]]
+name = "ProductionAddWitness"

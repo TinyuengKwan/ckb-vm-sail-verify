@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "charon": "0.1.247 (89ac118194b978d8cf753222c19f313521377aa0)",
+  "aeneas": "aeneas nightly-2026.09.01-379890b",
+  "preset": "aeneas",
+  "root": "ckb_vm_sail_extract::execute_production",
+  "include": [
+    "ckb_vm::instructions::_",
+    "ckb_vm_definitions::RISCV_GENERAL_REGISTER_NUMBER",
+    "ckb_vm_definitions::registers::RA",
+    "ckb_vm::machine::DefaultCoreMachine",
+    "ckb_vm::machine::{impl ckb_vm::machine::CoreMachine for ckb_vm::machine::DefaultCoreMachine}::_",
+    "ckb_vm::machine::DefaultMachine",
+    "ckb_vm::machine::{impl ckb_vm::machine::CoreMachine for ckb_vm::machine::DefaultMachine}::pc",
+    "ckb_vm::machine::{impl ckb_vm::machine::CoreMachine for ckb_vm::machine::DefaultMachine}::update_pc",
+    "ckb_vm::machine::{impl ckb_vm::machine::CoreMachine for ckb_vm::machine::DefaultMachine}::commit_pc",
+    "ckb_vm::machine::{impl ckb_vm::machine::CoreMachine for ckb_vm::machine::DefaultMachine}::registers",
+    "ckb_vm::machine::{impl ckb_vm::machine::CoreMachine for ckb_vm::machine::DefaultMachine}::set_register"
+  ],
+  "opaque": [
+    "ckb_vm::machine::MachineRuntime",
+    "ckb_vm::memory::_",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::eq",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::lt",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::lt_s",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::logical_not"
+  ],
+  "aeneas_args": ["-backend", "lean", "-abort-on-error", "-no-progress-bar"]
+}

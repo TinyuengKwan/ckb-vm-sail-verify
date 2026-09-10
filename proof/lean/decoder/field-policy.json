@@ -1,0 +1,88 @@
+{
+  "scope": "Supplementary field correspondence only; no full raw decoder theorem or main proof-check integration",
+  "roots": [
+    "ckb_vm::instructions::utils::rd",
+    "ckb_vm::instructions::utils::rs1",
+    "ckb_vm::instructions::utils::rs2",
+    "ckb_vm::instructions::utils::opcode",
+    "ckb_vm::instructions::utils::funct3",
+    "ckb_vm::instructions::utils::funct7"
+  ],
+  "sources": {
+    "proof/lean/decoder/RawFields.lean": "2d4839e8109a6642be83a0d651bd18cf95171672220a679949dba46a10305e8f",
+    "proof/lean/decoder/ExportFieldAudit.lean": "0571214b99e513e3761255d4f4b69551385871b40d4ae6ed13987ba886efa7b2",
+    "proof/lean/decoder/RuntimeCheck.rs": "273bb0c8908fd476c7d50777ffed8fd2a6fb9b651636d9cbf31b86045ceb9ba0",
+    "scripts/check_raw_add_fields.py": "c6de2baf99e3eec61061c298870dc73dd0cb44f4801de101e675f1d4f034f63c"
+  },
+  "ckb_cargo_lock_sha256": "b10b35cb6b00285720372c1df09b0e6fde7b8fa8b12fee18a4068e8d7ad1294f",
+  "generated_sha256": "3657ae25ac3b2c690e27a8e520663d64d7996bf7397eb1f182f905a4183f6868",
+  "audit": {
+    "axioms": {
+      "RawAddFields.funct3": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "RawAddFields.funct7": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "RawAddFields.index_val": [
+        "Quot.sound",
+        "propext"
+      ],
+      "RawAddFields.opcode": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "RawAddFields.operands_correspond": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "RawAddFields.rd": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "RawAddFields.rs1": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "RawAddFields.rs2": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "RawAddFields.sail_reg_decode": [
+        "Quot.sound",
+        "propext"
+      ]
+    },
+    "types": {
+      "RawAddFields.funct3": "0b876b1e4f64409774c9504f150186e7d0e2e5e6fd612aab023d16d0475d18c8",
+      "RawAddFields.funct7": "0caa60a2069281a43c266aea6e3e35862848db3a841709c3870f8ef9edfd74f8",
+      "RawAddFields.index_val": "0da4607cb64f9321549a05e342cc9acd131b57eb6d00560c3fd07ad6460eed58",
+      "RawAddFields.opcode": "373db59670e8cfd332e37d48d0532e447470eaf2bf4c6b2253a17cd8d4075bcb",
+      "RawAddFields.operands_correspond": "adccfe6f43f3ce1b554efd0169b183b93aa87b11e5ea709e8c315b1050c04921",
+      "RawAddFields.rd": "baded16eca74790d8ff4f32b23dde5eb0fd00a4edbe03d7b30412aa0e10c0471",
+      "RawAddFields.rs1": "f560df0a01012eaea8778447824e28c8d5cfe8fca14a1802d69fe968a1cceeb8",
+      "RawAddFields.rs2": "23de8cd129ef4230d3e2930a16cbd368f4910d08f39c6898528979702115c5fe",
+      "RawAddFields.sail_reg_decode": "59cb46d28aee61bdc0bf70780df11b5a8c901a994f63f77d218564d279320de4"
+    },
+    "definitions": {
+      "LeanRV64D.Functions.encdec_reg_backwards": "3266db7272b0f0b66fd53bc24d22212ae56b5dc46ad4fdaaea3c4b2dc43342c1",
+      "RawAddFields.index": "75748d66a073059b486297af8313752e7d1ee594596064c5cb84cad58e3a0d82",
+      "RawDecodeExtract.instructions.utils.funct3": "c7aa3b13e4fa3a8a8e1031bb6cb7c42106f3329cb24a99a69eca2538283a9562",
+      "RawDecodeExtract.instructions.utils.funct7": "bd07bd5d961607e1f6ca8a9fc8d8e528217731a60879213301939aaa5550dd70",
+      "RawDecodeExtract.instructions.utils.opcode": "e0bc89296ec24acef2b0a472806fad05591f25997ed9b7579f3d82b562bcfa11",
+      "RawDecodeExtract.instructions.utils.rd": "cdf95614b120e707a9a201c4c7ff180816117117da257b4596e552121207154d",
+      "RawDecodeExtract.instructions.utils.rs1": "9ae1dced4f696821dc727b0824be6b0e9bdb0238e63852210d4561389dffe82d",
+      "RawDecodeExtract.instructions.utils.rs2": "4ab6b1c8f14dbd96304616966de9e54a288516c70d16b2e55f46b3ded49300c7",
+      "RawDecodeExtract.instructions.utils.x": "a2db9fa818e99d2d28b412d6c4fc3e99c1fd59e63581d05a34fce3eb494a7af1"
+    }
+  }
+}

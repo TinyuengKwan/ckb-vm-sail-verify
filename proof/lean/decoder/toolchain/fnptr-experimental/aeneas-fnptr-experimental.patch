@@ -1,0 +1,405 @@
+diff --git a/src/extract/ExtractBase.ml b/src/extract/ExtractBase.ml
+index 2cea315a..5b18a6ed 100644
+--- a/src/extract/ExtractBase.ml
++++ b/src/extract/ExtractBase.ml
+@@ -1813,6 +1813,15 @@ let ctx_compute_trait_impl_name_raw (ctx : extraction_ctx)
+             let nm_ctx = Charon.NameMatcher.ctx_from_crate ctx.crate in
+             let self_name =
+               match self with
++              | TFnDef { binder_regions = [];
++                         binder_value = { kind = FunId (FRegular id); generics } } ->
++                  (* Distinct Rust function items may have identical signatures.
++                     Keep their declaration identity in trait instance names. *)
++                  let decl = FunDeclId.Map.find id ctx.crate.fun_decls in
++                  let name = opt_ctx_prepare_name decl.item_meta ctx
++                    decl.item_meta.name in
++                  name_with_generics_to_simple_name ctx.trans_ctx name
++                    params generics |> flatten_name
+               | TAdt { id; generics; builtin = None } -> (
+                   (* Lookup the ADT *)
+                   match TypeDeclId.Map.find_opt id ctx.crate.type_decls with
+diff --git a/src/interp/InterpBorrows.ml b/src/interp/InterpBorrows.ml
+index f3dcde14..c9386672 100644
+--- a/src/interp/InterpBorrows.ml
++++ b/src/interp/InterpBorrows.ml
+@@ -1920,7 +1920,8 @@ let rec promote_reserved_mut_borrow (config : config) (span : Meta.span)
+         \         a region abstraction"
+ 
+ let destructure_abs (span : Meta.span) (abs_kind : abs_kind) ~(can_end : bool)
+-    ~(destructure_shared_values : bool) (ctx : eval_ctx) (abs0 : abs) : abs =
++    ?(recoverable : bool = false) ~(destructure_shared_values : bool)
++    (ctx : eval_ctx) (abs0 : abs) : abs =
+   [%ltrace "- abs:\n" ^ abs_to_string span ctx abs0];
+   (* Accumulator to store the destructured values *)
+   let avalues = ref [] in
+@@ -1977,7 +1978,7 @@ let destructure_abs (span : Meta.span) (abs_kind : abs_kind) ~(can_end : bool)
+             push { value; ty }
+         | AIgnoredMutLoan (opt_bid, child_av) ->
+             (* We don't support nested borrows for now *)
+-            [%cassert] span
++            [%cassert_recover] recoverable span
+               (not
+                  (ty_has_borrows (Some span) ctx.type_ctx.type_infos child_av.ty))
+               "Nested borrows are not supported yet";
+@@ -1986,7 +1987,7 @@ let destructure_abs (span : Meta.span) (abs_kind : abs_kind) ~(can_end : bool)
+             list_avalues 0 push_fail child_av
+         | AEndedSharedLoan (sv, child_av) ->
+             (* We don't support nested borrows for now *)
+-            [%cassert] span
++            [%cassert_recover] recoverable span
+               (not
+                  (ty_has_borrows (Some span) ctx.type_ctx.type_infos child_av.ty))
+               "Nested borrows are not supported yet";
+@@ -2006,7 +2007,7 @@ let destructure_abs (span : Meta.span) (abs_kind : abs_kind) ~(can_end : bool)
+             { child = child_av; given_back = _; given_back_meta = _ }
+         | AIgnoredSharedLoan child_av ->
+             (* We don't support nested borrows for now *)
+-            [%cassert] span
++            [%cassert_recover] recoverable span
+               (not
+                  (ty_has_borrows (Some span) ctx.type_ctx.type_infos child_av.ty))
+               "Nested borrows are not supported yet";
+@@ -2115,7 +2116,7 @@ let destructure_abs (span : Meta.span) (abs_kind : abs_kind) ~(can_end : bool)
+             let avl, sv = list_values sv in
+             if destructure_shared_values then (
+               (* Rem.: the shared value can't contain loans nor borrows *)
+-              [%cassert] span (ty_no_regions ty)
++              [%cassert_recover] recoverable span (ty_no_regions ty)
+                 "Nested borrows are not supported yet";
+               let av : tavalue =
+                 [%sanity_check] span
+diff --git a/src/interp/InterpBorrows.mli b/src/interp/InterpBorrows.mli
+index 249c1d3a..a9195fef 100644
+--- a/src/interp/InterpBorrows.mli
++++ b/src/interp/InterpBorrows.mli
+@@ -145,6 +145,7 @@ val destructure_abs :
+   Meta.span ->
+   abs_kind ->
+   can_end:bool ->
++  ?recoverable:bool ->
+   destructure_shared_values:bool ->
+   eval_ctx ->
+   abs ->
+diff --git a/src/interp/InterpBorrowsCore.ml b/src/interp/InterpBorrowsCore.ml
+index a6493ea5..4ab8c053 100644
+--- a/src/interp/InterpBorrowsCore.ml
++++ b/src/interp/InterpBorrowsCore.ml
+@@ -414,6 +414,14 @@ let rec compare_rtys ?(allow_erased = false) (span : Meta.span) (ctx : eval_ctx)
+   | TLiteral lit1, TLiteral lit2 ->
+       [%sanity_check] span (lit1 = lit2);
+       default
++  | TFnPtr binder1, TFnPtr binder2 ->
++      let _ = check_fn_ptr_sig (Some span)
++        (Some ctx.type_ctx.type_infos) binder1 in
++      let _ = check_fn_ptr_sig (Some span)
++        (Some ctx.type_ctx.type_infos) binder2 in
++      [%sanity_check] span (binder1 = binder2);
++      (* These signatures contain no regions to intersect or include. *)
++      default
+   | TAdt tref1, TAdt tref2 ->
+       let generics1 = tref1.generics in
+       let generics2 = tref2.generics in
+diff --git a/src/interp/InterpExpressions.ml b/src/interp/InterpExpressions.ml
+index 224c4080..5eb8894a 100644
+--- a/src/interp/InterpExpressions.ml
++++ b/src/interp/InterpExpressions.ml
+@@ -956,6 +956,11 @@ let eval_unary_op_symbolic (config : config) (span : Meta.span) (unop : unop)
+         | Neg OPanic, (TLiteral (TInt _) as lty) -> lty
+         | Neg OPanic, (TLiteral (TUInt _) as lty) -> lty
+         | Cast (CastScalar (_, tgt_ty)), _ -> TLiteral tgt_ty
++        | Cast (CastFnPtr (src_ty, (TFnPtr binder as tgt_ty))), _ ->
++            [%sanity_check] span (v.ty = src_ty);
++            let _ = check_fn_ptr_sig (Some span)
++              (Some ctx.type_ctx.type_infos) binder in
++            tgt_ty
+         | Cast (CastUnsize (ty0, ty1, _)), _ ->
+             (* If the following function succeeds, then it means the cast is well-formed
+            (otherwise it throws an exception) *)
+diff --git a/src/interp/InterpJoin.ml b/src/interp/InterpJoin.ml
+index bd48e0bc..9c6470f6 100644
+--- a/src/interp/InterpJoin.ml
++++ b/src/interp/InterpJoin.ml
+@@ -823,7 +823,7 @@ let join_ctxs (span : Meta.span) (fresh_abs_kind : abs_kind)
+          Note that we destructure the fresh abstractions - TODO: make the merge more
+          general *)
+       let destructure_abs ctx =
+-        destructure_abs span fresh_abs_kind ~can_end:true
++        destructure_abs span fresh_abs_kind ~can_end:true ~recoverable
+           ~destructure_shared_values:true ctx
+       in
+       let add_marker ctx (pm : proj_marker) (ee : env_elem) : env_elem list =
+diff --git a/src/interp/InterpMatchCtxs.ml b/src/interp/InterpMatchCtxs.ml
+index 4f087307..48ad66de 100644
+--- a/src/interp/InterpMatchCtxs.ml
++++ b/src/interp/InterpMatchCtxs.ml
+@@ -341,7 +341,13 @@ let rec match_types (span : Meta.span) ~(recover : bool) (ctx0 : eval_ctx)
+         "Not the same raw pointer types";
+       let ty = match_rec ty0 ty1 in
+       TRawPtr (ty, rk0)
+-  | TDynTrait _, TDynTrait _ | TFnPtr _, TFnPtr _ | TFnDef _, TFnDef _ ->
++  | TFnPtr binder0, TFnPtr binder1 ->
++      let _ = check_fn_ptr_sig (Some span) None binder0 in
++      let _ = check_fn_ptr_sig (Some span) None binder1 in
++      [%cassert_recover] recover span (binder0 = binder1)
++        "Not the same function pointer signatures";
++      ty0
++  | TDynTrait _, TDynTrait _ | TFnDef _, TFnDef _ ->
+       [%craise_recover] recover span "Not implemented yet"
+   | TPtrMetadata ty0, TPtrMetadata ty1 ->
+       let ty = match_rec ty0 ty1 in
+diff --git a/src/interp/InterpReduceCollapse.ml b/src/interp/InterpReduceCollapse.ml
+index 379bcd2d..75adab0d 100644
+--- a/src/interp/InterpReduceCollapse.ml
++++ b/src/interp/InterpReduceCollapse.ml
+@@ -1316,6 +1316,38 @@ let collapse_ctx config (span : Meta.span)
+       None) (fresh_abs_kind : abs_kind) ~(recoverable : bool)
+     ~(with_abs_conts : bool) (ctx : eval_ctx) : eval_ctx =
+   [%ldebug "Initial ctx:\n" ^ eval_ctx_to_string ctx];
++  (* The borrow/loan maps used below do not support concrete shared borrows
++     nested in the values of abstract shared loans.  Do not attempt a partial
++     merge: reject this join before modifying the context.  The caller may
++     preserve the original branch contexts and duplicate their continuations.
++     Strict joins and non-recoverable callers still report an error. *)
++  let check_shared_value =
++    object
++      inherit [_] iter_tvalue as super
++      method! visit_borrow_content env bc =
++        match bc with
++        | VSharedBorrow _ ->
++            [%craise_recover] recoverable span
++              "Context collapse does not support concrete shared borrows in abstract shared loans"
++        | _ -> super#visit_borrow_content env bc
++    end
++  in
++  let check_abs =
++    object
++      inherit [_] iter_tavalue as super
++      method! visit_aloan_content env lc =
++        (match lc with
++        | ASharedLoan (_, _, sv, _) -> check_shared_value#visit_tvalue () sv
++        | _ -> ());
++        super#visit_aloan_content env lc
++    end
++  in
++  let frozen = ctx_get_frozen_abs_set ctx in
++  env_iter_abs
++    (fun abs ->
++      if not (AbsId.Set.mem abs.abs_id frozen) then
++        List.iter (check_abs#visit_tavalue ()) abs.avalues)
++    ctx.env;
+   let merge_funs =
+     mk_collapse_ctx_merge_duplicate_funs span fresh_abs_kind ~recoverable
+       ~with_abs_conts ctx
+diff --git a/src/interp/InterpStatements.ml b/src/interp/InterpStatements.ml
+index 5971fbc2..9c2674ec 100644
+--- a/src/interp/InterpStatements.ml
++++ b/src/interp/InterpStatements.ml
+@@ -1262,7 +1262,7 @@ and eval_function_call_concrete (config : config) (span : Meta.span)
+     (call : call) : stl_cm_fun =
+  fun ctx ->
+   match call.func with
+-  | FnOpDynamic _ -> [%craise] span "Function pointers are not supported yet"
++  | FnOpDynamic _ -> [%craise] span "Concrete function pointers are not supported"
+   | FnOpRegular func -> (
+       match func.kind with
+       | FunId (FRegular fid) ->
+@@ -1280,7 +1280,26 @@ and eval_function_call_symbolic (config : config) (span : Meta.span)
+     (call : call) : stl_cm_fun =
+  fun ctx ->
+   match call.func with
+-  | FnOpDynamic _ -> [%craise] span "Function pointers are not supported yet"
++  | FnOpDynamic fn ->
++      let fn, ctx, cc = eval_operand config span fn ctx in
++      let binder = match fn.ty with
++        | TFnPtr binder -> binder
++        | _ -> [%craise] span "Indirect call requires a function pointer" in
++      let sg = check_fn_ptr_sig (Some span)
++        (Some ctx.type_ctx.type_infos) binder in
++      let args_places = List.map (fun p -> S.mk_opt_place_from_op span p ctx) call.args in
++      let dest_place = Some (S.mk_mplace span call.dest ctx) in
++      let args, ctx, cc = comp2 cc (eval_operands config span call.args ctx) in
++      [%sanity_check] span
++        (List.map (fun (v : tvalue) -> Subst.erase_regions v.ty) args
++        = List.map Subst.erase_regions sg.inputs);
++      let ret = mk_fresh_symbolic_value span ctx sg.output in
++      let cc = cc_comp cc
++        (S.synthesize_function_call span (SymbolicAst.Indirect fn) ctx None []
++          empty_generic_args args args_places ret dest_place) in
++      let ctx, cc = comp cc
++        (assign_to_place config span (mk_tvalue_from_symbolic_value ret) call.dest ctx) in
++      ([ (ctx, Unit) ], cc_singleton __FILE__ __LINE__ span cc)
+   | FnOpRegular func ->
+       [%ltrace
+         "function call:\n- call: " ^ call_to_string ctx call ^ "\n- fn_ptr : "
+diff --git a/src/llbc/FunsAnalysis.ml b/src/llbc/FunsAnalysis.ml
+index a9ea59bb..aa1f7759 100644
+--- a/src/llbc/FunsAnalysis.ml
++++ b/src/llbc/FunsAnalysis.ml
+@@ -182,9 +182,9 @@ let analyze_module (m : crate) (funs_map : fun_decl FunDeclId.Map.t) :
+           method! visit_Call env call on_unwind =
+             (match call.func with
+             | FnOpDynamic _ ->
+-                (* Ignoring this: we lookup the called function upon creating
+-                   the closure *)
+-                ()
++                (* A runtime-selected pointer may fail or diverge. *)
++                can_fail := true;
++                can_diverge := true
+             | FnOpRegular func -> (
+                 match func.kind with
+                 | FunId (FRegular id) -> self#visit_fid env id
+diff --git a/src/llbc/TypesUtils.ml b/src/llbc/TypesUtils.ml
+index cf682465..712fb3f1 100644
+--- a/src/llbc/TypesUtils.ml
++++ b/src/llbc/TypesUtils.ml
+@@ -107,6 +107,33 @@ let ty_has_borrows (span : Meta.span option) (infos : TypesAnalysis.type_infos)
+   let info = TypesAnalysis.analyze_ty span infos ty in
+   info.TypesAnalysis.contains_borrow
+ 
++(* Experimental first-order pointers. Unsupported signatures remain errors.
++   In particular, do not erase zero-argument thunks or borrowed contracts. *)
++let check_fn_ptr_sig span infos (binder : fun_sig region_binder) : fun_sig =
++  let sg = binder.binder_value in
++  let scalar = function TLiteral _ -> true | _ -> false in
++  let result_shape = function
++    | TLiteral _ -> true
++    | TAdt { generics; _ } ->
++        generics.regions = [] && generics.trait_refs = []
++        && generics.const_generics = [] && List.for_all scalar generics.types
++    | _ -> false
++  in
++  [%cassert_opt_span] span
++    (binder.binder_regions = [] && not sg.is_unsafe && sg.abi = AbiRust
++    && not sg.is_variadic && sg.inputs <> []
++    && List.for_all scalar sg.inputs && result_shape sg.output)
++    "Unsupported function pointer signature (requires safe Rust scalar inputs and closed result)";
++  Option.iter
++    (fun infos ->
++      [%cassert_opt_span] span
++        (not (ty_has_borrows span infos sg.output))
++        "Borrowed function pointer result is not supported")
++    infos;
++  [%cassert_opt_span] span (not !Config.use_fuel)
++    "Function pointers with fuel are not supported";
++  sg
++
+ (** Checks that a type is copyable. * * This used to recursively traverse the
+     type to ensure all its fields were * `Copy`. Instead we trust rustc's
+     typechecking like we do for other marker * traits. *)
+diff --git a/src/symbolic/PrintSymbolicAst.ml b/src/symbolic/PrintSymbolicAst.ml
+index 64eff289..8b487043 100644
+--- a/src/symbolic/PrintSymbolicAst.ml
++++ b/src/symbolic/PrintSymbolicAst.ml
+@@ -11,6 +11,7 @@ let call_id_to_string (env : fmt_env) (call_id : call_id) : string =
+       fn_ptr_kind_to_string env fid ^ "@" ^ FunCallId.to_string call_id
+   | Unop unop -> unop_to_string env unop
+   | Binop binop -> binop_to_string binop
++  | Indirect fn -> "indirect(" ^ Values.tvalue_to_string env fn ^ ")"
+ 
+ let call_to_string (env : fmt_env) (indent : string) (call : call) : string =
+   let dest = Values.symbolic_value_to_string env call.dest in
+diff --git a/src/symbolic/SymbolicAst.ml b/src/symbolic/SymbolicAst.ml
+index 2fa28c83..876c9bfe 100644
+--- a/src/symbolic/SymbolicAst.ml
++++ b/src/symbolic/SymbolicAst.ml
+@@ -40,6 +40,7 @@ type call_id =
+           operation) *)
+   | Unop of unop
+   | Binop of binop
++  | Indirect of tvalue
+ [@@deriving show, ord]
+ 
+ type call = {
+diff --git a/src/symbolic/SymbolicToPureExpressions.ml b/src/symbolic/SymbolicToPureExpressions.ml
+index bbfbfda9..7f84b357 100644
+--- a/src/symbolic/SymbolicToPureExpressions.ml
++++ b/src/symbolic/SymbolicToPureExpressions.ml
+@@ -337,6 +337,26 @@ and translate_function_call (call : S.call) (e : S.expr) (ctx : bs_ctx) : texpr
+     ^ Print.option_to_string (inst_fun_sig_to_string call.ctx) call.inst_sg];
+   (* We have to treat unsized casts separately *)
+   match call.call_id with
++  | S.Indirect fn ->
++      let fn = tvalue_to_texpr ctx call.ctx fn in
++      let args = List.map (tvalue_to_texpr ctx call.ctx) call.args in
++      let app = [%add_loc] mk_apps ctx.span fn args in
++      let ctx, dest = fresh_var_for_symbolic_value call.dest ctx in
++      let pat = mk_tpat_from_fvar None dest in
++      let next_e = translate_expr e ctx in
++      [%add_loc] mk_closed_checked_let ctx true pat app next_e
++  | S.Unop (Cast (CastFnPtr (ty0, ty1))) ->
++      let source_ty = ctx_translate_fwd_ty ctx ty0 in
++      let target_ty = ctx_translate_fwd_ty ctx ty1 in
++      [%cassert] ctx.span (source_ty = target_ty)
++        "Function pointer cast requires identical translated signatures";
++      let arg = match call.args with
++        | [arg] -> tvalue_to_texpr ctx call.ctx arg
++        | _ -> [%internal_error] ctx.span in
++      let ctx, dest = fresh_var_for_symbolic_value call.dest ctx in
++      let pat = mk_tpat_from_fvar None dest in
++      let next_e = translate_expr e ctx in
++      [%add_loc] mk_closed_checked_let ctx false pat arg next_e
+   | S.Unop (Cast (CastUnsize (ty0, ty1, _))) ->
+       translate_cast_unsize call e ty0 ty1 ctx
+   | _ -> translate_function_call_aux call e ctx
+@@ -368,6 +388,7 @@ and translate_function_call_aux (call : S.call) (e : S.expr) (ctx : bs_ctx) :
+      if necessary. *)
+   let ctx, fun_id, effect_info, args, back_funs, dest_v =
+     match call.call_id with
++    | S.Indirect _ -> [%internal_error] ctx.span
+     | S.Fun (fid, call_id) ->
+         (* Regular function call *)
+         let fid_t = translate_fn_ptr_kind ctx fid in
+diff --git a/src/symbolic/SymbolicToPureTypes.ml b/src/symbolic/SymbolicToPureTypes.ml
+index bd132d84..35b5b0d1 100644
+--- a/src/symbolic/SymbolicToPureTypes.ml
++++ b/src/symbolic/SymbolicToPureTypes.ml
+@@ -181,7 +181,11 @@ let rec translate_sty (span : Meta.span option) (ty : T.ty) : ty =
+         (generics = TypesUtils.empty_generic_args)
+         "Unimplemented";
+       TTraitType (trait_ref, type_name)
+-  | TFnDef _ | TFnPtr _ ->
++  | TFnPtr binder ->
++      let sg = TypesUtils.check_fn_ptr_sig span None binder in
++      mk_arrows (List.map (translate span) sg.inputs)
++        (mk_result_ty (translate span sg.output))
++  | TFnDef _ ->
+       [%craise_opt_span] span "Arrow types are not supported yet"
+   | TDynTrait _ ->
+       [%craise_opt_span] span "Dynamic trait types are not supported yet"
+@@ -419,7 +423,11 @@ let rec translate_fwd_ty (span : Meta.span option) (decls_ctx : C.decls_ctx)
+           let subst = make_subst_from_generics sg.generics generics in
+           ty_substitute subst sigs.ty
+       | T.TraitMethod _ -> [%craise_opt_span] span "Unimplemented")
+-  | TFnPtr _ -> [%craise_opt_span] span "Arrow types are not supported yet"
++  | TFnPtr binder ->
++      let sg = TypesUtils.check_fn_ptr_sig span
++        (Some decls_ctx.type_ctx.type_infos) binder in
++      mk_arrows (List.map (translate_fwd_ty span decls_ctx) sg.inputs)
++        (mk_result_ty (translate_fwd_ty span decls_ctx sg.output))
+   | TDynTrait { binder } ->
+       let params, _predicates =
+         translate_generic_params span binder.binder_params
+@@ -536,7 +544,10 @@ and compute_back_ty_num_levels (span : Meta.span option)
+           (generics = TypesUtils.empty_generic_args)
+           "Unimplemented";
+         save_count outer_regions
+-    | TFnDef _ | TFnPtr _ ->
++    | TFnPtr binder ->
++        let _ = TypesUtils.check_fn_ptr_sig span (Some type_infos) binder in
++        save_count outer_regions
++    | TFnDef _ ->
+         [%craise_opt_span] span "Arrow types are not supported yet"
+     | TDynTrait _ ->
+         [%craise_opt_span] span "Dynamic trait types are not supported yet"
+@@ -671,7 +682,10 @@ and translate_back_ty_aux (span : Meta.span option) (decls_ctx : C.decls_ctx)
+           (generics = TypesUtils.empty_generic_args)
+           "Unimplemented";
+         stop outer_regions ty
+-    | TFnDef _ | TFnPtr _ ->
++    | TFnPtr binder ->
++        let _ = TypesUtils.check_fn_ptr_sig span (Some type_infos) binder in
++        stop outer_regions ty
++    | TFnDef _ ->
+         [%craise_opt_span] span "Arrow types are not supported yet"
+     | TDynTrait _ ->
+         [%craise_opt_span] span "Dynamic trait types are not supported yet"

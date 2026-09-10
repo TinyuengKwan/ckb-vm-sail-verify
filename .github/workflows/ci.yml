@@ -58,6 +58,12 @@ jobs:
       - name: Check out the ckb-vm submodule
         run: git submodule update --init deps/ckb-vm
 
+      - name: Apply reviewed CKB source baseline
+        run: make ckb-baseline-apply
+
+      - name: Test source baseline guard
+        run: python3 scripts/tests/test_ckb_source_baseline.py
+
       # rust-toolchain.toml pins the version and its components; this installs
       # it up front and prints what the rest of the job will use.
       - name: Install the pinned toolchain
@@ -88,6 +94,9 @@ jobs:
           submodules: recursive
           # The emulator build reads the sail-riscv history.
           fetch-depth: 0
+
+      - name: Apply reviewed CKB source baseline
+        run: make ckb-baseline-apply
 
       # z3 is required because the pinned Sail is built from source: generating
       # the C++ model discharges type-level constraints through an SMT solver.
@@ -193,7 +202,7 @@ jobs:
       # cannot pass as evidence.
       - name: Check the recorded report
         run: |
-          jq -e '.schema_version == 2
+          jq -e '.schema_version == 3
                  and .summary.passed == true
                  and .summary.failures == 0
                  and .mutations.passed == true
@@ -202,6 +211,9 @@ jobs:
                  and (.environment.cargo | type) == "string"
                  and (.environment.sail_compiler | type) == "string"
                  and (.environment.ckb_vm_commit | type) == "string"
+                 and .environment.ckb_vm_source_baseline.identity_kind == "verified-source-checkout-not-binary-attestation"
+                 and (.environment.ckb_vm_source_baseline.patch_sha256 | length) == 64
+                 and (.environment.ckb_vm_source_baseline.source_tree_sha256 | length) == 64
                  and (.environment.sail_riscv_commit | type) == "string"
                  and (.environment.sail_config_sha256 | type) == "string"' \
             artifacts/report.json > /dev/null

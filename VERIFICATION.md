@@ -4,7 +4,9 @@
 
 ## 1. 当前版本基线
 
-- CKB-VM：`1ffba3977da9dcdef8092e9ab1fd2516b27ec939`
+- CKB-VM 生产源码：`ckb-vm-1ffba3977da9-runtime-container-v1`，即上游
+  `1ffba3977da9dcdef8092e9ab1fd2516b27ec939` 加受审容器化补丁；不是未修改的该 commit。
+  固定补丁、完整源码树哈希、提取配置和验收边界见[基线审查](proof/lean/extraction/ADOPTION.md)。
 - CKB-VM crate：0.24.0
 - Rust：MSRV 1.95；当前 foundation 验证版本 1.97.1
 - Sail compiler：**从源码构建**，commit `8eb1fb6b5bf9f18c0f89f71e94ff0c5894acd7c1`
@@ -36,19 +38,24 @@ Lean 模型在第 10/131 个目标失败于 `unknown namespace LeanRV64D.Defs`�
 
 - Charon：`0.1.247 (89ac118194b978d8cf753222c19f313521377aa0)`
 - Aeneas：`aeneas nightly-2026.09.01-379890b`
-- Lean（Sail 侧模型）：`leanprover/lean4:v4.29.0`
-- Lean（Rust 侧模型 / Aeneas 库）：`leanprover/lean4:v4.31.0`，依赖 mathlib4
+- Lean（Rust / Sail / 双侧导入工程）：`leanprover/lean4:v4.31.0`
+- Aeneas Lean 库同为 4.31.0；共同工程锁定 mathlib4 及传递 Git 依赖
 
 `scripts/generate_rust_model.sh` 在生成前核对 Charon/Aeneas 的完整版本串，不符即失败。
-两侧 Lean 工具链版本**不同**，因此 Week 5 的精化定理无法直接放进任一现有工程，
-需要先解决工具链统一或跨工程引用；这是已知的下一个结构性问题。
+共同版本由 `proof/lean/theorems/lean-toolchain` 唯一指定，生成与构建脚本均应用它。
+Sail 原生成模板使用 4.29.0；在 4.31.0 下还需要一处自动化的 `Defs.lean` 作用域
+兼容补丁。不能只改版本后将 Lake 的 `Built` 当成成功：未修正的枚举派生曾触发
+退出码为 0 的 compiler panic。复现、补丁边界与验收记录见
+[共同 Lean 兼容性报告](proof/lean/compat/README.md)。
 
-Rocq/OPAM 尚未进入门禁。
+Rocq/OPAM 的兼容性检查由 `make proof-spike` 单独执行，当前记录为 NO-GO，
+不是 Rocq 证明门禁通过。
 
 ## 2. 当前可运行基线
 
 ```bash
 git submodule update --init --recursive
+make ckb-baseline-apply
 make check
 make test
 make verify-env
@@ -57,6 +64,9 @@ make verify-negative
 make proof-gen BACKEND=lean
 make proof-gen BACKEND=rocq
 make proof-build BACKEND=lean
+make proof-gen-rust
+make proof-imports
+make proof-spike
 ```
 
 当前基线可以构建 Rust workspace、运行单元测试、构建 Sail 模拟器、验证固定环境、
@@ -70,14 +80,14 @@ Lean/Rocq 模型。模型生成不等于 kernel 编译或等价证明。
 漂移。`ckb_vm::instructions::common::add` 出现在生成物里是因为生产**到达**它，
 不是脚本点名它。
 
-**Week 4 要求记录的结论:提取不需要修改 `deps/ckb-vm`，因此本轮不需要上游
-patch 或 PR。** 原计划设想的是先重构生产代码去调用抽出的纯内核；实测表明
-Charon/Aeneas 直接吃得下生产形状，那次重构因此没有发生 —— 被翻译的就是跑差分
-的那份代码，不存在"重构是否改变了被验证对象"的问题。早期那个手写的
+**Week 4 历史结论：不改源码也能提取，但 wrapper 当时为 opaque。**
+Week 5 为取得真实 wrapper 定义已正式采用受审容器化补丁；现在的源码身份必须为
+上游 commit + 补丁，不得把修改版的证明归到原始 commit。早期那个手写的
 `crates/ckb-runner/src/semantics.rs` 原型已删除：它是第二份手写 RISC-V 语义，
 按 §5 不能计入证明证据，留在树里只会被误当成提取目标。生成物同样要过编译检查（记录在
-`proof/lean/expected_rust_build_status.txt`），当前状态 **ok**：279 个 `def`、
-65 个 `axiom`。exit gate 要求的"重新生成不需要编辑生成文件"已实测——连跑两次逐
+`proof/lean/expected_rust_build_status.txt`），当前状态 **ok**：285 个 `def`、
+51 个 `axiom`。寄存器总数和 RA 已通过精确 `--include` 从原来的 axiom 补为纯定义。
+exit gate 要求的"重新生成不需要编辑生成文件"已实测——连跑两次逐
 字节相同。
 
 `make proof-gen` 在生成之后调用 `scripts/check_proof_model.sh` 编译生成物，并把
@@ -91,7 +101,24 @@ Charon/Aeneas 直接吃得下生产形状，那次重构因此没有发生 —�
 历史与原因保留在 `proof/lean/expected_build_status.txt` 里，因为那正是这两个 pin
 现在是这个取值的理由。
 
-模型能编译**不等于**存在定理。Rust 侧生成、状态桥接与 ADD 精化定理都还没有。
+`make proof-imports` 在同一个锁定依赖的 Lean 工程中构建双方完整库和
+`SmokeImports.lean`，检查真实编译器版本、依赖 checkout、锁文件不变及无 compiler
+panic；失败或超时必定非零退出。它不沿用“符合已知 blocked 也返回 0”的判定。
+详细用法见 [导入工程](proof/lean/theorems/README.md)。
+
+模型能编译**不等于**完成精化。`make proof-registers` 进一步检查寄存器 `state_rel`、
+直接引用两侧生成 ADD 叶函数的条件性定理、精确公理依赖守卫及边界回归。
+已证内容见 [寄存器证明](proof/lean/reports/ADD_REGISTERS.md)。`make proof-step` 进一步
+连接 `execute_production` 和 `try_step`，检查 GPR/PC/next-PC、正常退休及所选内存
+frame 的条件性定理；[一步边界](proof/lean/reports/ADD_STEP.md) 列出通用定理的剩余条件、固定
+RVFI=false 配置与 137 项传递公理依赖。wrapper 两个合同已证明，其余条件仍显式。
+两个入口都不替代最终 `proof-check`。
+
+新增 [联合前提见证](proof/lean/reports/ADD_NONVACUITY.md) 已在 Lean 中构造同一具体 Sail 状态链的
+全部路径合同，并以 Rust seed 为输入应用最终定理。这不证明 raw decoder 对应、
+平台 reset 可达性或 Rust opaque 类型的无条件非空性。
+同码 ADD 解码已由另一个[公开入口定理](proof/lean/decoder/ADOPTION.md)证明；
+其独立干净复验及首次集成主门禁实跑均已通过，限定采纳身份与实际报告见上述记录。
 
 Lean 支持库（`rems-project/lean-sail`）在生成的 lakefile 里是按**分支**引用的，同一
 个 session 内实测解析到过两个不同 revision（`79b4d085` 与 `07946313`）。检查脚本因此
@@ -125,10 +152,13 @@ Sail 侧 `rv64d.v` 需要 `e_div`，而发布版 `rocq-sail-stdpp 0.20.2` 不提
 
 当前尚未完成：
 
-- 生产路径对纯 Rust `ADD` 语义的调用连接；
-- Rust 侧 Lean 4 生成、双方导入和 `ADD` 定理；
-- Rocq/Coq 的 Rust 侧生成、双方导入、状态桥接与 GO/NO-GO 报告；
-- `proof-check` 与 `audit-release`（Week 5–6）。
+- 为已有 `state_rel_pc` / `decoded_add_step` 的对应解码结果、Sail 前缀与初始化合同
+  提供具体状态上的证明；当前一步结论仍是条件性的；
+- `audit-release` 的全环境 clean-room、完整覆盖与发布证据验收（Week 6）；
+  已接入的条件性 `proof-check` 不替代这些工作。
+
+生产调用图提取和源码关联已建立；Rocq 双侧生成/导入尝试及 NO-GO 报告已存在。
+Rocq 当前的构建失败意味着没有完成双侧成功导入、状态桥接或定理。
 
 直接 ELF 模式得到空 RVFI 流必须返回失败，不能当作空程序或 PASS。
 
@@ -139,8 +169,8 @@ RVFI-DII 会话必须从架构复位态开始，首包不是 `rvfi_order` 0 / `p
 ## 3. 六周 MVP 验收接口
 
 以下接口是稳定验收面。`verify-smoke`、`verify-negative` 与 `proof-spike` 已实现
-并可直接验收；`proof-check` 与 `audit-release` 仍是计划中的接口，只有相应实现
-合入后才能按本节验收：
+并可直接验收；`proof-check BACKEND=lean` 已实现条件性 ADD 定理的严格生成/证明审计。
+`audit-release` 仍是计划中的接口，尚不能执行发布验收：
 
 ```bash
 make verify-smoke
@@ -154,11 +184,21 @@ make audit-release
 
 - `verify-smoke`：对 ADD、ADDI、BEQ 的至少 10 个案例完成严格双端比较；
 - `verify-negative`：至少 5 类 mutation 全部被检测；
-- `proof-check BACKEND=lean`：生成两侧 Lean 4 定义并由 kernel 检查生产关联的 ADD 定理；
+- `proof-check BACKEND=lean`：重新生成两侧 Lean 4 定义，实际编译并检查生产关联的
+  条件性 ADD 定理，精确审计公理、显式前提及来源；报告 `assurance=conditional`，
+  另要求模型/证明/Lean 依赖从零构建，并重新提取和审计指定配置的公开 ADD decoder；
+  wrapper 合同已证明，但取指/初态与 Sail 前提未全部消除，完整指令覆盖不自动成为 `proved`；
 - `make proof-spike`：重现双侧 Rocq 生成/导入并核对已记录的 GO/NO-GO；
 - `audit-release`：检查版本、哈希、覆盖、重放 artifact、占位符与保证边界。
 
 任一 runner error、空 trace、事件长度差异、字段差异或终止差异都不能返回 PASS。
+
+`proof-check` 要求两侧实际编译及指定定理的 kernel 检查成功，具体流程与
+原内部定理 137 项与公开解码步骤 158 项的审计边界见 [门禁说明](proof/lean/reports/PROOF_CHECK.md)。报告在
+`artifacts/proof-check/report.json`，失败不能沿用先前 PASS。
+`check_proof_model.sh` 是构建状态核对器，对符合记录的 `blocked` 也返回 0；
+因此新门禁不调用该状态核对器，而是运行严格构建和 Lean 环境导出审计，
+同时核验最终定理的传递公理、定理/合同类型和关系定义，不只用文本搜索判断信任边界。
 
 ## 4. 强制 Mutation
 
@@ -200,19 +240,29 @@ make audit-release
 
 Lean 4 主定理和关键连接层不得包含未说明的 `sorry` 或 `axiom`。
 
-**当前已知的信任基与 allowlist**（实测，非推断）：
+**当前已知的支持库假设与未解决依赖**（不是最终定理的批准 allowlist）：
 
-- Aeneas 的 Lean 支持库在构建中报告 4 处 `sorry`：`Aeneas/Std/Slice.lean:359`
-  （`core.slice.Slice.get_unchecked`）、同文件 615（其 spec 定理），以及
-  `Aeneas/Std/StringIter.lean:12,15`。ADD 路径用的是 `Slice.index_usize`，
-  它与其 spec **不含** `sorry`。这四处在信任基里但不在 ADD 定理会走的路径上；
-  任何触及它们的定理必须显式声明。
-- Rust 侧生成物含 65 个 `axiom`，全部来自被显式设为 opaque 的部分：内存实现、
-  `DefaultMachine`（因 `dyn` 无法翻译）、以及四个 `bool -> u64` 比较辅助函数。
-  理由逐条记录在 `proof/lean/expected_rust_build_status.txt`。
-- **`DefaultMachine` 到 `DefaultCoreMachine` 的委托是 axiom 而不是被翻译的
-  body**，这是生产机器与被提取定义之间唯一未被提取覆盖的一环。ADD 不触及它承载
-  的 `dyn` 字段，但这一点必须作为前提写进定理，不能默认成立。
+- Aeneas 的 Lean 支持库包含 4 处 `sorry`：`Aeneas/Std/Slice.lean` 中的
+  `core.slice.Slice.get_unchecked` 及其 spec 定理，以及
+  `Aeneas/Std/StringIter.lean` 的 `IteratorChars.next`、`IteratorChars.fold`。
+  ADD 的读取使用有 body 的 `Slice.index_usize`。不能仅凭这个直接调用就预先
+  排除未来证明经其他引理依赖 `sorryAx`；最终定理必须检查传递依赖。
+- 旧原始源码模型含 63 个 `axiom`，包括显式 opaque 的内存、`DefaultMachine` 和
+  四个 `bool -> u64` 比较辅助，以及其他外部声明。这一文件级
+  数字不等于选中 ADD 的必要假设集合。理由及审计入口见
+  `proof/lean/expected_rust_build_status.txt` 与 `proof/lean/reports/ADD_AUDIT.md`。
+- `RISCV_GENERAL_REGISTER_NUMBER` 和 `registers.RA` 已分别生成纯定义 32 和 1，
+  不再需要常量值/成功前提。`ExtractedConstants.lean` 的值引理及依赖守卫由
+  `make proof-imports` 编译；实测只有三个标准逻辑公理，无 `sorryAx`。
+- **以下是旧 policy 的历史边界，不是新源码的验收状态**：旧 `DefaultMachine` 到 `DefaultCoreMachine` 的委托是 axiom 而不是被翻译的
+  body**。生产实例的 `registers/set_register/pc/update_pc/commit_pc` 都是 opaque。
+  需补连接证明或明确读取、局部写回、PC 更新/提交的规律；“ADD 不触及 dyn 字段”
+  本身不够证明这些规律。仍依赖它们的定理必须标注为相应前提下的精化。
+  [ADD_PREMISES.md](proof/lean/reports/ADD_PREMISES.md) 区分了已编译的方法合同、状态/编码
+  条件和 Sail 一步前缀合同；当前 `decoded_add_step` 已使用它们连接双方真实入口，
+  合同本身不是其生产实例的证明。历史完整一步有 141 项依赖；当前 patched 基线的
+  137 项公理清单见 `AddStepAxioms.lean`，
+  不能沿用寄存器叶定理较小的依赖清单。
 
 Rocq/Coq spike 只有在定理由 Rocq kernel 检查通过时才计入额外证明覆盖；GO/NO-GO 报告本身不等于证明。若生成代码依赖公理或抽象接口，必须进入审计 allowlist 并解释影响。
 
@@ -222,8 +272,17 @@ Rocq/Coq spike 只有在定理由 Rocq kernel 检查通过时才计入额外证�
 - Sail 定义由固定 Sail 模型和同一配置生成；
 - 定理直接引用双方生成物，不引用手写第三份指令语义；
 - 记录状态关系、前提、源函数、生成函数、工具版本和 theorem 名称。
+- 对最终 theorem 执行 `#print axioms`，区分标准逻辑公理、外部声明与未证行为规律，
+  同时审计 theorem 的显式参数。报告中的合法输入前提不能直接假设待证明的 ADD
+  结果；应证明两侧成功及关系保持，包括 CKB 外层 Aeneas Result 与内层 VM Result。
 
 ## 6. Artifact 与 Mismatch
+
+新运行报告和 artifact 使用 schema 3。`ckb_vm_commit` 只表示上游锚点，修改版身份须读取
+`ckb_vm_source_baseline` 的 baseline ID、补丁/源码树/manifest 哈希；校验失败时该字段为 null，
+CI 不接受缺失身份。该字段核验的是当前源码 checkout，不是运行中二进制的构建证明。
+旧 schema 2 artifact 仍可重放输入，但不能据此补认新源码身份。新 proof-check policy
+已绑定修改版来源及正式 wrapper 合同，运行状态以本次验收报告为准。
 
 `--artifact-dir` 为每个案例写一份 JSON（`crates/diff-test/src/artifact.rs`），
 包含 schema 版本、案例身份与 seed、双方 commit、模拟器版本、合并配置 SHA-256、

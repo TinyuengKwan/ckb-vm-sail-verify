@@ -1,0 +1,74 @@
+{
+  "BorrowRegression.add_value": {
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "type_sha256": "29514e7c0cdbe27f91295c16ed94b8f846a00f37356b8cf8ae432cefbedf6c53"
+  },
+  "BorrowRegression.count_loop": {
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "type_sha256": "aad2bdcdbcf92882965e35e607f805abdd282ae28bb154810057d81be401a5ee"
+  },
+  "BorrowRegression.empty_extract": {
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "type_sha256": "48da25e4d1f739dc10905f37f94cab15cb865293141c9d5ce6571c672d21fb78"
+  },
+  "BorrowRegression.nested_assert": {
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "type_sha256": "3fcb6f02d3e5529acd5f68c0d938bcf7d8b245098ee6aac4661821b737d8174d"
+  },
+  "BorrowRegression.nested_loop": {
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "type_sha256": "81ff84925f67d1a96ec98e64032d3dfddb8ce4ba86b477d4e2422f9155e7a41a"
+  },
+  "BorrowRegression.next_done": {
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "type_sha256": "3dda4f2554ae811278fc8beba777bc77abb1858643a9b20d8107df1f69016ad5"
+  },
+  "BorrowRegression.next_some": {
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "type_sha256": "e4b4e62ff141e733841d40d558240ba025ffde26481af4a337efe9360cba6833"
+  },
+  "BorrowRegression.transform_lanes": {
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "type_sha256": "fba3f068a7028cfa1e5334e24655c7787b019a2e9da40dc8350c8a20db654caf"
+  },
+  "BorrowRegression.two_updates": {
+    "axioms": [
+      "propext",
+      "Classical.choice",
+      "Quot.sound"
+    ],
+    "type_sha256": "44b9ed6d0c6886f7ee7ea73d0a795536db3db55afc89d3413f81ba5171a27f4a"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "scope": "Raw 32-bit ADD through the production RV64 VERSION2 i::factory; not DefaultDecoder fetch/cache/MOP",
+  "root": "raw_add_decoder_connection::decode",
+  "namespace": "RawDecodeFactory",
+  "include": [
+    "ckb_vm::instructions::_",
+    "ckb_vm_definitions::instructions::_",
+    "ckb_vm::machine::VERSION2",
+    "core::option::_"
+  ],
+  "opaque": [
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::eq",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::lt",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::lt_s",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::logical_not"
+  ],
+  "aeneas_args": ["-backend", "lean", "-abort-on-error", "-no-progress-bar", "-checks"],
+  "aeneas_source_commit": "379890b54b4961dc7729e314c6eefdc09fe50981",
+  "charon_source_commit": "89ac118194b978d8cf753222c19f313521377aa0",
+  "aeneas_patch": "proof/lean/decoder/toolchain/aeneas-join-recovery.patch",
+  "aeneas_patch_baseline": "aeneas-379890b5-recover-nested-shared-joins-v1"
+}

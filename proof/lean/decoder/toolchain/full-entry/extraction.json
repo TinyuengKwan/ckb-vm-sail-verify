@@ -1,0 +1,79 @@
+{
+  "status": "adopted-rv64-add-public-v1",
+  "production_baseline": "ckb-vm-1ffba3977da9-runtime-container-v1",
+  "rust_toolchain": "nightly-2026-08-18",
+  "rust_commit": "8fa1c96cfd489e4c27654c144ae871ce2c4db6c6",
+  "target": "x86_64-unknown-linux-gnu",
+  "rustflags": "-Zalways-encode-mir=yes -Zmir-opt-level=0 -Zinline-mir=no",
+  "build_std": "std,panic_abort",
+  "charon_version": "0.1.247",
+  "charon_commit": "89ac118194b978d8cf753222c19f313521377aa0",
+  "aeneas_commit": "379890b54b4961dc7729e314c6eefdc09fe50981",
+  "aeneas_patch": "../branch-experimental/aeneas-branch-v2.patch",
+  "aeneas_patch_sha256": "956a3b1b895c9ffee8376d7cc8f2440efcedba8592908bac8b58c4a07b7c387d",
+  "aeneas_binary_sha256": "1fe7040d9dc5dc2af5320722c23199eddb2d1d540a303f7fcbaa7cb0defacaae",
+  "charon_common": [
+    "--preset=aeneas",
+    "--sysroot",
+    "<isolated-built-sysroot>"
+  ],
+  "outer_crate": "outer-decoder-probe",
+  "outer_root_source": "../full-mir/OuterRoot.rs",
+  "outer_source_dependency": "<repository>/deps/ckb-vm (path dependency, unchanged baseline)",
+  "outer_roots_checked": [
+    "outer_decoder_probe::fresh_decoder",
+    "outer_decoder_probe::decode_raw",
+    "outer_decoder_probe::decode"
+  ],
+  "outer_include": [
+    "ckb_vm::decoder::_",
+    "ckb_vm::instructions::_",
+    "ckb_vm_definitions::_",
+    "ckb_vm::machine::VERSION2",
+    "core::option::_",
+    "alloc::vec::{core::iter::traits::collect::IntoIterator<&_>}::into_iter",
+    "ckb_vm::machine::VERSION3",
+    "core::convert::num::{core::convert::TryFrom<i32, u64>}::try_from",
+    "core::num::error::TryFromIntError",
+    "core::num::error::IntErrorKind"
+  ],
+  "outer_opaque": [
+    "ckb_vm::memory::_",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::eq",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::lt",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::lt_s",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::logical_not"
+  ],
+  "outer_cargo_args": [
+    "--lib",
+    "--locked",
+    "--offline"
+  ],
+  "aeneas_args": [
+    "-backend",
+    "lean",
+    "-abort-on-error",
+    "-no-progress-bar",
+    "-checks",
+    "-namespace",
+    "OuterDecodeCandidate",
+    "-sequential"
+  ],
+  "compatibility": "Insert only import CkbVmProduction immediately after import Aeneas; preserve all generated definitions.",
+  "archived_inputs": "artifacts/boundary-check/aeneas-branch-ZR2ur7/OuterClosedDepsV3.llbc",
+  "full_public_decode_root_status": "body extracted and kernel checked; ADD MOP-off path proved; scoped tool adoption in public-policy.json",
+  "charon_patch": "../cfg-experimental/charon-cleanup-suffix.patch",
+  "charon_patch_sha256": "17f5c34ca63f66987498331d9712b8affb00e25867e4746b5b660893d3d6eebf",
+  "charon_binary_sha256": "bb36ff589c4eec04b834504c26fd29308421e24013a3ab44b58ef54b9e9eb3de",
+  "charon_driver_sha256": "b6ac4b189fd8b4afa43a02fd65ce3cb6e51b6cb408cd98b973d7345af416f49b",
+  "aeneas_env": {
+    "AENEAS_FACTOR_RETURN_GUARDS": "1",
+    "AENEAS_EXTRACT_TRY_FROM_INT_ERROR": "1"
+  },
+  "outer_root_source_sha256": "ce89211f2d139f2a7a3f4f5d69e6fe362ad2fd0b8bcf19e8e185cb589a15972c",
+  "outer_cargo_lock_sha256": "023588c4dac3bf3489f629bfd7eef67fa202a76918c737ad8ab1816d9ddfc2c3",
+  "outer_start_from": [
+    "outer_decoder_probe::_"
+  ],
+  "llbc_sha256": "ca80303e64e2010890d43f68bb70afe716a58d3ca568e2e9e831e81873911b10"
+}

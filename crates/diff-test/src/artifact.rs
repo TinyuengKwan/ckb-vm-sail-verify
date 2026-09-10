@@ -20,14 +20,27 @@ use crate::{corpus::TestProgram, mutation::MutationSummary};
 
 /// Bumped whenever the artifact layout changes in a way a reader must notice.
 ///
-/// 2 added the build toolchain: without it a replayer cannot tell which
-/// compilers produced the evidence, which `VERIFICATION.md` §6 requires.
-pub const ARTIFACT_SCHEMA_VERSION: u32 = 2;
+/// 3 distinguishes the upstream anchor from the verified patched source checkout.
+/// Checkout metadata is not an attestation of the running binary's build inputs.
+pub const ARTIFACT_SCHEMA_VERSION: u32 = 3;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CkbSourceBaseline {
+    pub baseline_id: String,
+    pub upstream_commit: String,
+    pub patch_sha256: String,
+    pub source_tree_sha256: String,
+    pub manifest_sha256: String,
+    pub identity_kind: String,
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Environment {
-    /// Commit of the verified production implementation, when it is a checkout.
+    /// Upstream checkout anchor only, NOT the identity of a patched implementation.
     pub ckb_vm_commit: Option<String>,
+    /// Verified current checkout, not a build-time or running-binary attestation.
+    #[serde(default)]
+    pub ckb_vm_source_baseline: Option<CkbSourceBaseline>,
     pub sail_riscv_commit: Option<String>,
     /// Version string reported by the emulator binary itself.
     pub sail_model_version: Option<String>,
@@ -51,6 +64,7 @@ impl Environment {
     pub fn detect(sail_bin: &Path, sail_config: &Path, isa: u8, ckb_vm_version: u32) -> Self {
         Self {
             ckb_vm_commit: git_head("deps/ckb-vm"),
+            ckb_vm_source_baseline: ckb_source_baseline(),
             sail_riscv_commit: git_head("deps/sail-riscv"),
             sail_model_version: emulator_version(sail_bin),
             sail_bin: sail_bin.to_path_buf(),
@@ -157,8 +171,8 @@ impl Artifact {
         let artifact: Self = serde_json::from_str(&text)
             .with_context(|| format!("failed to parse artifact {}", path.display()))?;
         anyhow::ensure!(
-            artifact.schema_version == ARTIFACT_SCHEMA_VERSION,
-            "artifact schema version {} is not the supported {ARTIFACT_SCHEMA_VERSION}",
+            matches!(artifact.schema_version, 2 | ARTIFACT_SCHEMA_VERSION),
+            "artifact schema version {} is not supported (2 or {ARTIFACT_SCHEMA_VERSION})",
             artifact.schema_version
         );
         Ok(artifact)
@@ -259,6 +273,18 @@ fn git_head(directory: &str) -> Option<String> {
         .then(|| String::from_utf8_lossy(&output.stdout).trim().to_string())
 }
 
+fn ckb_source_baseline() -> Option<CkbSourceBaseline> {
+    let root = Path::new(env!("CARGO_MANIFEST_DIR")).parent()?.parent()?;
+    let output = Command::new("python3")
+        .arg(root.join("scripts/ckb_source_baseline.py"))
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    serde_json::from_slice(&output.stdout).ok()
+}
+
 fn emulator_version(sail_bin: &Path) -> Option<String> {
     let output = Command::new(sail_bin).arg("--version").output().ok()?;
     output
@@ -306,6 +332,7 @@ mod tests {
             case,
             environment: Environment {
                 ckb_vm_commit: None,
+                ckb_vm_source_baseline: None,
                 sail_riscv_commit: None,
                 sail_model_version: None,
                 sail_bin: PathBuf::from("sail_riscv_sim"),
@@ -365,6 +392,18 @@ mod tests {
         assert_eq!(describe_isa(0), "IMC");
         assert_eq!(describe_isa(ckb_vm::ISA_B), "IMC+B");
         assert_eq!(describe_isa(ckb_vm::ISA_B | ckb_vm::ISA_MOP), "IMC+B+MOP");
+    }
+
+    #[test]
+    fn legacy_artifacts_do_not_invent_patched_source_identity() {
+        let mut value = serde_json::to_value(artifact()).unwrap();
+        value["schema_version"] = 2.into();
+        value["environment"]
+            .as_object_mut()
+            .unwrap()
+            .remove("ckb_vm_source_baseline");
+        let restored: Artifact = serde_json::from_value(value).unwrap();
+        assert!(restored.environment.ckb_vm_source_baseline.is_none());
     }
 
     #[test]

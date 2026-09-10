@@ -1,5 +1,19 @@
 # Week 4 — 双侧 Lean 4 生成与 Rocq/Coq Go/No-Go
 
+## 实施状态补充
+
+原任务中的生产重构路线已被直接提取生产调用图替代：`crates/proof-extract`
+用共享的 `InjectedMachine` 调用生产 `instructions::execute`，没有修改
+`deps/ckb-vm`，因此没有旧/新语义实现需要做迁移差分。现有入口测试覆盖 ADD、
+x0 和压缩指令 PC 增量；它们不构成 decoder 或生产委托的形式化证明。
+
+Rust/Sail 两侧 Lean 定义已有分别编译成功记录，Rocq 双侧尝试及 NO-GO 报告已存在。
+共同 Lean 4.31.0 工程及 `make proof-imports` 已实现，兼容补丁和实测结论见
+[兼容性报告](../../proof/lean/compat/README.md)。寄存器总数与 RA 已补齐生成定义和值检查。
+GPR/PC 状态桥接及条件性 ADD 一步定理已完成，双方 dispatch 与 PC 更新已连接；生产 wrapper 方法仍有 opaque 缺口，
+五个委托合同已编译但未实例化。详见 [ADD 审计](../../proof/lean/reports/ADD_AUDIT.md)。
+以下任务和 exit gate 保留其验收目标，不因这些阶段性证据而视为全部完成。
+
 ## 任务
 
 - 在 CKB-VM 上游友好的模块边界提取纯语义函数。

@@ -24,7 +24,7 @@ use std::{
 /// Bumped whenever the report envelope changes in a way a reader must notice.
 ///
 /// 2 added the build toolchain to `environment`.
-const REPORT_SCHEMA_VERSION: u32 = 2;
+const REPORT_SCHEMA_VERSION: u32 = 3;
 
 #[derive(Debug, Parser)]
 #[command(about = "Strict architectural trace comparison for CKB-VM and Sail")]

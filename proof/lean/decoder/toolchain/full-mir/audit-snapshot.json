@@ -1,0 +1,606 @@
+{
+  "definitions": {
+    "OuterAdd.factoryIter": "86fbb81b6d43e1bcc8dd0fe4084d49c524a2db8bc9b292ac5d8925f11ef9ae2f",
+    "OuterAdd.initial": "15675b825d0f2bb718cecc72a26f81a70bbf9e86a9ed621c2588037a8ec14287",
+    "OuterDecodeCandidate.SharedAVec.Insts.CoreIterTraitsCollectIntoIteratorSharedATIter.into_iter": "a9e1c83283dc48da06e703776d43fa38c07b172e4ce7ddb200a8c09ffdf4fe41",
+    "OuterDecodeCandidate.ckb_vm.decoder.DefaultDecoder.Insts.Ckb_vmDecoderInstDecoder.new": "a565e6e76f40856012c77328f8a54227157384e4aec5ddc1b28448f39f3e6c1a",
+    "OuterDecodeCandidate.ckb_vm.decoder.DefaultDecoder.add_instruction_factory": "fb381e624753e5c6a999eec133c64c8c8986d4cd5b06ad4739ac03ef4e8716f0",
+    "OuterDecodeCandidate.ckb_vm.decoder.DefaultDecoder.decode_bits": "e32477a65eea7dbf5c8394c56bd776c4f7d8d23d3340bda60a34b319ed17dae1",
+    "OuterDecodeCandidate.ckb_vm.decoder.DefaultDecoder.decode_raw": "da164607765318311dba1753664ee0422af20452b1b22dac4d4eccd3f795fa19",
+    "OuterDecodeCandidate.ckb_vm.decoder.DefaultDecoder.decode_raw_loop": "d9318d131487261474fc34b581fdeb7735d6ce78b58b5b5dad010999d333d82b",
+    "OuterDecodeCandidate.ckb_vm.decoder.DefaultDecoder.decode_raw_loop.body": "4a8a9a7d1b05aafea64e513ba0804b7f6b902f7dd743fe7b662a9b2a6786236f",
+    "OuterDecodeCandidate.ckb_vm.decoder.DefaultDecoder.empty": "c23db0ffbc1af4b4f67dbac4c7560d698a743dcff9c8bf9dc227480fd1826b97",
+    "OuterDecodeCandidate.ckb_vm.instructions.Rtype.new": "86c6d9efe4840bcf143a974ba915affb1450c7ed7af480302a04e5d620241b60",
+    "OuterDecodeCandidate.ckb_vm.instructions.i.factory": "fbb14e086d71c36d22e5eae12bc1a2a5a95c3eee46bf08af8bedce4a5ba31b5a",
+    "OuterDecodeCandidate.ckb_vm.instructions.rvc.factory": "7ae260cc235bd568821841516a7d05a132404e08115997df8ce4a6654e2d85dc",
+    "OuterDecodeCandidate.ckb_vm.instructions.set_instruction_length_4": "6ab397c5be5265dd2491917b7b5498cad81db33cd50708e42322473bae3b569b",
+    "OuterDecodeCandidate.fresh_decoder": "a60de7451a38408b0f74cc193b6f7425c9115bce66a0823643e0ac6b89a70010",
+    "fnptr_cases.SharedAVec.Insts.CoreIterTraitsCollectIntoIteratorSharedATIter.into_iter": "a9e1c83283dc48da06e703776d43fa38c07b172e4ce7ddb200a8c09ffdf4fe41"
+  },
+  "scope": "experimental full-MIR decoder prefix; not production tool adoption or full decoder acceptance",
+  "theorems": {
+    "FullMirIterator.actual_entry_empty": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "fc39237edd5bf537394c7252da22e3e60ce25ff01ca854e0e3232e75a633581c"
+    },
+    "FullMirIterator.actual_entry_hit": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "48e368f117da9951d3dfb8a29b69a8df3547331337baf81097e697aaa9c76637"
+    },
+    "FullMirIterator.actual_entry_order": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "6fda012f725a5fbc97d32bbe281aee987f84be70cc5444cae534640257ef2cc9"
+    },
+    "FullMirIterator.into_iterator": {
+      "axioms": [
+        "propext"
+      ],
+      "type_sha256": "5945884b18ae106de2154ad8ee5d6e975ff522a0f17bf6529ce77b83416ee32f"
+    },
+    "OuterAdd.add_decode": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "5170b06f940b483caa74e5d1cfc4822b618df9ae8f206fe8d89b0088abe6a323"
+    },
+    "OuterAdd.add_dispatch": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "4733d93099bf1b67751cc9741d00928cb2313f7e7c81b92945968a1925bab37d"
+    },
+    "OuterAdd.add_low_two": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "70d36c22e3a958a97cac8b43146cb79982eec1ba16763a03185d5f7025a668a1"
+    },
+    "OuterAdd.cache_other_unchanged": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "a6a39ede2eab0b7d1f497f85b686320dda681935f29269d8b30607c2ba5aa59c"
+    },
+    "OuterAdd.cache_update": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "f38ab36b1c91065a8acdd9524a8e87311dd8d4fab1b1cb50908dae85f5972150"
+    },
+    "OuterAdd.cache_write_visible": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "93e3dffe7d175f869d3de5c8e14afd266dadc93d9150b34c7584cff846830bc3"
+    },
+    "OuterAdd.compressed_mask": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "9024bd12ee1ff456d285c8f50b239232550ff8138b7f762fe9c384ab9a12b10a"
+    },
+    "OuterAdd.compressed_rejects_add": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "a698c8abbc9470f0ec62c44ef9226e23f5e627992a5637df83242619c4cedbd6"
+    },
+    "OuterAdd.decode_raw_zero": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "a621fa88c7fca4c28186c4a7dd11310b0bde872bf8a51f90d9f64fa9fa0b1be7"
+    },
+    "OuterAdd.factory_f3": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "89cde2e46a49e5a0f18746115b2fe252b8ece0c68dc84e07505f9d5006f3221a"
+    },
+    "OuterAdd.factory_f7": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "2fe80184a1894e0da668ac4e04348791d49a24a43a6a71c7cc337d6def566c8e"
+    },
+    "OuterAdd.factory_loop_add": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "65eecd15fc5140028d19aef70cd040c0e7e68c607bc79ce0559b1eae3ce3f7a1"
+    },
+    "OuterAdd.factory_op": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "81e032214d1f56a2ead74806a8abda37d3fca0990609b688bede624c0575e55f"
+    },
+    "OuterAdd.factory_rd": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "8417b34659bc3f507cae8e378758345fa5b721e98daaf119e40d2e6c469cb150"
+    },
+    "OuterAdd.factory_rs1": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "ca3111759f59102e94ff1579af61119dd85eba365fa08319f48af6ae028a418a"
+    },
+    "OuterAdd.factory_rs2": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "0b15002955b7669845e860ac8f0bad690832f03435f242d5ee5682872393e4c8"
+    },
+    "OuterAdd.fetch_add32": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "fe9ef9cbe948e573e4abb4718b98dd249ee97cd590e535cef3837be0487c135e"
+    },
+    "OuterAdd.first_factory_skips": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "631629a3646f5a25f0782ab8526af446bfab8b6cdf70189459b2925093338315"
+    },
+    "OuterAdd.fresh_initial": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "e9a8f5abebfbb19b4852b96a570690d5ef5e66105ec202b81b93a7eb9fb44779"
+    },
+    "OuterAdd.initial_cache": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "66f2c062cc0cb0580fa1306e6d1fc31cf4d46028cd05500bc031c1324cbc7c99"
+    },
+    "OuterAdd.initial_factories": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "69008a126a838bfc92fa4c0dbc6c6363c14231e823607d6966e01a659c2b94cc"
+    },
+    "OuterAdd.initial_mop_off": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "6310e2b1f280d7fb0005f9a80381c666f66587298aadbbfbd50f431207ef0659"
+    },
+    "OuterAdd.initial_new": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "d8765a0cf7ec4e7f5d8ed183df8ea738d89aae7f8e396546aa5a83ec1eff7fa1"
+    },
+    "OuterAdd.iterator_entry": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "28bb6e4298da4261dd47809e89060d3a40557336b988dd0dd31db0d118e942b6"
+    },
+    "OuterAdd.next_one": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "15b7b89cdb3de002010097bdbf44d5f468f6a0d01931925dc5fb2d8ab9b34ca9"
+    },
+    "OuterAdd.next_zero": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "f18638f5f9cffa2377b4e95446eef8091cef868e0a2e9fbaafcfd7f956b7d177"
+    },
+    "OuterAdd.page_mask": {
+      "axioms": [
+        "Classical.choice",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "7e84d0696723f59357fd1f8bf84c886cf09c12f52ca388769ca225a14d2d36b2"
+    },
+    "OuterAdd.second_factory_writes": {
+      "axioms": [
+        "Aeneas.Std.core.fmt.Formatter",
+        "Classical.choice",
+        "OuterDecodeCandidate.I128.Insts.CoreConvertFromU64.from",
+        "OuterDecodeCandidate.I32.Insts.CoreConvertFromU8.from",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShlU64I64.shl",
+        "OuterDecodeCandidate.I64.Insts.CoreOpsBitShrU64I64.shr",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShlI32U64.shl",
+        "OuterDecodeCandidate.Shared0U64.Insts.CoreOpsBitShrI32U64.shr",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.eq",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.logical_not",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt",
+        "OuterDecodeCandidate.U64.Insts.Ckb_vmInstructionsRegisterRegister.lt_s",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitAndU64U64.bitand",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitOrU64U64.bitor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitBitXorU64U64.bitxor",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitNotU64.not",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShlU64U64.shl",
+        "OuterDecodeCandidate.U64.Insts.CoreOpsBitShrU64U64.shr",
+        "OuterDecodeCandidate.core.num.I64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.count_ones",
+        "OuterDecodeCandidate.core.num.U64.overflowing_rem",
+        "OuterDecodeCandidate.core.num.U64.trailing_zeros",
+        "Quot.sound",
+        "propext"
+      ],
+      "type_sha256": "21040117912751c811d5290547958395e9c523d67fbf4d1898e55a93a76b8a4a"
+    }
+  }
+}

@@ -18,13 +18,12 @@
 #   ckb_vm::memory::_   ADD touches no memory, and SparseMemory::load uses
 #                       Iterator::skip, which the Aeneas Lean library does not
 #                       model.
-#   DefaultMachine      Carries Box<dyn Syscalls>, Box<dyn Debugger> and a
-#                       dyn Fn cycle hook; Aeneas reports "Dynamic trait types
-#                       are not supported yet". ADD touches none of them, but
-#                       the wrapper's delegation to DefaultCoreMachine is
-#                       therefore an axiom rather than a translated body. This
-#                       is the one link between the production machine and the
-#                       extracted definitions that this track does not cover.
+#   MachineRuntime      The reviewed upstream-plus-patch baseline groups the
+#                       dynamic callbacks in this private opaque container.
+#                       DefaultMachine is now a structure and the five
+#                       register/PC delegates are real translated definitions.
+#                       Pause remains an external opaque type. See
+#                       extraction/ADOPTION.md; this is not the original commit.
 #   Register<u64>::{eq,lt,lt_s,logical_not}
 #                       All four are `bool -> u64` via `.into()`; Aeneas emits
 #                       `core.convert.FromU64Bool`, which its Lean library does
@@ -32,15 +31,23 @@
 #                       ADD uses none of them. BEQ does, so a comparison
 #                       theorem must resolve this first.
 #
+# Two external constant axioms were removed by exact --include rules:
+#   ckb_vm_definitions.RISCV_GENERAL_REGISTER_NUMBER = 32#usize
+#   ckb_vm_definitions.registers.RA = 1#usize
+# Both are pure generated defs. theorems/ExtractedConstants.lean checks their
+# values and permits only the three observed standard logical axioms.
+# Other external functions/types remain in the 51-axiom file and are not all
+# explicit --opaque selections. Full dispatch is not a path-sensitive ADD list.
+#
 # Trust boundary, per VERIFICATION.md section 5: the Aeneas Lean library itself
-# reports four `sorry`s during this build --
-#   Aeneas/Std/Slice.lean:359      core.slice.Slice.get_unchecked
-#   Aeneas/Std/Slice.lean:615      its spec theorem
-#   Aeneas/Std/StringIter.lean:12,15
-# The ADD path uses `Slice.index_usize`, which together with its spec carries
-# no `sorry`. These four are therefore in the trust base but not on the path
-# any future ADD theorem would use; a theorem that reaches them must say so.
+# has four `sorry`s: Slice.get_unchecked and its spec in Std/Slice.lean, and
+# IteratorChars.next/fold in Std/StringIter.lean. Direct ADD reads use
+# Slice.index_usize, but a future theorem's helper lemmas and explicit premises
+# must also be audited. See ADD_AUDIT.md and audit/*Dependencies.lean.
+# This build record does not certify a theorem or approve an axiom allowlist.
 status=ok
-# 279 defs, 65 axioms. About 15s once mathlib is cached; mathlib itself is the
+# 285 defs, 51 axioms, 12 structures (old baseline: 281 defs / 63 axioms).
+# These file-level counts are not the final theorem's transitive axiom count.
+# About 20s once mathlib is cached; mathlib is the
 # expensive part of a cold setup.
 target=CkbVmProduction

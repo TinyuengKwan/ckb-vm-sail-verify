@@ -1,0 +1,83 @@
+diff --git a/charon/src/transform/control_flow/duplicate_return.rs b/charon/src/transform/control_flow/duplicate_return.rs
+index ba0749b2..8dbc6cf8 100644
+--- a/charon/src/transform/control_flow/duplicate_return.rs
++++ b/charon/src/transform/control_flow/duplicate_return.rs
+@@ -45,7 +45,7 @@ fn is_return_block(block: &BlockData) -> bool {
+ impl UllbcPass for Transform {
+     fn transform_body(&self, _ctx: &mut TransformCtx, b: &mut ExprBody) {
+         // Find the return block id (there should be one).
+-        let returns: HashMap<BlockId, BlockData> = b
++        let mut returns: HashMap<BlockId, BlockData> = b
+             .body
+             .iter_enumerated()
+             .filter_map(|(bid, block)| {
+@@ -57,16 +57,66 @@ impl UllbcPass for Transform {
+             })
+             .collect();
+ 
++        // A shared cleanup suffix hides early returns from CFG reconstruction, just as a
++        // shared bare return does. Include short, acyclic chains of storage cleanup and
++        // drops. Copy the normal path verbatim; unwind edges keep their original targets.
++        // The bound limits expansion and recursion; longer suffixes keep the old behavior.
++        for _ in 0..32 {
++            let additions: Vec<_> =
++                b.body
++                    .iter_enumerated()
++                    .filter_map(|(bid, block)| {
++                        if returns.contains_key(&bid)
++                            || !block
++                                .statements
++                                .iter()
++                                .all(|st| matches!(st.kind, StatementKind::StorageDead(_)))
++                        {
++                            return None;
++                        }
++                        let target = match &block.terminator.kind {
++                            TerminatorKind::Goto { target }
++                            | TerminatorKind::Drop { target, .. } => target,
++                            _ => return None,
++                        };
++                        returns.contains_key(target).then(|| (bid, block.clone()))
++                    })
++                    .collect();
++            if additions.is_empty() {
++                break;
++            }
++            returns.extend(additions);
++        }
++
+         // Whenever we find a goto the return block, introduce an auxiliary block
+         // for this (remark: in the end, it makes the return block dangling).
+         // We do this in two steps.
+         // First, introduce fresh ids.
+         let mut generator = Generator::new_with_init_value(b.body.next_idx());
+         let mut new_blocks = Vec::new();
++        fn clone_suffix(
++            bid: BlockId,
++            returns: &HashMap<BlockId, BlockData>,
++            generator: &mut Generator<BlockId>,
++            new_blocks: &mut Vec<BlockData>,
++        ) -> BlockId {
++            let new_id = generator.fresh_id();
++            let index = new_blocks.len();
++            new_blocks.push(returns[&bid].clone());
++            let mut block = returns[&bid].clone();
++            match &mut block.terminator.kind {
++                TerminatorKind::Goto { target } | TerminatorKind::Drop { target, .. } => {
++                    *target = clone_suffix(*target, returns, generator, new_blocks);
++                }
++                TerminatorKind::Return => {}
++                _ => unreachable!(),
++            }
++            new_blocks[index] = block;
++            new_id
++        }
+         b.body.dyn_visit_in_body_mut(|bid: &mut BlockId| {
+-            if let Some(block) = returns.get(bid) {
+-                *bid = generator.fresh_id();
+-                new_blocks.push(block.clone());
++            if returns.contains_key(bid) {
++                *bid = clone_suffix(*bid, &returns, &mut generator, &mut new_blocks);
+             }
+         });
+ 

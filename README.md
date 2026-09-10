@@ -1,5 +1,14 @@
 # CKB-VM Sail Verification
 
+当前生产源码已采用 `ckb-vm-1ffba3977da9-runtime-container-v1`：上游 commit 加固定
+容器化补丁，**不是原始 CKB-VM commit 本身**。见[正式源码基线与审计清单](proof/lean/extraction/ADOPTION.md)。
+正式 wrapper 合同、最终定理和 137 项审计 policy 已迁移；
+`proof-check` 还强制从零编译模型/证明及 Lean 依赖。实际验收证据见 [Week 5 报告](proof/lean/reports/WEEK5_EXIT.md)。
+
+公开 ADD decoder 已通过 47 阶段独立干净复验，并按[限定工具政策](proof/lean/decoder/ADOPTION.md)
+接入主门禁，首次集成实跑已通过。它从同一个原始 ADD 字连接双方执行，保留取指/初态边界，
+不扩展到 MOP-on 或所有 ISA/configuration。
+
 用官方 Sail RISC-V 模型验证 CKB-VM 指令语义的工程化项目。项目采用两条相互校验、但不混淆结论的链路：
 
 - 运行时差分：CKB-VM 与 Sail 模拟器输出统一的 RVFI 风格 `CommitEvent`，逐条比较 PC、指令、寄存器写回、内存访问、trap 和终止原因。
@@ -19,33 +28,49 @@ PC = `0x80000000`）出发，因此比较不再经过 ELF loader 与平台栈。
 在每个 PR 上，差分层的模拟器构建按 sail-riscv commit 缓存，未命中时冷构建而不
 跳过。
 
-这只是运行时证据，不是形式化验证：证明轨仍然停在 Sail 侧模型生成，没有 Rust
-侧生成、状态桥接或等价定理。
+上述数字是运行时证据。证明轨已有 Rust/Sail 两侧 Lean 生成物；共同工具链固定为
+Lean 4.31.0，双侧导入入口为 `make proof-imports`，实测记录见
+[兼容性报告](proof/lean/compat/README.md)。`state_rel` 与 ADD 寄存器层条件性定理
+现已实现并由 `make proof-registers` 检查，详见 [证明边界](proof/lean/reports/ADD_REGISTERS.md)。
+`make proof-step` 进一步检查 [dispatch/PC 条件性一步精化](proof/lean/reports/ADD_STEP.md)，
+直接连接 `execute_production` 与 `try_step`。
+`make proof-check BACKEND=lean` 已串联重新生成、来源/公理/显式前提审计及负向测试，
+输出条件性验收报告，详见 [proof-check 门禁](proof/lean/reports/PROOF_CHECK.md)。
+这不消除剩余合同，也不等于 `audit-release`。
 
 固定配置下的 Sail→Lean 4 与 Sail→Rocq 模型生成入口均已验证可重现，且 **Lean 模型
 现在编译通过**(125 个 `.olean`)。`make proof-gen` 在生成之后会真正编译它生成的
-东西并与 `proof/lean/expected_build_status.txt` 的记录双向核对 —— 生成可重现不等于
+Lean 模型并与 `proof/lean/expected_build_status.txt` 的记录双向核对 —— 生成可重现不等于
 生成物可用,这两件事在这里是分开检查的。
 
 这一步需要**从源码构建的 Sail**(`make sail-compiler`)：sail-riscv 的 Lean target
 需要比任何已发布 Sail 都新的编译器,上游自己也是这么做的。源码构建与发布版同样
-自称 0.20.2,所以环境检查钉的是完整版本串,发布版会被明确拒绝。Rocq 侧尚无编译
-检查。
+自称 0.20.2,所以环境检查钉的是完整版本串,发布版会被明确拒绝。Rocq 的双侧
+生成/导入 spike 已记录 NO-GO，由 `make proof-spike` 复现；它不提供证明覆盖。
 
 **Rust 侧生成也已建立**(Week 4):`crates/proof-extract` 用普通 Rust 命名生产
 提取根 —— 一行调用 `ckb_vm::instructions::execute`,机器类型 import 自 ckb-runner
 的 `InjectedMachine`,和差分驱动的是同一个类型。Charon 从这个根提取生产调用图,
-Aeneas 译成 Lean 4,`make proof-gen-rust` 生成并编译(279 个 `def`/65 个 `axiom`),
-连跑两次逐字节相同。`ckb_vm::instructions::common::add` 出现在生成物里是因为
+Aeneas 译成 Lean 4,`make proof-gen-rust` 生成并编译。新基线的生成结果与已检查的
+隔离模型逐字一致；`ckb_vm::instructions::common::add` 出现在生成物里是因为
 生产**到达**它。
 
-模型能编译不等于存在定理:状态桥接与 ADD 精化定理都还没有,而且两侧 Lean 工具链
-版本不同(v4.29.0 / v4.31.0),定理无法直接放进任一现有工程。被显式设为 opaque
-的部分(内存、`DefaultMachine` 的 `dyn` 字段、四个 `bool -> u64` 比较辅助)逐条
-记录在 `proof/lean/expected_rust_build_status.txt`。
+模型能编译不等于完成精化：现有定理已连接 GPR、PC/dispatch 与正常退休路径，
+生产 wrapper 委托已证明；原内部定理保留 decoded-input 前提，新公开入口定理则在指定配置下
+从原始 ADD 字推出两侧解码。Sail 前缀、取指和初态关系仍有明确边界。
+双方导入和定理工程位于
+`proof/lean/theorems/`；生成脚本统一工具链并自动应用已记录的 Sail 类型作用域
+兼容补丁，不修改指令函数体。被显式设为 opaque
+的部分(内存、`MachineRuntime` 动态字段容器、四个 `bool -> u64` 比较辅助)逐条
+记录在 `proof/lean/expected_rust_build_status.txt`。寄存器数量 32 与 RA 1 已补齐真实
+定义并检查值；已证 wrapper 委托及剩余状态/解码合同见 [ADD 剩余前提](proof/lean/reports/ADD_PREMISES.md)。完整边界见
+[ADD 依赖与定理审计](proof/lean/reports/ADD_AUDIT.md)。
 
-生成物位于忽略目录，仍不包含 Rust 翻译、状态桥接或等价定理，不能计入
-形式化证明覆盖。
+生成物位于忽略目录，包含 Rust/Sail 翻译；统一物理内存及平台初始化尚未关闭，
+不能将其计作完整指令的 `proved` 覆盖。
+已新增 [具体联合前提见证](proof/lean/reports/ADD_NONVACUITY.md)：Sail 合同在同一状态链上成立，
+双侧实例以 Rust seed 为输入；该见证本身不证明 reset 可达性或 `Nonempty Machine`。
+同码 ADD 解码对应另见[公开入口定理](proof/lean/decoder/toolchain/full-entry/OuterPublicStep.lean)。
 
 只有同时满足下列条件，某条指令才能标记为 `proved`：
 
@@ -84,6 +109,7 @@ Rust/Sail generated definitions ──► Rocq/Coq compatibility GO/NO-GO
 ```bash
 # 初始化固定版本的 CKB-VM 与 Sail RISC-V 源码
 git submodule update --init --recursive
+make ckb-baseline-apply  # 只在精确、干净的上游源码上应用受审补丁；不提交 Git commit
 
 # 从源码构建固定 commit 的 Sail 编译器（发布版不够新，见 VERIFICATION.md §1）
 make sail-compiler
@@ -122,8 +148,20 @@ cargo run -p ckb-vm-sail-diff -- \
 make proof-gen BACKEND=lean
 make proof-gen BACKEND=rocq
 
+# Rust 侧生产调用图生成与 Lean 编译检查
+make proof-gen-rust
+
+# 复现 Rocq 双侧路线的 NO-GO（不是证明通过）
+make proof-spike
+
 # 只跑编译检查（对照 proof/lean/expected_build_status.txt 的双向核对）
 make proof-build BACKEND=lean
+
+# 共同 Lean 4.31.0 下构建双方库并完成双侧 import（不是 ADD 定理门禁）
+make proof-imports
+
+# 条件性 ADD 一步定理、依赖守卫和边界回归
+make proof-step
 ```
 
 Rust 工具链由 `rust-toolchain.toml` 固定为 1.97.1（`Cargo.toml` 声明的 MSRV
@@ -147,8 +185,11 @@ crates/
 deps/
   ckb-vm/        被验证的生产 Rust 实现
   sail-riscv/    权威 Sail RISC-V 模型
+patches/
+  ckb-vm/        受审的 runtime-container 源码补丁，由 make ckb-baseline-apply 应用
 proof/
-  lean/          必须完成的 Lean 4 主证明入口
+  lean/          Lean 4 主证明入口：theorems/ 定理、decoder/ 解码对应层、
+                 audit/ policy、extraction/ 源码基线、reports/ 各阶段历史报告
   rocq/          Rocq/Coq 生成、导入与兼容性 spike
 docs/            架构、方法、覆盖、语义缺口与 Week 1–6 计划
 artifacts/       失败案例格式；大体积本地生成物默认忽略
@@ -157,15 +198,21 @@ sail-model/
 .github/
   workflows/ci.yml 分层 CI：快速检查每次跑，差分层按缓存与定时任务跑
 scripts/
-  prepare_sail_config.sh
-  generate_proof_model.sh
-  verify_environment.sh
+  build_*/prepare_*/verify_*   工具链与模拟器构建、环境核验
+  generate_*/configure_*       两侧证明模型生成与 Lake 工程配置
+  check_*/public_decoder_*     证明门禁及其子门禁（路径与哈希被 policy 固定）
+  tests/                       门禁的单元与负向测试
+  probes/                      被门禁引用的边界探针
+  experiments/                 不被门禁引用的翻译器实验与回归审计脚本
 ```
 
 
-证明轨翻译的是**生产代码本身**，不为证明改写它：提取根在
-`crates/proof-extract`，一行调用 `ckb_vm::instructions::execute`。因此
-**本轮不需要 CKB-VM 上游 patch 或 PR** —— 这是 Week 4 计划要求记录的结论。
+证明轨翻译的是**生产代码本身**，不为证明改写指令语义：提取根在
+`crates/proof-extract`，一行调用 `ckb_vm::instructions::execute`。Week 4 记录的
+结论是指令函数体不需要上游 patch；Week 5 为了让 `DefaultMachine` 可提取，引入了
+`patches/ckb-vm/runtime-container.patch`（只把三个 `dyn` 字段搬进私有结构体，
+`CoreMachine` 实现逐字未变），其审查与等价边界见
+[源码基线采用决议](proof/lean/extraction/ADOPTION.md)。
 早期那个手写的 `semantics.rs` 原型已删除：它是第二份手写 RISC-V 语义，
 `VERIFICATION.md` §5 明确规定这种东西不能计入证明证据，留在树里只会误导。
 注意：锁定的上游 sail-riscv 只有在 RVFI-DII socket 模式下才真正产生 RVFI 包，

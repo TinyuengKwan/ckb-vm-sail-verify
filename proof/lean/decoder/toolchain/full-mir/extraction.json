@@ -1,0 +1,38 @@
+{
+  "status": "experimental-not-adopted",
+  "production_baseline": "ckb-vm-1ffba3977da9-runtime-container-v1",
+  "rust_toolchain": "nightly-2026-08-18",
+  "rust_commit": "8fa1c96cfd489e4c27654c144ae871ce2c4db6c6",
+  "target": "x86_64-unknown-linux-gnu",
+  "rustflags": "-Zalways-encode-mir=yes -Zmir-opt-level=0 -Zinline-mir=no",
+  "build_std": "std,panic_abort",
+  "charon_version": "0.1.247",
+  "charon_commit": "89ac118194b978d8cf753222c19f313521377aa0",
+  "aeneas_commit": "379890b54b4961dc7729e314c6eefdc09fe50981",
+  "aeneas_patch": "../fnptr-experimental/aeneas-fnptr-experimental.patch",
+  "aeneas_patch_sha256": "a8ef142bd11bf29a923649920f95ae15b730f5d4aaf1ed5da5b9ec8a27e4e3c9",
+  "aeneas_binary_sha256": "504cd66e34a386174fd763b41fb7fd91f50ab00f8edd5c811562365defcd6554",
+  "charon_common": ["--preset=aeneas", "--sysroot", "<isolated-built-sysroot>"],
+  "outer_crate": "outer-decoder-probe",
+  "outer_root_source": "OuterRoot.rs",
+  "outer_source_dependency": "<repository>/deps/ckb-vm (path dependency, unchanged baseline)",
+  "outer_roots_checked": ["outer_decoder_probe::fresh_decoder", "outer_decoder_probe::decode_raw"],
+  "outer_include": [
+    "ckb_vm::decoder::_", "ckb_vm::instructions::_", "ckb_vm_definitions::_",
+    "ckb_vm::machine::VERSION2", "core::option::_",
+    "alloc::vec::{core::iter::traits::collect::IntoIterator<&_>}::into_iter"
+  ],
+  "outer_opaque": [
+    "ckb_vm::memory::_",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::eq",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::lt",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::lt_s",
+    "ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::logical_not"
+  ],
+  "outer_cargo_args": ["--lib", "--locked", "--offline"],
+  "aeneas_args": ["-backend", "lean", "-abort-on-error", "-no-progress-bar", "-checks",
+    "-namespace", "OuterDecodeCandidate"],
+  "compatibility": "Insert only import CkbVmProduction immediately after import Aeneas; preserve all generated definitions.",
+  "archived_inputs": "artifacts/boundary-check/decoder-sysroot-q8nI9W",
+  "full_public_decode_root_status": "resource-aborted; not extracted or proved"
+}

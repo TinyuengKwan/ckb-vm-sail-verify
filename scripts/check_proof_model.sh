@@ -40,7 +40,7 @@ with coq-sail-stdpp) and is tracked in docs/semantic-gaps.md.
 EOF
         exit 0
         ;;
-    *) fail "backend must be lean or rocq" ;;
+    *) fail "backend must be lean, rust or rocq" ;;
 esac
 
 if [ "$BACKEND" = "lean" ]; then
@@ -55,6 +55,10 @@ fi
 
 [ -d "$GENERATED" ] || fail "no generated model at $GENERATED; run $REGENERATE"
 [ -f "$EXPECTATION" ] || fail "missing expectation record $EXPECTATION"
+"$SCRIPT_DIR/configure_lean_project.sh" "$BACKEND"
+export ELAN_TOOLCHAIN="$(tr -d '\n' < "$GENERATED/lean-toolchain")"
+export LEAN_ABORT_ON_PANIC=1
+ulimit -c 0
 
 # elan installs lake outside the default PATH.
 if ! command -v lake >/dev/null 2>&1; then
@@ -82,20 +86,8 @@ trap 'rm -f "$LOG"' EXIT
 EXPECTED_LEAN_SAIL_REV="$(read_field lean_sail_rev)"
 
 echo "==> Resolving the Lean support library"
-# The generated lakefile requires lean-sail by *branch*, so two runs can
-# resolve to different code. Pin it to the recorded revision before resolving,
-# and refuse to continue if the resolved manifest disagrees: a model built
-# against an unknown support library is not reproducible evidence.
-if [ "$BACKEND" = "lean" ] && [ -n "$EXPECTED_LEAN_SAIL_REV" ]; then
-    LAKEFILE="$GENERATED/lakefile.toml"
-    [ -f "$LAKEFILE" ] || fail "no lakefile at $LAKEFILE"
-    if grep -q '^rev = ' "$LAKEFILE"; then
-        sed -i "s|^rev = .*|rev = \"$EXPECTED_LEAN_SAIL_REV\"|" "$LAKEFILE"
-    else
-        fail "$LAKEFILE has no rev line to pin"
-    fi
-    echo "    pinned lean-sail to $EXPECTED_LEAN_SAIL_REV"
-fi
+# configure_lean_project.sh has pinned the toolchain and Sail dependency.
+# Also check Lake's resolved revision, rather than trusting configuration alone.
 
 (cd "$GENERATED" && lake update) >"$LOG" 2>&1 || {
     cat "$LOG" >&2
@@ -114,6 +106,10 @@ fi
 echo "==> Building the generated $BACKEND-side Lean model (timeout ${BUILD_TIMEOUT}s)"
 BUILD_STATUS=0
 (cd "$GENERATED" && timeout "$BUILD_TIMEOUT" lake build) >"$LOG" 2>&1 || BUILD_STATUS=$?
+
+if grep -qE 'PANIC|uncaught exception|Stack overflow' "$LOG"; then
+    fail "compiler panic/internal failure in generated model build (including cached traces)"
+fi
 
 if [ "$BUILD_STATUS" -eq 124 ]; then
     tail -n 20 "$LOG" >&2

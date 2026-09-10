@@ -1,0 +1,118 @@
+diff --git a/src/interp/InterpBorrows.ml b/src/interp/InterpBorrows.ml
+index f3dcde14..c9386672 100644
+--- a/src/interp/InterpBorrows.ml
++++ b/src/interp/InterpBorrows.ml
+@@ -1920,7 +1920,8 @@ let rec promote_reserved_mut_borrow (config : config) (span : Meta.span)
+         \         a region abstraction"
+ 
+ let destructure_abs (span : Meta.span) (abs_kind : abs_kind) ~(can_end : bool)
+-    ~(destructure_shared_values : bool) (ctx : eval_ctx) (abs0 : abs) : abs =
++    ?(recoverable : bool = false) ~(destructure_shared_values : bool)
++    (ctx : eval_ctx) (abs0 : abs) : abs =
+   [%ltrace "- abs:\n" ^ abs_to_string span ctx abs0];
+   (* Accumulator to store the destructured values *)
+   let avalues = ref [] in
+@@ -1977,7 +1978,7 @@ let destructure_abs (span : Meta.span) (abs_kind : abs_kind) ~(can_end : bool)
+             push { value; ty }
+         | AIgnoredMutLoan (opt_bid, child_av) ->
+             (* We don't support nested borrows for now *)
+-            [%cassert] span
++            [%cassert_recover] recoverable span
+               (not
+                  (ty_has_borrows (Some span) ctx.type_ctx.type_infos child_av.ty))
+               "Nested borrows are not supported yet";
+@@ -1986,7 +1987,7 @@ let destructure_abs (span : Meta.span) (abs_kind : abs_kind) ~(can_end : bool)
+             list_avalues 0 push_fail child_av
+         | AEndedSharedLoan (sv, child_av) ->
+             (* We don't support nested borrows for now *)
+-            [%cassert] span
++            [%cassert_recover] recoverable span
+               (not
+                  (ty_has_borrows (Some span) ctx.type_ctx.type_infos child_av.ty))
+               "Nested borrows are not supported yet";
+@@ -2006,7 +2007,7 @@ let destructure_abs (span : Meta.span) (abs_kind : abs_kind) ~(can_end : bool)
+             { child = child_av; given_back = _; given_back_meta = _ }
+         | AIgnoredSharedLoan child_av ->
+             (* We don't support nested borrows for now *)
+-            [%cassert] span
++            [%cassert_recover] recoverable span
+               (not
+                  (ty_has_borrows (Some span) ctx.type_ctx.type_infos child_av.ty))
+               "Nested borrows are not supported yet";
+@@ -2115,7 +2116,7 @@ let destructure_abs (span : Meta.span) (abs_kind : abs_kind) ~(can_end : bool)
+             let avl, sv = list_values sv in
+             if destructure_shared_values then (
+               (* Rem.: the shared value can't contain loans nor borrows *)
+-              [%cassert] span (ty_no_regions ty)
++              [%cassert_recover] recoverable span (ty_no_regions ty)
+                 "Nested borrows are not supported yet";
+               let av : tavalue =
+                 [%sanity_check] span
+diff --git a/src/interp/InterpBorrows.mli b/src/interp/InterpBorrows.mli
+index 249c1d3a..a9195fef 100644
+--- a/src/interp/InterpBorrows.mli
++++ b/src/interp/InterpBorrows.mli
+@@ -145,6 +145,7 @@ val destructure_abs :
+   Meta.span ->
+   abs_kind ->
+   can_end:bool ->
++  ?recoverable:bool ->
+   destructure_shared_values:bool ->
+   eval_ctx ->
+   abs ->
+diff --git a/src/interp/InterpJoin.ml b/src/interp/InterpJoin.ml
+index bd48e0bc..9c6470f6 100644
+--- a/src/interp/InterpJoin.ml
++++ b/src/interp/InterpJoin.ml
+@@ -823,7 +823,7 @@ let join_ctxs (span : Meta.span) (fresh_abs_kind : abs_kind)
+          Note that we destructure the fresh abstractions - TODO: make the merge more
+          general *)
+       let destructure_abs ctx =
+-        destructure_abs span fresh_abs_kind ~can_end:true
++        destructure_abs span fresh_abs_kind ~can_end:true ~recoverable
+           ~destructure_shared_values:true ctx
+       in
+       let add_marker ctx (pm : proj_marker) (ee : env_elem) : env_elem list =
+diff --git a/src/interp/InterpReduceCollapse.ml b/src/interp/InterpReduceCollapse.ml
+index 379bcd2d..75adab0d 100644
+--- a/src/interp/InterpReduceCollapse.ml
++++ b/src/interp/InterpReduceCollapse.ml
+@@ -1316,6 +1316,38 @@ let collapse_ctx config (span : Meta.span)
+       None) (fresh_abs_kind : abs_kind) ~(recoverable : bool)
+     ~(with_abs_conts : bool) (ctx : eval_ctx) : eval_ctx =
+   [%ldebug "Initial ctx:\n" ^ eval_ctx_to_string ctx];
++  (* The borrow/loan maps used below do not support concrete shared borrows
++     nested in the values of abstract shared loans.  Do not attempt a partial
++     merge: reject this join before modifying the context.  The caller may
++     preserve the original branch contexts and duplicate their continuations.
++     Strict joins and non-recoverable callers still report an error. *)
++  let check_shared_value =
++    object
++      inherit [_] iter_tvalue as super
++      method! visit_borrow_content env bc =
++        match bc with
++        | VSharedBorrow _ ->
++            [%craise_recover] recoverable span
++              "Context collapse does not support concrete shared borrows in abstract shared loans"
++        | _ -> super#visit_borrow_content env bc
++    end
++  in
++  let check_abs =
++    object
++      inherit [_] iter_tavalue as super
++      method! visit_aloan_content env lc =
++        (match lc with
++        | ASharedLoan (_, _, sv, _) -> check_shared_value#visit_tvalue () sv
++        | _ -> ());
++        super#visit_aloan_content env lc
++    end
++  in
++  let frozen = ctx_get_frozen_abs_set ctx in
++  env_iter_abs
++    (fun abs ->
++      if not (AbsId.Set.mem abs.abs_id frozen) then
++        List.iter (check_abs#visit_tavalue ()) abs.avalues)
++    ctx.env;
+   let merge_funs =
+     mk_collapse_ctx_merge_duplicate_funs span fresh_abs_kind ~recoverable
+       ~with_abs_conts ctx

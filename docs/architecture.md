@@ -73,11 +73,14 @@ pub fn execute_production(inst: Instruction, machine: &mut InjectedMachine) -> R
 拼写，两者因此不可能漂移。Charon 从这个根提取调用图，
 `ckb_vm::instructions::common::add` 出现在生成物里是因为生产**到达**它。
 
-代价是有三处必须设为 opaque，每一处都有实测原因（内存的 `Iterator::skip`、
+提取显式将三组对象设为 opaque，每一组都有实测原因（内存的 `Iterator::skip`、
 `DefaultMachine` 的 `dyn` 字段、四个 `bool -> u64` 转换），逐条记录在
 `proof/lean/expected_rust_build_status.txt`。其中 `DefaultMachine` 到
-`DefaultCoreMachine` 的委托是 axiom 而非翻译出的 body，这是生产与被提取定义之间
-唯一未被提取覆盖的一环，必须作为定理前提写出。
+`DefaultCoreMachine` 的委托是 axiom 而非翻译出的 body，必须补连接证明或明确的
+方法规律前提。生成物还有其他外部声明：ADD 写回直接依赖的
+`RISCV_GENERAL_REGISTER_NUMBER` 也被生成为 axiom，不能宣称 wrapper 是唯一缺口。
+实际依赖、输入合法性和寄存器/PC 两层证明合同见
+[ADD 审计](../proof/lean/reports/ADD_AUDIT.md)。
 
 这条路线不引入"Rust 一份、手写证明模型一份"的双重实现，因为被翻译的就是生产
 那一份。
@@ -130,6 +133,12 @@ state_rel ckb sail
 
 适用前提必须包含 ISA 开关、特权级、对齐策略、内存范围、异常环境和版本。
 
+上式是一般关系示意，具体 ADD 定理还应从合法输入和外围条件推出两侧成功，避免
+只假设双方已成功而漏掉失败行为。初版范围是对应的已解码 ADD；取指/解码与 cycle
+不在提取根内。`common.add` 和 Sail `execute_RTYPE` 都不推进 PC，包含 PC 的结论
+必须另外连接生成的 CKB `execute` 与 Sail `run_hart_active` / `tick_pc`。
+Sail 的寄存器映射必须具有所需键；全零复位态不是通用 ADD 引理的必要限制。
+
 ## 5. 信任边界
 
 需要明确记录的可信组件：
@@ -138,6 +147,7 @@ state_rel ckb sail
 - Sail compiler 对 Lean 4/Rocq 后端的翻译；
 - 强制证明使用的 Lean 4 kernel，以及兼容性 spike 使用的 Rocq kernel；
 - `DefaultMachine` 到 `DefaultCoreMachine` 的委托：它因 `dyn` 字段无法翻译，在生成物里是 axiom；
+- 实际定理可达的外部声明与显式前提；寄存器总数和 RA 已提取并检查值，wrapper 合同仍未实例化。见 ADD 审计，不能只扫描占位符；
 - RVFI 适配器只影响测试观察，不影响 VM 行为。
 
 翻译器生成代码应固定 commit，CI 重新生成后必须保持 clean diff。
@@ -160,7 +170,8 @@ state_rel ckb sail
 ```text
 crates/core/
   后端无关的事件协议与严格比较器
-  临时证明翻译目标；最终必须移入生产调用边界或由生产路径调用
+crates/proof-extract/
+  使用共享 InjectedMachine 类型调用生产 instructions::execute 的提取根
 crates/ckb-runner/src/lib.rs
   只读 CKB-VM 观察 adapter，不属于被证明语义
 crates/sail-runner/
@@ -169,8 +180,14 @@ crates/diff-test/
   外部 oracle 的 CLI 编排、重放与报告
 proof/{lean,rocq}/generated/
   工具生成物，不手工修改
-proof/{lean,rocq}/theorems/
-  state relation、adapter lemmas 与精化定理
+proof/lean/audit/
+  可执行的依赖查询，不是精化定理
+proof/lean/theorems/
+  共同 Lean 4.31.0 双侧 import 工程；state relation 与精化定理待实现
+proof/lean/compat/
+  Sail 类型作用域兼容补丁、回归探针与实测报告
+proof/rocq/theorems/（计划目录）
+  兼容性 NO-GO 尚未解除
 ```
 
 旧 `coq/CkbVmModel.v` 等手写状态/语义文件不继续作为证明入口。Rocq 路线迁移到 `proof/rocq/`，只有同时引用 Rust 与 Sail 生成物的关系定理才计入覆盖。
@@ -182,9 +199,9 @@ proof/{lean,rocq}/theorems/
 - CKB runner 已采集 PC、raw instruction 与 GPR delta，但尚无 committed data-memory observer；load/store/AMO/SYSTEM 因此被支持子集拒绝。
 - 寄存器观察的分辨率是架构状态变化：写回寄存器已有值在两端都不可观察。
 - 注入路径的 CKB ISA 已收敛到 `ISA_IMC | ISA_B`。开启 `ISA_MOP` 会让解码器走 `decode_mop` 并向前读取注入流之外的字节，融合命中时一步退休多条指令；两侧对"一步"的定义必须一致，因此宏操作融合不在范围内。
-- Rust 侧生成物已存在且可编译，但**没有定理**：状态桥接与 ADD 精化定理都还没有，且两侧 Lean 工具链版本不同（v4.29.0 / v4.31.0），定理暂时放不进任一现有工程。
+- 双侧工程使用共同 Lean 4.31.0，生成流程包含已记录的 Sail 类型作用域补丁；`make proof-step` 检查条件性 dispatch/PC 定理，wrapper 委托已证明，原内部定理审计 137 项依赖。新增公开 ADD decoder 定理审计 158 项，在既定配置和取指条件下推出同码解码；其独立干净复验及集成主门禁实跑均通过。Sail 前缀、物理内存对应与 reset 可达性仍有边界，不能据此标记无条件完整指令 `proved`。
 - 提取不需要修改 `deps/ckb-vm`，因此本轮不需要上游 patch/PR。
-- proof 目录目前没有定理或 Rust 翻译生成物。
+- 寄存器总数与 RA 已从 axiom 补为真实定义；生产 wrapper 方法仍是 axiom，其五个委托合同虽已编译，尚无实例/连接证明。
 
 - mutation 矩阵证明的是**比较器**会失败，不是语料覆盖了 CKB-VM 的输入空间；两者是不同的命题。
 

@@ -38,7 +38,8 @@ foundation
 ## Deliverables
 
 - `crates/core/`：统一观察协议、严格比较与结构化错误。
-- `crates/ckb-runner/`：真实 CKB-VM adapter 与临时 extraction scaffold。
+- `crates/ckb-runner/`：真实 CKB-VM adapter 与共享的注入机器类型。
+- `crates/proof-extract/`：直接调用生产解释器的提取入口；替代早期手写语义 scaffold。
 - `crates/sail-runner/`：Sail 进程、RVFI parser 与 DII client。
 - `crates/diff-test/`：CLI 编排、报告与退出状态。
 - `proof/`：生成物入口、状态关系与真实定理。

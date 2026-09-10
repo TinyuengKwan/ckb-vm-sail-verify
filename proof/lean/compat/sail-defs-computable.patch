@@ -1,0 +1,11 @@
+--- LeanRV64D/Defs.lean
++++ LeanRV64D/Defs.lean
+@@ -9,7 +9,7 @@
+ open Sail
+ open Sail.ConcurrencyInterfaceV1
+ 
+-noncomputable section
++section
+ namespace LeanRV64D
+ 
+ /-- Type quantifiers: k_a : Type -/

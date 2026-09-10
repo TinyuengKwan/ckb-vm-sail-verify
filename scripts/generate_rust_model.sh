@@ -11,15 +11,10 @@
 #   ckb_vm::memory::_        ADD touches no memory. SparseMemory::load also
 #                            uses Iterator::skip, which the Aeneas Lean library
 #                            has no model for, so including it fails outright.
-#   DefaultMachine           It carries `Box<dyn Syscalls>`, `Box<dyn Debugger>`
-#                            and a `dyn Fn` cycle hook. Aeneas reports
-#                            "Dynamic trait types are not supported yet". None
-#                            of the three is touched by ADD, but the type
-#                            cannot be translated while they are in it, so the
-#                            wrapper's delegation to DefaultCoreMachine stays an
-#                            axiom. This is recorded in docs/semantic-gaps.md;
-#                            it is the one link in the chain that extraction
-#                            does not cover.
+#   MachineRuntime           The reviewed source patch contains the dynamic
+#                            callbacks in a private container. DefaultMachine
+#                            and its five register/PC delegates are included;
+#                            only the dynamic container remains opaque.
 #   Register<u64>::{eq,lt,lt_s,logical_not}
 #                            All four are `bool -> u64` via `.into()`, and
 #                            Aeneas emits `core.convert.FromU64Bool`, which its
@@ -28,6 +23,11 @@
 #                            them, but BEQ does, so a comparison theorem will
 #                            have to resolve this first.
 #
+# The selections above do not enumerate every generated axiom. The two reached
+# external constants are explicitly included below so Charon retains their
+# source initializers: register count (ADD) and RA (other dispatch branches).
+# See proof/lean/ADD_AUDIT.md for remaining dependencies and method premises.
+#
 # Usage: ./scripts/generate_rust_model.sh
 
 set -euo pipefail
@@ -35,10 +35,15 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 
+# Reject the original checkout, unreviewed edits, or extraction-config drift.
+# A source baseline is upstream commit PLUS patch, never the commit alone.
+SOURCE_IDENTITY="$(python3 "$SCRIPT_DIR/ckb_source_baseline.py")"
+EXTRACTION_CONFIG="$PROJECT_DIR/proof/lean/extraction/ckb-vm.json"
+
 # Pinned toolchain. VERIFICATION.md section 1 requires these to be fixed before
 # any Rust-side definition is generated.
-EXPECTED_CHARON="0.1.247 (89ac118194b978d8cf753222c19f313521377aa0)"
-EXPECTED_AENEAS="aeneas nightly-2026.09.01-379890b"
+EXPECTED_CHARON="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["charon"])' "$EXTRACTION_CONFIG")"
+EXPECTED_AENEAS="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["aeneas"])' "$EXTRACTION_CONFIG")"
 
 AENEAS_HOME="${AENEAS_HOME:-$HOME/.local/share/aeneas}"
 CHARON="${CHARON:-$AENEAS_HOME/charon}"
@@ -63,29 +68,37 @@ LLBC="$PROJECT_DIR/target/CkbVmProduction.llbc"
 mkdir -p "$(dirname "$LLBC")" "$DESTINATION"
 
 echo "==> Extracting the production call graph"
-(cd "$PROJECT_DIR/crates/proof-extract" && "$CHARON" cargo --preset=aeneas \
-    --start-from 'ckb_vm_sail_extract::execute_production' \
-    --include 'ckb_vm::instructions::_' \
-    --include 'ckb_vm::machine::DefaultCoreMachine' \
-    --include 'ckb_vm::machine::{impl ckb_vm::machine::CoreMachine for ckb_vm::machine::DefaultCoreMachine}::_' \
-    --opaque 'ckb_vm::machine::DefaultMachine' \
-    --opaque 'ckb_vm::memory::_' \
-    --opaque 'ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::eq' \
-    --opaque 'ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::lt' \
-    --opaque 'ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::lt_s' \
-    --opaque 'ckb_vm::instructions::register::{ckb_vm::instructions::register::Register<u64>}::logical_not' \
+mapfile -t CHARON_ARGS < <(python3 - "$EXTRACTION_CONFIG" <<'PY'
+import json, sys
+c = json.load(open(sys.argv[1]))
+print('--preset=' + c['preset'])
+print('--start-from\n' + c['root'])
+for key in ('include', 'opaque'):
+    for name in c[key]:
+        print('--' + key + '\n' + name)
+PY
+)
+(cd "$PROJECT_DIR/crates/proof-extract" && "$CHARON" cargo "${CHARON_ARGS[@]}" \
     --dest-file "$LLBC" -- --lib)
 
 echo "==> Translating to Lean 4"
-"$AENEAS" -backend lean -dest "$DESTINATION" "$LLBC"
+mapfile -t AENEAS_ARGS < <(python3 -c 'import json,sys; print("\n".join(json.load(open(sys.argv[1]))["aeneas_args"]))' "$EXTRACTION_CONFIG")
+"$AENEAS" "${AENEAS_ARGS[@]}" -dest "$DESTINATION" "$LLBC"
+# Bind provenance to the model just generated and reject mid-run source drift.
+[ "$(python3 "$SCRIPT_DIR/ckb_source_baseline.py")" = "$SOURCE_IDENTITY" ] || fail "source identity changed during extraction"
+python3 - "$DESTINATION" "$SOURCE_IDENTITY" "$LLBC" <<'PY'
+import hashlib, json, pathlib, sys
+dest = pathlib.Path(sys.argv[1])
+evidence = json.loads(sys.argv[2])
+evidence['generated_lean_sha256'] = hashlib.sha256((dest/'CkbVmProduction.lean').read_bytes()).hexdigest()
+evidence['llbc_sha256'] = hashlib.sha256(pathlib.Path(sys.argv[3]).read_bytes()).hexdigest()
+(dest/'SOURCE_BASELINE.json').write_text(json.dumps(evidence, indent=2) + '\n')
+PY
 
 # A lake project so the generated definitions can be compiled. Written here
 # rather than by hand: the exit gate requires that regenerating needs no edits
 # to anything under the generated directory.
 AENEAS_LEAN_LIB="$AENEAS_HOME/backends/lean"
-cat >"$DESTINATION/lean-toolchain" <<EOF
-$(cat "$AENEAS_LEAN_LIB/lean-toolchain")
-EOF
 cat >"$DESTINATION/lakefile.toml" <<EOF
 name = "CkbVmProduction"
 defaultTargets = ["CkbVmProduction"]
@@ -97,15 +110,16 @@ path = "$AENEAS_LEAN_LIB"
 [[lean_lib]]
 name = "CkbVmProduction"
 EOF
+"$SCRIPT_DIR/configure_lean_project.sh" rust
 cat >"$DESTINATION/TOOLCHAIN.txt" <<EOF
 charon=$actual_charon
 aeneas=$actual_aeneas
 roots=ckb_vm_sail_extract::execute_production
-lean_toolchain=$(cat "$AENEAS_LEAN_LIB/lean-toolchain")
+lean_toolchain=$(cat "$DESTINATION/lean-toolchain")
 EOF
 
 echo
 echo "Generated Rust-side Lean definitions: $DESTINATION"
 echo "NOTE: generating these files says nothing about whether they compile,"
-echo "      and compiling says nothing about any theorem. Neither a Rust-side"
-echo "      to Sail-side state bridge nor an ADD refinement theorem exists yet."
+echo "      and compiling alone checks no theorem. Run make proof-check BACKEND=lean"
+echo "      to audit the existing conditional ADD step theorem and its boundaries."

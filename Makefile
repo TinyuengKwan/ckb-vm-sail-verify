@@ -1,13 +1,19 @@
-.PHONY: check test sail-compiler verify-env verify-smoke verify-negative verify-dii sail-emu sail-config diff diff-corpus proof-gen proof-gen-rust proof-build proof-spike clean-generated
+.PHONY: check test ckb-baseline ckb-baseline-apply sail-compiler verify-env verify-smoke verify-negative verify-dii sail-emu sail-config diff diff-corpus proof-gen proof-gen-rust proof-build proof-imports proof-registers proof-step proof-check proof-spike clean-generated
 
 BACKEND ?= lean
 
-check:
+ckb-baseline:
+	python3 scripts/ckb_source_baseline.py
+
+ckb-baseline-apply:
+	python3 scripts/ckb_source_baseline.py --apply
+
+check: ckb-baseline
 	cargo fmt --all -- --check
 	cargo check --workspace --all-targets --locked
 	cargo clippy --workspace --all-targets --locked -- -D warnings
 
-test:
+test: ckb-baseline
 	cargo test --workspace --locked
 
 verify-env: sail-config
@@ -25,7 +31,7 @@ sail-emu:
 sail-config: sail-emu
 	./scripts/prepare_sail_config.sh
 
-diff:
+diff: ckb-baseline
 	@test -n "$(ELF)" || (echo "usage: make diff ELF=path/to/test.elf"; exit 2)
 	./scripts/run_differential.sh "$(ELF)"
 
@@ -36,10 +42,10 @@ diff:
 #                  harness locating a real divergence. Neither target can pass
 #                  without the other's evidence being meaningful, so CI runs
 #                  both.
-verify-smoke: sail-config
+verify-smoke: ckb-baseline sail-config
 	cargo run --locked -p ckb-vm-sail-diff -- --corpus --artifact-dir artifacts/corpus
 
-verify-negative: sail-config
+verify-negative: ckb-baseline sail-config
 	cargo test --locked -p ckb-vm-sail-diff -- --ignored
 	cargo run --locked -p ckb-vm-sail-diff -- --corpus --mutate --artifact-dir artifacts/corpus
 
@@ -63,6 +69,22 @@ proof-gen-rust:
 
 proof-build:
 	./scripts/check_proof_model.sh "$(BACKEND)"
+
+# Common-toolchain compilation/import check, without the proof-check audit.
+proof-imports:
+	./scripts/check_lean_imports.sh
+
+# Conditional register-only ADD theorem, not the full production-step proof-check.
+proof-registers:
+	./scripts/check_lean_imports.sh --registers
+
+# Normal ADD at execute_production/try_step, with explicit boundary contracts.
+proof-step:
+	./scripts/check_lean_imports.sh --step
+
+# Strict regeneration + kernel + dependency/premise audit. Conditional, not release.
+proof-check:
+	python3 scripts/check_proof.py "$(BACKEND)"
 
 # `VERIFICATION.md` §3's proof-spike: reproduces the Rocq GO/NO-GO recorded in
 # proof/rocq/SPIKE.md. Fails if either half starts succeeding, because that

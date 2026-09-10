@@ -45,6 +45,10 @@ cp -R "$SOURCE"/. "$DESTINATION"/
 cp "$MATERIALIZED_CONFIG" "$DESTINATION/ckb_vm_config.json"
 sha256sum "$DESTINATION/ckb_vm_config.json" >"$DESTINATION/ckb_vm_config.json.sha256"
 
+if [ "$BACKEND" = lean ]; then
+    "$SCRIPT_DIR/configure_lean_project.sh" lean
+fi
+
 echo "Generated Sail $BACKEND definitions: $DESTINATION"
 echo "NOTE: generating these files says nothing about whether they compile."
 echo "      Run scripts/check_proof_model.sh $BACKEND for that; it is what"

@@ -1,0 +1,125 @@
+{
+  "schema_version": 1,
+  "status": "adopted-rv64-add-public-v1",
+  "production_baseline": "ckb-vm-1ffba3977da9-runtime-container-v1",
+  "inputs": "artifacts/boundary-check/aeneas-branch-ZR2ur7",
+  "configuration": {
+    "instruction": "normal 32-bit RV64 ADD",
+    "version": 2,
+    "isa": "IMC+B",
+    "mop": false,
+    "cache": "actual fresh decoder",
+    "pc": "arbitrary, subject to explicit size/fetch contracts",
+    "theorem": "OuterAdd.cold_public_add_step"
+  },
+  "limitations": [
+    "tool transforms remain trusted, not generally formally verified",
+    "upstream full test suite has documented failures; not claimed all-pass",
+    "MOP-on fusion and non-ADD instruction correctness not proved",
+    "physical memory coupling and actual SparseMemory implementation not proved",
+    "opaque Rust Machine inhabitation and platform reset reachability not proved"
+  ],
+  "sources": {
+    "proof/lean/decoder/field-policy.json": "2fd824db64328972468ddb76fd7cdfb4d0cfbf86e8614ab88ee10169b9b40673",
+    "proof/lean/decoder/raw-policy.json": "407909ee4584c3d1a45dcbf123fa2019d70b2eaac4f22b962caf3dea37596951",
+    "proof/lean/decoder/toolchain/branch-experimental/BorrowProof.lean": "29277a112c1c5f371748592dc477191b294e9b8a3e38dd5cb70750a286254c19",
+    "proof/lean/decoder/toolchain/branch-experimental/ExportBorrowAudit.lean": "e21c3b571582d345c52afc8053a197390f1b16232f6bdb57b7497bbdfa0789b4",
+    "proof/lean/decoder/toolchain/branch-experimental/GuardCounterexample.lean": "bab643e47054f374823016937a5e7c70efa58759b33967f26ed4a4dee1e2e8a3",
+    "proof/lean/decoder/toolchain/branch-experimental/GuardEquivalence.lean": "17125d1d2a235a5dfe9019e3b55d025906e3290103f6af4d0608fb93d90b1c61",
+    "proof/lean/decoder/toolchain/branch-experimental/RejectWrongGuard.lean": "28845a351540402efe50f03554b9e5b096122bb8fbbc82092adc0aba23718443",
+    "proof/lean/decoder/toolchain/branch-experimental/SharedEffectProof.lean": "672260903967fdf6d82b413bbf3608cd55208615f8668f20cb6512a9a229aa06",
+    "proof/lean/decoder/toolchain/branch-experimental/aeneas-branch-v2.patch": "956a3b1b895c9ffee8376d7cc8f2440efcedba8592908bac8b58c4a07b7c387d",
+    "proof/lean/decoder/toolchain/branch-experimental/borrow-audit-snapshot.json": "9806e98cba5033a180cd7a846860ddd767b99ffaee0c012fe802bde21d2eb7b7",
+    "proof/lean/decoder/toolchain/cfg-experimental/LoopJumpNegative.lean": "fdf068760caee8425c3e1504f1ac9a7aca70d360a231703e71ae3a9e0ae16b28",
+    "proof/lean/decoder/toolchain/cfg-experimental/LoopJumpProof.lean": "c9ec73fb18cf48dec445ab7e9d3d6502abfeab7df85add9e307850007d3fdfc1",
+    "proof/lean/decoder/toolchain/cfg-experimental/charon-cleanup-suffix.patch": "17f5c34ca63f66987498331d9712b8affb00e25867e4746b5b660893d3d6eebf",
+    "proof/lean/decoder/toolchain/fnptr-experimental/fnptr_cases.rs": "030b33d30abb63491fa97017fc1d558f2d3bf3c49c53eff38792704cf101272e",
+    "proof/lean/decoder/toolchain/full-entry/ExportPublicAudit.lean": "71839d0e966775ac012f45fe45e340e4160e61943c96ef8f0a906b6f43d0d06f",
+    "proof/lean/decoder/toolchain/full-entry/OuterConversion.lean": "b2bffa0116e4345906cacad686d4c895db514f9759ac9777beec253ef287fb1e",
+    "proof/lean/decoder/toolchain/full-entry/OuterPublic.lean": "18b35c205437c38f996f96e8f05c34df6e92e509616f03a7dd7dca17120224d9",
+    "proof/lean/decoder/toolchain/full-entry/OuterPublicStep.lean": "7be8e73389d26c4bd095491e58c8ebc43715f83866429a4dbeefd41495a1db14",
+    "proof/lean/decoder/toolchain/full-entry/OuterPublicWitness.lean": "88405791705b3c1ddc58032abd4a50c422e0a67be2b4174336e9defb008d8452",
+    "proof/lean/decoder/toolchain/full-entry/RejectWrongPublic.lean": "e6d29385f2e8bd764b8c7f89af443063b6caadffecaf77f4b401e101344998b8",
+    "proof/lean/decoder/toolchain/full-entry/audit-snapshot.json": "33b76c6791a874357ae9859b57ddb8c7b37e689e3c4a7b8edc900386a82e1135",
+    "proof/lean/decoder/toolchain/full-entry/extraction.json": "aaed2661ab316b0cf959034fa8b3e9c836aa88ad52da7746b3b648c707771b1c",
+    "proof/lean/decoder/toolchain/full-mir/ExportFullMirAudit.lean": "ea27963b1d2f6d31f6f9e30d54031b85ad300f7b539bc31bb969956ee28d6857",
+    "proof/lean/decoder/toolchain/full-mir/ExportGeneralAudit.lean": "ad0487b6c221242906390bbbbce8c2d3de6c2431b60f2877b9844139a90b9c1b",
+    "proof/lean/decoder/toolchain/full-mir/IteratorProof.lean": "34d504643698644f15903f7efb2eb458fc29641c8546c067a07938578b90c27e",
+    "proof/lean/decoder/toolchain/full-mir/OuterCache.lean": "e6817a7d4dc53102febe025b2143cf08b04cdfdc2e2f97ee47954266d831be53",
+    "proof/lean/decoder/toolchain/full-mir/OuterEntry.lean": "c9190785489417377468de52899294eab00dd35e73e044760ad42d13e7b9a0b0",
+    "proof/lean/decoder/toolchain/full-mir/OuterFactories.lean": "e918dfa82ae4b273be7b4bd99e103b30a35d73a0e36d5602173351945413725f",
+    "proof/lean/decoder/toolchain/full-mir/OuterFetch.lean": "c35281194587ce9bca7cc779d32dca10a37405e8e2ec4772fa02207756d7df78",
+    "proof/lean/decoder/toolchain/full-mir/OuterGeneral.lean": "6da98c3bcf45ebcfcc61f87b6a45385de4a13dda89d5778eb5c539fc3607083f",
+    "proof/lean/decoder/toolchain/full-mir/OuterInit.lean": "493da21dc920c0bffb8440d45f804907157d45c86616bef281893d62e7663e6a",
+    "proof/lean/decoder/toolchain/full-mir/OuterLoop.lean": "195da9023bae26ceb3ef0f892f6302d859d2103c11d1b9c848ec16631e712794",
+    "proof/lean/decoder/toolchain/full-mir/OuterMemoryWitness.lean": "d2e3038eb1c32b9c802cbc6d97761155c585fb6914e45c918a5e3ccf5bb94bc8",
+    "proof/lean/decoder/toolchain/full-mir/OuterPage.lean": "525821473a49805ffbfe6d90be2b06c3f750ace1289b6d1b67b458b197b72d66",
+    "proof/lean/decoder/toolchain/full-mir/OuterRoot.rs": "ce89211f2d139f2a7a3f4f5d69e6fe362ad2fd0b8bcf19e8e185cb589a15972c",
+    "proof/lean/decoder/toolchain/full-mir/OuterStep.lean": "8a23ca1bba9d5967ea86576f6680d7340d460604db5298201e5330fc2cd8abae",
+    "proof/lean/decoder/toolchain/full-mir/OuterStepWitness.lean": "0119a5d2d11f0f1c46b43a8717654c68d0ffd1aae1911217068de913450d1a47",
+    "proof/lean/decoder/toolchain/full-mir/audit-snapshot.json": "0bf566835a64ba833fde785585c1590a0fe65dde14a95935c93b0b5e8a7e22ba",
+    "proof/lean/decoder/toolchain/full-mir/general-audit-snapshot.json": "e8e38a0a0a5e2fe042ca22b738c95eb2556e42bbe998044dbc50dc2131b6fdd6",
+    "scripts/decoder_public_clean.py": "5345525b1fdd06f5f55c5053416b9ddf60fec371c2a91312dd33c9436cfe16bb",
+    "scripts/decoder_public_source.py": "952d6ca1f22ffdfcf9e9035846802bc4b4c00dcb46353ad71c8c9a1352fe979e",
+    "scripts/probes/probe_decoder_full_mir.py": "5f9b87c3d9276bc0f47419b9fbeb1771740cf7af3a383a82dcbfc78caae28f20",
+    "scripts/probes/probe_decoder_public.py": "9e84a83b1c1d9d21b08142192af57e69fa13ec52dc2229ef70f11197884c6ea8",
+    "scripts/public_decoder_acceptance.py": "3f5571a17d244cbf8506e58fb7a9723bcb934f658fd802232516c1fd7ffbe2e8",
+    "scripts/public_decoder_gate.py": "e8f4d4b9eee9808031a821a7add05a6a13dab4f55fd205c61c9f9fc7973029cf",
+    "scripts/tests/test_decoder_public_clean.py": "b48cc0e793c69cd3bcc0bcb04e7d19f3c043d37e264ec259a9f249ed0fb00dce",
+    "scripts/tests/test_decoder_public_source.py": "3bf227c97e51c818f3217f00fad4b9884d9d7e868420310f57ec21d1d7de7daf",
+    "scripts/tests/test_public_decoder_acceptance.py": "f33adeb148c499796c4a292581f9f7d913c6525a04c59db12ac9ae654f8c1605",
+    "scripts/tests/test_public_decoder_gate.py": "ef93cfff94b6aa307e5f75f74b2129f73ef90fd615b7afbe88140d32a3cd8b66"
+  },
+  "tool_ids": {
+    "charon": "charon-89ac1181-cleanup-suffix-v1",
+    "aeneas": "aeneas-379890b5-public-add-v2"
+  },
+  "adoption_basis": "Scoped trusted translation baseline: full public Rust extraction, exact generated models, clean Lean audit, and reviewed differential/semantic regressions. Not a compiler-correctness proof or an all-pass upstream test claim. Main installed tools and CKB source baseline are unchanged.",
+  "qualification": {
+    "public_clean": {
+      "path": "artifacts/boundary-check/public-check-4zyu9gx5/report.json",
+      "sha256": "9a5811804b4be414dcee340ba79ccac03de0df7cacf1fd4bb75c1869499e7da4"
+    },
+    "borrow": {
+      "path": "artifacts/boundary-check/borrow-check-71_p72a7/report.json",
+      "sha256": "419a12b5f03cc0f9a5f2810a3fff8d6e282a1c933c5bdfd2f8c1d92cb0346cae"
+    },
+    "fnptr": {
+      "path": "artifacts/boundary-check/fnptr-regression-4u6h18fe/report.json",
+      "sha256": "b5ad996bbb080a8e6e6e69356ea9959915aad6acc9baf6b1c3e4b915d244de6f"
+    },
+    "charon_ui": {
+      "path": "artifacts/boundary-check/cleanup-regression-g6y486ux/report.json",
+      "sha256": "a6d337c88c81de996d077215f65c9fca4cc6f618217dbdc6986572716463945c"
+    },
+    "charon_diagnostics": {
+      "path": "artifacts/boundary-check/cleanup-diagnostics-68visubv/report.json",
+      "sha256": "ffd67769dec2b843a16a78a2518071e6c9863c7a3e71c418ea44a5a4e5b04fd3"
+    },
+    "guard_equivalence": {
+      "path": "artifacts/boundary-check/aeneas-branch-ZR2ur7/kernel-equivalence-v2.log",
+      "sha256": "c02895e27ba5790d135c46fe22219d4ee6e9d65eb0254f0c0193aeff59a6525f"
+    },
+    "loop_equivalence": {
+      "path": "artifacts/boundary-check/charon-cfg-OYcaoK/loop-equivalence-kernel-v6.log",
+      "sha256": "40e8a2fdba02884a9e883ca4f9fb6489d74690549fffba361f7aacae4ba3abe2"
+    }
+  },
+  "known_regression_disposition": {
+    "charon_ui_cases": 435,
+    "executed_cases_same_exit_code": 433,
+    "selected_output_differences_reviewed": 11,
+    "candidate": {
+      "golden_pass": 349,
+      "golden_mismatch": 56,
+      "command_failed": 26,
+      "missing_golden": 1,
+      "output_not_checked": 1,
+      "ignored": 2
+    },
+    "baseline_golden_mismatch": 49,
+    "new_golden_mismatches_structurally_reviewed": 7,
+    "full_upstream_suite_passed": false,
+    "note": "No golden files refreshed. Twenty-six shared command failures remain; seven residual diagnostic differences are explained by unchanged concurrent target failure reporting. Baseline golden mismatches and missing odoc/Miri/cross targets/clippy coverage are not claimed resolved. Guard/loop/borrow proofs qualify the selected changes, not all Drop/unwind behavior."
+  }
+}

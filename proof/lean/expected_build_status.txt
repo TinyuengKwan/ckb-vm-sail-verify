@@ -24,10 +24,13 @@
 #   change across the move, so the runtime differential evidence is comparable
 #   to what it was before.
 status=ok
-# 125 .olean files, about ten minutes cold on 24 cores.
+# Original successful build: Lean 4.29.0, 125 .olean files, about ten minutes
+# cold on 24 cores. The common toolchain is now set in theorems/lean-toolchain;
+# configure_lean_project.sh also applies compat/sail-defs-computable.patch.
+# See compat/README.md for the 4.31.0 compatibility evidence and panic guard.
 target=LeanRV64D
 # The generated lakefile requires the Lean support library by BRANCH, so two
 # runs can resolve to different code -- observed in one session resolving both
-# 79b4d085 and 07946313. check_proof_model.sh pins the lakefile to this
-# revision before resolving, and fails if the manifest disagrees.
+# 79b4d085 and 07946313. configure_lean_project.sh pins the lakefile to this
+# revision before resolving; both build gates reject a different resolved pin.
 lean_sail_rev=079463134b9c50450b8393e1566a09fc492a34d9
