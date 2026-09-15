@@ -74,6 +74,14 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-15 候选 `7890148` 的第四次 VM 实跑：** 第 8 阶段 `rebuild-rust-model` 通过（诊断目录也已带回）；
+第 9 阶段 `rebuild-sail-model` 在 sail-riscv 本地构建 GMP 的 configure 处失败，guest 缺 `m4`。同时发现一处
+卫生问题：预检的 `rustup --version` 在仓库目录内执行，被 `rust-toolchain.toml` 触发自动向网络下载了一套工具链到
+guest 的 `~/.rustup`（未固定的网络获取，虽未影响固定工具链的使用）。本轮不再逐阶段试错：把[固定宿主输入审查](release/FIXED_HOST_INPUT_REVIEW.md)
+记录的全部 31 个宿主命令对应的 Ubuntu 包与系统动态库包一次性加入 guest 软件包列表；控制器预检改为核对
+33 个宿主命令（opam、rustup、jq、m4 四个按哈希固定），探针在检出目录之外、使用一次性 Rust home 且拒绝任何
+"syncing/downloading" 输出。本机预检干跑通过。失败运行 `…-run-20260915d` 保留；需要新的候选提交与推送后重跑。
+
 **2026-09-15 候选 `e8928d6` 的第三次 VM 实跑：** 前 7 个阶段（递归检出、快照、Rust/Sail/Aeneas-Charon/Lean/Rocq
 安装与固定编译器 CMake 配置）在 guest 内全部通过，六个工具身份与本机固定值一致；第 8 阶段 `rebuild-rust-model`
 在 `rustup which` 处失败，因为 guest 没有 Ubuntu 的 `rustup` 包（宿主上 `rustup`/`cargo`/`rustc` 都是该包在

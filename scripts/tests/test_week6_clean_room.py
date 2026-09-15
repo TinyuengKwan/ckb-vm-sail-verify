@@ -84,15 +84,28 @@ class CleanRoomTests(unittest.TestCase):
         self.assertTrue(native["CARGO_HOME"].endswith("week6-native-clean-room/runtime-cargo-home"))
         host = self.root / "host"; host.mkdir()
         executable = host / "opam"
-        executable.write_text("#!/bin/sh\nprintf 'fixture-opam 1.0\\n'\n")
+        executable.write_text("#!/bin/sh\nprintf 'fixture-opam 1.0 cwd=%s rustup_home=%s\\n' \"$PWD\" \"$RUSTUP_HOME\"\n")
         executable.chmod(0o755)
         release = host / "os-release"; release.write_text('ID=ubuntu\nVERSION_ID="24.04"\n')
         preflight = MODULE.host_preflight(self.out, {"opam": {
             "path": str(executable), "sha256": MODULE.sha(executable), "probe": ["--version"]}},
             release, "x86_64")
         self.assertEqual(preflight["status"], "compatible_host_commands_verified")
-        self.assertEqual(preflight["executables"]["opam"]["version"], "fixture-opam 1.0")
+        version = preflight["executables"]["opam"]["version"]
+        self.assertTrue(version.startswith("fixture-opam 1.0 cwd="))
+        # The probe must not run inside the checkout (rust-toolchain.toml would be honoured) and
+        # must not touch a real Rust home.
+        self.assertNotIn(str(self.root), version)
+        self.assertIn("rustup_home=/", version)
+        self.assertNotIn("rustup_home=/home", version)
+        self.assertTrue(preflight["probe_cwd_outside_checkout"])
         self.assertFalse(preflight["boundaries"]["host_closure_complete"])
+        fetching = host / "fetching"
+        fetching.write_text("#!/bin/sh\nprintf 'tool 1.0\\ninfo: syncing channel updates\\n'\n")
+        fetching.chmod(0o755)
+        with self.assertRaisesRegex(RuntimeError, "network fetch"):
+            MODULE.host_preflight(self.out.parent / "other", {"tool": {
+                "path": str(fetching), "sha256": None, "probe": ["--version"]}}, release, "x86_64")
         sys.path.insert(0, str(HERE.parent))
         import release_public_claims
         self.assertEqual(MODULE.PUBLIC_BOUNDARIES, release_public_claims.BOUNDARIES)
@@ -242,8 +255,9 @@ class CleanRoomTests(unittest.TestCase):
 
     def test_host_preflight_pins_every_bare_tool_the_stages_call(self):
         pinned = {name: row for name, row in MODULE.HOST_EXECUTABLES.items() if row["sha256"]}
-        self.assertEqual(set(pinned), {"opam", "rustup", "jq"})
-        for name in ["rustup", "jq", "cmake", "z3", "git", "make", "python3"]:
+        self.assertEqual(set(pinned), {"opam", "rustup", "jq", "m4"})
+        for name in ["rustup", "jq", "m4", "cmake", "z3", "git", "make", "python3", "curl", "patch", "bzip2",
+                     "xz", "awk", "gcc", "g++", "ar", "ld", "ranlib", "nproc", "sha256sum", "sh"]:
             self.assertIn(name, MODULE.HOST_EXECUTABLES)
             self.assertEqual(MODULE.HOST_EXECUTABLES[name]["path"], "/usr/bin/" + name)
         for row in pinned.values():

@@ -57,8 +57,16 @@ PROXY_VARIABLES = ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "NO
 # Apt names for the controller's twelve pinned host commands plus the C/GMP
 # build inputs the Sail emulator and OCaml tools need.  This is the reviewed
 # guest package list, not a proof that the host closure is complete.
+# Ubuntu 24.04 packages behind every host command the fixed-host input review
+# recorded (ar awk bash bzip2 c++ cc cmake curl g++ gcc git gzip head jq ld make
+# ninja nproc opam patch pkg-config python3 ranlib rustup sed sh sha256sum sort
+# tar xz z3), plus m4 for sail-riscv's local GMP build, `script` (bsdutils) for
+# the demo recording, and the shared libraries the fixed ELFs resolve from the
+# system (libgmp, zlib, zstd, libatomic).  Lean bundles its own libc++/LLVM.
 GUEST_PACKAGES = ["git", "make", "bash", "python3", "cmake", "ninja-build", "build-essential",
-                  "pkg-config", "z3", "opam", "rustup", "jq", "bsdutils", "ca-certificates", "libgmp-dev"]
+                  "pkg-config", "z3", "opam", "rustup", "jq", "m4", "bzip2", "curl", "gawk", "patch",
+                  "xz-utils", "gzip", "tar", "coreutils", "diffutils", "findutils", "bsdutils",
+                  "ca-certificates", "libgmp-dev", "zlib1g", "libzstd1", "libatomic1"]
 # Stage producers that fail write their report outside week6-*; bring back
 # their small diagnostic files so a failed run can be explained without a guest.
 DIAGNOSTIC_SUFFIXES = (".json", ".log", ".stdout", ".stderr", ".txt")

@@ -177,8 +177,9 @@ class EphemeralVmTests(unittest.TestCase):
             RUN + "/exit-code": b"1\n"})
         self.assertIn(("evidence", "artifacts/boundary-check/rebuilt-production-rust-abc/report.json"),
                       set(MODULE.evidence_members(diagnostics).values()))
-        self.assertIn("rustup", MODULE.GUEST_PACKAGES)
-        self.assertIn("jq", MODULE.GUEST_PACKAGES)
+        for package in ["rustup", "jq", "m4", "bzip2", "curl", "gawk", "patch", "xz-utils", "build-essential",
+                        "bsdutils", "libgmp-dev", "zlib1g", "libzstd1", "libatomic1"]:
+            self.assertIn(package, MODULE.GUEST_PACKAGES)
         for name, members, link, pattern in [
             ("foreign.tar", {CANONICAL + "/scripts/week6_clean_room.py": b"x"}, None, "outside allowed"),
             ("other-root.tar", {CANONICAL + "/artifacts/boundary-check/isolated-rust/bin/rustc": b"x"}, None,

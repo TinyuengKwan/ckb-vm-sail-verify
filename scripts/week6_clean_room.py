@@ -47,10 +47,14 @@ TOOL_ENV_PREFIXES = ("CARGO", "RUST", "OPAM", "OCAML", "CHARON", "AENEAS", "ELAN
                      "SAIL", "MIRI", "SCCACHE", "CCACHE")
 NATIVE_STAGES = {"rust-tests", "runtime-differential", "mutation-matrix"}
 RUST_TOOLCHAIN = "1.97.1-x86_64-unknown-linux-gnu"
+# Every host command the fixed-host input review recorded for the fixed
+# installations and build scripts, plus the controller's own needs.  Unpinned
+# entries must exist; pinned ones must match the reviewed Ubuntu 24.04 binary.
 HOST_EXECUTABLES = {
     name: {"path": "/usr/bin/" + name, "sha256": None, "probe": None}
-    for name in ["git", "make", "bash", "python3", "cmake", "ninja", "cc", "c++",
-                 "pkg-config", "z3", "script"]
+    for name in ["git", "make", "bash", "sh", "python3", "cmake", "ninja", "cc", "c++", "gcc", "g++",
+                 "ar", "ld", "ranlib", "pkg-config", "z3", "script", "awk", "sed", "sort", "head",
+                 "sha256sum", "nproc", "tar", "gzip", "bzip2", "xz", "patch", "curl"]
 }
 HOST_EXECUTABLES["opam"] = {"path": "/usr/bin/opam",
                             "sha256": "22222e47a7bbe31946500457a8e6da4fa789afc78bc0c7593b00a328a5b6f615",
@@ -63,6 +67,10 @@ HOST_EXECUTABLES["rustup"] = {"path": "/usr/bin/rustup",
                               "probe": ["--version"]}
 HOST_EXECUTABLES["jq"] = {"path": "/usr/bin/jq",
                           "sha256": "59cfd58d7e470b103aede0e7589cfea929e45ee27f5471f08aa9676ac7bfc566",
+                          "probe": ["--version"]}
+# sail-riscv builds GMP locally (DOWNLOAD_GMP=TRUE); its configure needs m4.
+HOST_EXECUTABLES["m4"] = {"path": "/usr/bin/m4",
+                          "sha256": "426fbab900b6c676038cf71da51c3ae45a6d546c9580fff9372bc5b1bb81d576",
                           "probe": ["--version"]}
 OID = re.compile(r"[0-9a-f]{40}")
 HEX = re.compile(r"[0-9a-f]{64}")
@@ -175,24 +183,35 @@ def host_preflight(out, executables=None, os_release=Path("/etc/os-release"), ma
     require(values.get("ID") == "ubuntu" and values.get("VERSION_ID") == "24.04",
             "clean-room host is not Ubuntu 24.04")
     observed = {}
-    for name, specification in executables.items():
-        path = Path(specification["path"])
-        require(path.is_file() and os.access(path, os.X_OK), "required host executable missing: " + name)
-        digest = sha(path.resolve())
-        require(specification["sha256"] is None or digest == specification["sha256"],
-                "pinned host executable differs: " + name)
-        version = None
-        if specification.get("probe") is not None:
-            result = command([str(path), *specification["probe"]], Path(out).parent,
-                             env=base_environment(os.environ), timeout=30)
-            version = (result.stdout + result.stderr).decode(errors="replace").strip()
-            require(version, "empty host executable probe: " + name)
-        observed[name] = {"path": str(path), "resolved_path": str(path.resolve()),
-                          "sha256": digest, "version": version}
+    # Probe outside the checkout with throwaway Rust homes: run inside the
+    # repository, the rustup proxy would honour rust-toolchain.toml and download
+    # a toolchain from the network, which a clean-room preflight must never do.
+    probe_root = Path(tempfile.mkdtemp(prefix="week6-host-probe-"))
+    probe_env = base_environment(os.environ)
+    probe_env.update(RUSTUP_HOME=str(probe_root / "rustup-home"), CARGO_HOME=str(probe_root / "cargo-home"),
+                     RUSTUP_NO_UPDATE_CHECK="1", RUSTUP_TOOLCHAIN="none")
+    try:
+        for name, specification in executables.items():
+            path = Path(specification["path"])
+            require(path.is_file() and os.access(path, os.X_OK), "required host executable missing: " + name)
+            digest = sha(path.resolve())
+            require(specification["sha256"] is None or digest == specification["sha256"],
+                    "pinned host executable differs: " + name)
+            version = None
+            if specification.get("probe") is not None:
+                result = command([str(path), *specification["probe"]], probe_root, env=probe_env, timeout=30)
+                version = (result.stdout + result.stderr).decode(errors="replace").strip()
+                require(version, "empty host executable probe: " + name)
+                require("syncing channel" not in version and "downloading" not in version,
+                        "host executable probe attempted a network fetch: " + name)
+            observed[name] = {"path": str(path), "resolved_path": str(path.resolve()),
+                              "sha256": digest, "version": version}
+    finally:
+        shutil.rmtree(probe_root, ignore_errors=True)
     report = {"schema_version": 1, "kind": "week6-clean-room-host-preflight-v1",
               "status": "compatible_host_commands_verified", "architecture": machine,
               "os_release": {key: values[key] for key in ["ID", "VERSION_ID"]},
-              "executables": observed,
+              "executables": observed, "probe_cwd_outside_checkout": True,
               "boundaries": {"container_identity_verified": False, "host_closure_complete": False,
                              "clean_room_claimed": False, "release_claimed": False,
                              "week6_closed": False}}
