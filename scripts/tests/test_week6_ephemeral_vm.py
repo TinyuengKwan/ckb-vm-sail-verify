@@ -171,10 +171,22 @@ class EphemeralVmTests(unittest.TestCase):
         self.assertEqual(set(MODULE.evidence_members(good).values()),
                          {("evidence", "artifacts/boundary-check/week6-clean-room/report.json"),
                           ("guest", "exit-code")})
+        diagnostics = archive("diag.tar", {
+            CANONICAL + "/artifacts/boundary-check/rebuilt-production-rust-abc/report.json": b"{}",
+            CANONICAL + "/artifacts/boundary-check/week6-clean-room/report.json": b"{}",
+            RUN + "/exit-code": b"1\n"})
+        self.assertIn(("evidence", "artifacts/boundary-check/rebuilt-production-rust-abc/report.json"),
+                      set(MODULE.evidence_members(diagnostics).values()))
+        self.assertIn("rustup", MODULE.GUEST_PACKAGES)
+        self.assertIn("jq", MODULE.GUEST_PACKAGES)
         for name, members, link, pattern in [
             ("foreign.tar", {CANONICAL + "/scripts/week6_clean_room.py": b"x"}, None, "outside allowed"),
             ("other-root.tar", {CANONICAL + "/artifacts/boundary-check/isolated-rust/bin/rustc": b"x"}, None,
-             "outside allowed"),
+             "restored installation root"),
+            ("aeneas-root.tar", {CANONICAL + "/artifacts/boundary-check/aeneas-opam-x/report.json": b"x"}, None,
+             "restored installation root"),
+            ("binary-diag.tar", {CANONICAL + "/artifacts/boundary-check/rebuilt-production-rust-abc/x.llbc": b"x"},
+             None, "outside allowed"),
             ("traversal.tar", {CANONICAL + "/artifacts/boundary-check/week6-x/../../../etc/passwd": b"x"}, None,
              "unsafe"),
             ("link.tar", {RUN + "/exit-code": b"0\n"}, CANONICAL + "/artifacts/boundary-check/week6-clean-room/l",

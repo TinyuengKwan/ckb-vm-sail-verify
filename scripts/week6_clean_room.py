@@ -55,6 +55,15 @@ HOST_EXECUTABLES = {
 HOST_EXECUTABLES["opam"] = {"path": "/usr/bin/opam",
                             "sha256": "22222e47a7bbe31946500457a8e6da4fa789afc78bc0c7593b00a328a5b6f615",
                             "probe": ["--version"]}
+# The Rust regeneration calls `rustup which`/`cargo`/`rustc` through the Ubuntu
+# rustup proxy, and the Sail config/environment scripts call `jq`; both come
+# from Ubuntu 24.04 packages and are pinned like opam.
+HOST_EXECUTABLES["rustup"] = {"path": "/usr/bin/rustup",
+                              "sha256": "be178b5cdda17e6ab5027dcdd5262014a9e967f02f439b2da618942af5cbad27",
+                              "probe": ["--version"]}
+HOST_EXECUTABLES["jq"] = {"path": "/usr/bin/jq",
+                          "sha256": "59cfd58d7e470b103aede0e7589cfea929e45ee27f5471f08aa9676ac7bfc566",
+                          "probe": ["--version"]}
 OID = re.compile(r"[0-9a-f]{40}")
 HEX = re.compile(r"[0-9a-f]{64}")
 

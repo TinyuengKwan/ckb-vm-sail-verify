@@ -74,6 +74,14 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-15 候选 `e8928d6` 的第三次 VM 实跑：** 前 7 个阶段（递归检出、快照、Rust/Sail/Aeneas-Charon/Lean/Rocq
+安装与固定编译器 CMake 配置）在 guest 内全部通过，六个工具身份与本机固定值一致；第 8 阶段 `rebuild-rust-model`
+在 `rustup which` 处失败，因为 guest 没有 Ubuntu 的 `rustup` 包（宿主上 `rustup`/`cargo`/`rustc` 都是该包在
+`/usr/bin` 下的代理）；同类缺口还有第 9、11 阶段需要的 `jq`。两者此前既不在 guest 软件包列表，也不在控制器固定的
+宿主命令清单里。现已加入 guest 软件包，并按宿主二进制哈希与 opam 同样纳入预检；launcher 的证据回传扩展为同时
+带回非 `week6-*` 运行目录中的小型诊断文件，避免失败报告留在 guest 内。失败运行 `…-run-20260915c` 保留。
+这是第四个仅在新鲜检出中暴露的缺陷，需要新的候选提交与推送后重跑。
+
 **2026-09-15 候选 `a105db3a` 的首次 VM 实跑：** 候选分支已推送；固定输入已作为 pre-release
 `week6-fixed-inputs-v1` 发布，服务端摘要与匿名下载哈希均与固定值一致；guest 镜像已批准并经 Canonical 签名的
 校验清单核对。两次启动都在真正执行 16 阶段之前失败，各自的 launcher 失败记录保留：第一次 SeaBIOS 把显式

@@ -240,6 +240,15 @@ class CleanRoomTests(unittest.TestCase):
             MODULE.public_run(args)
         run.assert_not_called()
 
+    def test_host_preflight_pins_every_bare_tool_the_stages_call(self):
+        pinned = {name: row for name, row in MODULE.HOST_EXECUTABLES.items() if row["sha256"]}
+        self.assertEqual(set(pinned), {"opam", "rustup", "jq"})
+        for name in ["rustup", "jq", "cmake", "z3", "git", "make", "python3"]:
+            self.assertIn(name, MODULE.HOST_EXECUTABLES)
+            self.assertEqual(MODULE.HOST_EXECUTABLES[name]["path"], "/usr/bin/" + name)
+        for row in pinned.values():
+            self.assertEqual(row["probe"], ["--version"])
+
     def test_new_output_creates_the_ignored_evidence_parent_in_a_fresh_checkout(self):
         fresh = self.root.parent / "fresh"
         (fresh / "artifacts").mkdir(parents=True)

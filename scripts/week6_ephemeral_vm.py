@@ -58,7 +58,11 @@ PROXY_VARIABLES = ["HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy", "NO
 # build inputs the Sail emulator and OCaml tools need.  This is the reviewed
 # guest package list, not a proof that the host closure is complete.
 GUEST_PACKAGES = ["git", "make", "bash", "python3", "cmake", "ninja-build", "build-essential",
-                  "pkg-config", "z3", "opam", "bsdutils", "ca-certificates", "libgmp-dev"]
+                  "pkg-config", "z3", "opam", "rustup", "jq", "bsdutils", "ca-certificates", "libgmp-dev"]
+# Stage producers that fail write their report outside week6-*; bring back
+# their small diagnostic files so a failed run can be explained without a guest.
+DIAGNOSTIC_SUFFIXES = (".json", ".log", ".stdout", ".stderr", ".txt")
+RESTORED_ROOT_PREFIXES = ("isolated-", "aeneas-opam-")
 SHARED_FILESYSTEM_FLAGS = ("-virtfs", "-fsdev", "virtio-9p", "virtiofs", "vhost-user-fs")
 OID = re.compile(r"[0-9a-f]{40}")
 HEX = re.compile(r"[0-9a-f]{64}")
@@ -139,6 +143,10 @@ finish() {
         cd / && find "${RUN#/}" -mindepth 1 \( -type f -o -type d \) 2>/dev/null
         cd / && find "${CANONICAL#/}/artifacts/boundary-check" -mindepth 1 -maxdepth 1 -name 'week6-*' \
             -exec find {} \( -type f -o -type d \) \; 2>/dev/null
+        cd / && find "${CANONICAL#/}/artifacts/boundary-check" -mindepth 1 -maxdepth 1 -type d \
+            ! -name 'week6-*' ! -name 'isolated-*' ! -name 'aeneas-opam-*' \
+            -exec find {} -type f \( -name '*.json' -o -name '*.log' -o -name '*.stdout' -o -name '*.stderr' \
+            -o -name '*.txt' \) -size -8M \; 2>/dev/null
     } | sort -u > /root/week6-evidence-members.txt
     tar -C / --no-recursion --ignore-failed-read -cf "$EVIDENCE_DISK" -T /root/week6-evidence-members.txt \
         2>> "$RUN/controller.stderr"
@@ -278,7 +286,13 @@ def evidence_members(archive):
             require(member.isfile() or member.isdir(), "special/link guest evidence member: " + name)
             if member.isdir():
                 continue
-            if name.startswith(canonical + CLEAN_ROOM_OUT.rsplit("/", 1)[0] + "/week6-"):
+            boundary = canonical + CLEAN_ROOM_OUT.rsplit("/", 1)[0] + "/"
+            if name.startswith(boundary):
+                top = name[len(boundary):].split("/", 1)[0]
+                require(not top.startswith(RESTORED_ROOT_PREFIXES),
+                        "guest evidence member inside a restored installation root: " + name)
+                require(top.startswith("week6-") or name.endswith(DIAGNOSTIC_SUFFIXES),
+                        "guest evidence member outside allowed prefixes: " + name)
                 target = ("evidence", name[len(canonical):])
             elif name.startswith(run):
                 target = ("guest", name[len(run):])
