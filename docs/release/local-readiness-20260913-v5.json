@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "candidate": "local-readiness-2026-09-13-v5-rebuilt-public-main-run-pending-not-a-release",
+  "pins": {
+    "main_policy": "32364dd191802c39bb9b10cb567240ff3e0d964eb6ef105fdb6ed6524795ade4",
+    "public_policy": "731b3213e0c22a2a23b65992041be05bd9be7e3ca8c89b44515319143cd096df",
+    "raw_policy": "4f3e0c5af8983187182d63adb50267cb638fd3841104a9bd2b3c3ef29cc66585",
+    "input_admission": "74e7a88b1413f09df12126c0020f2bb9b261043d80bc34d74b03f9bbc875cd8f",
+    "input_catalogue": "b9015281f8a2c4d30aabd0b91eb6993d492b87e15eb83dcf93a8a66df8daa523",
+    "week5_plan": "0116b1cc0b3ededec4c4d2be4d8dd265edd3ed71bb0194a5b9d9ac52a64fcd4b",
+    "week6_plan": "354ee1e4401ef29339695c71219e42be799d1c8563d4a256b7d197138a77cb6c",
+    "overview_plan": "2c92573b561058fadac801b3f73b3bebb080ef83104f4222d588a5b8cff28e62"
+  },
+  "evidence": {
+    "runtime": {
+      "path": "artifacts/boundary-check/release-runtime-epku3001/report.json",
+      "sha256": "c0fe75025d89826590b9e062aea93d8053814d95f1c2133e1d848d6a74cc4f03"
+    },
+    "lean": null,
+    "rocq": {
+      "path": "artifacts/rocq-spike/run-70gr5bdr/report.json",
+      "sha256": "99f971ba62845ee0e5fc62bebf3ff79611a1801bd5ec011541723cce240c0865"
+    },
+    "rust_tests": {
+      "path": "artifacts/boundary-check/release-rust-tests-8z94lst1/report.json",
+      "sha256": "cfbb84e8de84f45eaf3f147e77fe6d399e8f7d6d980363b40b3d959de44530a4"
+    },
+    "mismatches": {
+      "path": "docs/release/mismatch-inventory-20260913-v5.json",
+      "sha256": "6240593815b3efa80b5f4bab6af378366b3438366d8874734b4786e99cd51365"
+    },
+    "clean_room": null,
+    "worktree_audit": null,
+    "ci_download": null,
+    "release_package": null,
+    "maintainer_demo": null,
+    "third_party": null,
+    "public_claims": null
+  }
+}

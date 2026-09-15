@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "candidate": "local-readiness-2026-09-13-v10-formal-rebuilt-main-verified-not-a-release",
+  "pins": {
+    "main_policy": "7ced9f425d1fbda578a796fbc7135a15fec930b66adfbc26a3fc1ba1a177b6f5",
+    "public_policy": "63dd6ab1965a50c208d5779b217718d0b349671566ba6de725037d28fb3f19e4",
+    "raw_policy": "a67b275f94ba0797705eec57c31595a9da05f2c70e26c8f011e320a64c1e7b84",
+    "input_admission": "74e7a88b1413f09df12126c0020f2bb9b261043d80bc34d74b03f9bbc875cd8f",
+    "input_catalogue": "b9015281f8a2c4d30aabd0b91eb6993d492b87e15eb83dcf93a8a66df8daa523",
+    "week5_plan": "0116b1cc0b3ededec4c4d2be4d8dd265edd3ed71bb0194a5b9d9ac52a64fcd4b",
+    "week6_plan": "354ee1e4401ef29339695c71219e42be799d1c8563d4a256b7d197138a77cb6c",
+    "overview_plan": "2c92573b561058fadac801b3f73b3bebb080ef83104f4222d588a5b8cff28e62"
+  },
+  "evidence": {
+    "runtime": {
+      "path": "artifacts/boundary-check/formal-native-gWE5WMRA/runtime/report.json",
+      "sha256": "ed6571bba185848283578ff50d64b67fed28d071950b2a2b9e74769b31f59a24"
+    },
+    "lean": {
+      "path": "artifacts/boundary-check/formal-main-acceptance-hnOBopcM/main/report.json",
+      "sha256": "1371a5b84ea1d460bbd19af36cbd32696aad9a53ef2e742fc511d5ba880a1996"
+    },
+    "rocq": {
+      "path": "artifacts/rocq-spike/run-iu08clul/report.json",
+      "sha256": "ed404517e8ae909b119897b90141b0dbdb3fbdd19d9e095f885e8e39b20967a0"
+    },
+    "rust_tests": {
+      "path": "artifacts/boundary-check/formal-native-gWE5WMRA/rust-tests/report.json",
+      "sha256": "69787d4132013cbe291627c6f9ba4de93e2df2e37f4f065e80b19f19844df892"
+    },
+    "mismatches": {
+      "path": "docs/release/mismatch-inventory-20260913-v9.json",
+      "sha256": "8d6c4c5e7a9d6221898ce1b8d39e7c4fe9706120e627c34d9500e8c3d169878e"
+    },
+    "maintainer_demo": {
+      "path": "artifacts/boundary-check/formal-support-refresh-bk5s659j/demo/report.json",
+      "sha256": "832195bb4c98d712552cdfd94f902ba63272b7de66bab13f8ea14050d40fc507"
+    },
+    "clean_room": null,
+    "worktree_audit": null,
+    "ci_download": null,
+    "release_package": null,
+    "third_party": null,
+    "public_claims": null
+  }
+}

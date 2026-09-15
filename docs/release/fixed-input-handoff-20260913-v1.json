@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "kind": "fixed-input-handoff-preparation-only",
+  "canonical_checkout": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify",
+  "project_head": "872d225dc4e16c449be37d92761b20c6aefe853c",
+  "working_tree_overlay_required": true,
+  "source_snapshot_sha256": "810b71aa1d4002acce1ad0fc52ef1f37019a6e57550d1c5e381c06b68c5b9999",
+  "main_policy_sha256": "7ced9f425d1fbda578a796fbc7135a15fec930b66adfbc26a3fc1ba1a177b6f5",
+  "production_baseline": "ckb-vm-1ffba3977da9-runtime-container-v1",
+  "source": {
+    "archive": {
+      "path": "artifacts/boundary-check/fixed-source-capsule-vra4CmWQ/source-capsule.tar.gz",
+      "sha256": "782747aa8b8275575e4cfccd5dc7e19020eb4a00dfff3ff335bfdaf80ba90429"
+    },
+    "transfer_manifest": {
+      "path": "artifacts/boundary-check/fixed-source-capsule-vra4CmWQ/transfer-manifest.json",
+      "sha256": "59010a3dfbff4782125ca37c600606926881322d081def4bbb6488ee4c8bc8e4"
+    },
+    "capsule_manifest_sha256": "e8024a053ce895a603d5984280f293611b4078a06087ecb2d7776f2b05b53238",
+    "restoration_report": {
+      "path": "artifacts/boundary-check/fixed-source-capsule-vra4CmWQ/report.json",
+      "sha256": "5c1105a72d39e433ba12f77a8cabb9737e93cce98fbba0b8c16b25d89faae0cb"
+    },
+    "transfer_report": {
+      "path": "artifacts/boundary-check/fixed-source-capsule-vra4CmWQ/transfer-report.json",
+      "sha256": "2e45a0d81c0adc3709ad7d048ff5d53d3300399d625acf2cf88efee612a7a1ab"
+    }
+  },
+  "extra_installations": {
+    "archive": {
+      "path": "artifacts/boundary-check/fixed-install-package-o7qy39ke/extra-installations.tar.gz",
+      "sha256": "d128c9e7a4755fa01b8f54640bae3276c4c0a5ff968ee62b88ed01ca4240cd3c"
+    },
+    "manifest": {
+      "path": "artifacts/boundary-check/fixed-install-package-o7qy39ke/manifest.json",
+      "sha256": "d6c28ebc2fc9f6010aec478763a4f792bd18c5ec17b5fafc50fc3675cc5266b2"
+    },
+    "build_report": {
+      "path": "artifacts/boundary-check/fixed-install-package-o7qy39ke/report.json",
+      "sha256": "90232f24ae4d39a78301368ba7b67355c2cfe7263fb3373b872dfb8838304de7"
+    },
+    "independent_acceptance": {
+      "path": "artifacts/boundary-check/fixed-install-acceptance-W9Da1PEm/report.json",
+      "sha256": "48a9424c266db35c225b87448dd85a54545e2fb06a94101a4fd438c92c79e352"
+    }
+  },
+  "decoder_inputs": {
+    "archive": {
+      "path": "artifacts/boundary-check/rebuilt-input-candidate-z2k9y4hg/rebuilt-decoder-candidate.tar.gz",
+      "sha256": "1a81921b12215a87106ac2080c05de3f2bf9d51b9bb14bdb80a90ac8c05c58d5"
+    },
+    "admission_policy_sha256": "74e7a88b1413f09df12126c0020f2bb9b261043d80bc34d74b03f9bbc875cd8f",
+    "catalogue_sha256": "b9015281f8a2c4d30aabd0b91eb6993d492b87e15eb83dcf93a8a66df8daa523"
+  },
+  "external_requirements": [
+    "Unified restoration/bootstrap entry and compatible host tools/dynamic libraries remain to be validated",
+    "Canonical-path deployment must occur in a new environment, never over the current checkout",
+    "Actual full regeneration and Lean/Rocq/runtime execution on that same restored candidate",
+    "Semantic review of all source/generated differences and traceable public claims",
+    "CI upload/download/replay, publication authority/location and independent third-party reproduction",
+    "Redistribution/privacy review before any external upload of source and tool metadata"
+  ],
+  "boundaries": {
+    "clean_room_closed": false,
+    "week6_closed": false,
+    "release_claimed": false,
+    "third_party_reproduced": false,
+    "host_closure_complete": false,
+    "arbitrary_path_relocation_adopted": false,
+    "current_worktree_is_frozen_capsule": false
+  }
+}

@@ -88,6 +88,7 @@ def local_sources():
                  "proof/lean/expected_build_status.txt",
                  "proof/lean/audit/ExportStepAudit.lean",
                  "scripts/generate_rust_model.sh", "scripts/generate_proof_model.sh",
+                 "scripts/sail_model_transaction.py", "scripts/tests/test_sail_model_transaction.py",
                  "scripts/configure_lean_project.sh", "scripts/prepare_sail_config.sh",
                  "scripts/check_proof.py", "scripts/check_lean_imports.sh",
                  "scripts/tests/test_proof_check.py", "scripts/tests/test_lean_imports.py",
@@ -96,15 +97,22 @@ def local_sources():
                  "scripts/check_lean_clean.py", "scripts/tests/test_lean_clean.py",
                  "scripts/public_decoder_gate.py", "scripts/public_decoder_acceptance.py",
                  "proof/lean/decoder/public-policy.json",
+                 "proof/lean/decoder/public-rebuilt-policy.json",
                  "scripts/probes/probe_add_decoder.py",
                  "proof/lean/extraction/ckb-source-baseline.json",
                  "proof/lean/extraction/ckb-vm.json", "patches/ckb-vm/runtime-container.patch",
                  "scripts/build_sail_emulator.sh", "Makefile"]:
         files[name] = file_hash(ROOT / name)
+    import rebuilt_main_tools
+    for name in rebuilt_main_tools.SOURCES:
+        files[name] = file_hash(ROOT / name)
     return files
 
 
 def tools_and_environment(policy):
+    if "main_toolchain" in policy:
+        import rebuilt_main_tools
+        return rebuilt_main_tools.resolve(ROOT, policy)
     env = os.environ.copy()
     aeneas_home = Path(env.get("AENEAS_HOME", str(Path.home() / ".local/share/aeneas"))).resolve()
     cache = ROOT / "deps/sail-riscv/build/CMakeCache.txt"
@@ -170,6 +178,9 @@ def generated_evidence(policy):
     require_equal(file_hash(ROOT / "proof/lean/generated/sail/ckb_vm_config.json"), config,
                   "generated Sail config")
     provenance = json.loads((ROOT / "proof/lean/generated/rust/SOURCE_BASELINE.json").read_text())
+    if "main_toolchain" in policy:
+        import generate_rebuilt_rust
+        generate_rebuilt_rust.check_provenance(ROOT, policy, provenance)
     for name, value in ckb_source_baseline.check(ROOT).items():
         require_equal(provenance.get(name), value, "generated Rust provenance " + name)
     require_equal(provenance["generated_lean_sha256"],
@@ -256,7 +267,9 @@ def execute(policy, report):
     # No check_proof_model.sh: its expected-blocked success is not acceptance.
     run_stage("sail-config", ["make", "sail-config"], env, report)
     run_stage("environment", ["bash", "scripts/verify_environment.sh"], env, report)
-    run_stage("generate-rust", ["bash", "scripts/generate_rust_model.sh"], env, report)
+    generator = ([sys.executable, "scripts/generate_rebuilt_rust.py"] if "main_toolchain" in policy
+                 else ["bash", "scripts/generate_rust_model.sh"])
+    run_stage("generate-rust", generator, env, report)
     run_stage("generate-sail", ["bash", "scripts/generate_proof_model.sh", "lean"], env, report)
     generated = generated_evidence(policy)
     report["generated"] = generated
@@ -270,7 +283,11 @@ def execute(policy, report):
     report["boundary_sha256"] = boundary_hashes(evidence)
     for name in ("test_lean_imports", "test_lean_step", "test_proof_check", "test_ckb_source_baseline", "test_lean_clean",
                  "test_decoder_public_source", "test_decoder_public_clean",
-                 "test_public_decoder_acceptance", "test_public_decoder_gate"):
+                 "test_public_decoder_acceptance", "test_public_decoder_gate",
+                 "test_decoder_harness", "test_decoder_model_identity", "test_decoder_iterator_identity",
+                 "test_decoder_input_bundle", "test_decoder_input_locations", "test_sail_model_transaction",
+                 "test_decoder_rebuilt_inputs", "test_decoder_rebuilt_locations", "test_rebuilt_main_tools",
+                 "test_generate_rebuilt_rust", "test_rebuilt_production_rust", "test_source_snapshot"):
         run_stage(name, [sys.executable, "scripts/tests/" + name + ".py"], env, report)
     # The public decoder producer rebuilds the same main source/support graph
     # and independently audits it before checking the additional decoder layer.

@@ -1,0 +1,49 @@
+{
+  "allowed_source_changes": {
+    ".": {},
+    "deps/ckb-vm": {
+      "src/machine/mod.rs": {
+        "category": "production",
+        "evidence": [
+          "proof/lean/extraction/ADOPTION.md"
+        ],
+        "operation": "modified",
+        "rationale": "Reviewed dynamic-field containerization patch used by the adopted production extraction baseline."
+      },
+      "tests/runtime_container_probe.rs": {
+        "category": "test",
+        "evidence": [
+          "proof/lean/extraction/ADOPTION.md"
+        ],
+        "operation": "added",
+        "rationale": "Regression probe for the reviewed production containerization boundary."
+      }
+    },
+    "deps/sail-riscv": {}
+  },
+  "boundaries": {
+    "clean_room_claimed": false,
+    "delivery_approval_claimed": false,
+    "generated_outputs_audited": false,
+    "release_claimed": false,
+    "semantic_approval_claimed": false,
+    "week6_closed": false
+  },
+  "kind": "week6-source-review-policy-v1",
+  "output_review": {
+    "allowed_root_prefixes": [
+      "artifacts/boundary-check/week6-formal-review-",
+      "artifacts/boundary-check/week6-native-"
+    ],
+    "build_markers": [
+      "/cargo-target/",
+      "/target/",
+      "/.lake/",
+      "/build/"
+    ],
+    "registry_marker": "/cargo/registry/"
+  },
+  "require_root_repository_clean": true,
+  "reviewed_by": "tracked Week6 source review policy",
+  "schema_version": 1
+}

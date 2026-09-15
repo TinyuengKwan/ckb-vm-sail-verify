@@ -16,12 +16,14 @@ import check_raw_add as raw
 import check_raw_add_fields as fields
 
 
-def build(out, run, report):
+def build(out, run, report, inputs):
+    import decoder_rebuilt_locations as locations
+    installed = locations.load(inputs)
+    payload = Path(installed['payload'])
     policy = json.loads(gate.POLICY.read_text())
-    raw_policy = json.loads(raw.POLICY.read_text())
+    raw_policy = locations.lower_policy(inputs)
     field_policy = json.loads(fields.POLICY.read_text())
-    gate.require_equal(gate.file_hash(raw.POLICY),
-        '407909ee4584c3d1a45dcbf123fa2019d70b2eaac4f22b962caf3dea37596951', 'raw policy identity')
+    raw_policy_sha = gate.file_hash(locations.RAW_POLICY)
     gate.require_equal(gate.file_hash(fields.POLICY), raw_policy['field_policy_sha256'], 'field policy identity')
     gate.require_equal(raw.source_hashes(), raw_policy['sources'], 'raw sources')
     gate.require_equal(fields.source_hashes(), field_policy['sources'], 'field sources')
@@ -34,11 +36,9 @@ def build(out, run, report):
     dependencies.mkdir()
     # Never copy a directory containing archived .oleans. Each source is checked
     # against its existing policy, then copied individually into the new tree.
-    boundary = gate.ROOT / 'artifacts/boundary-check'
     originals = {
-        'LocalFields': boundary / 'raw-fields-6zf2keby/models/LocalFields.lean',
-        'FactoryScoped': boundary / 'raw-add-0__trc1y/models/FactoryScoped.lean',
-        'MiniComplete': boundary / 'raw-add-0__trc1y/models/MiniComplete.lean',
+        name: payload / 'models' / (name + '.lean')
+        for name in ['LocalFields', 'FactoryScoped', 'MiniComplete']
     }
     gate.require_equal(gate.file_hash(originals['LocalFields']), field_policy['generated_sha256'], 'field model')
     gate.require_equal(raw.normalized_model(originals['FactoryScoped']),
@@ -59,10 +59,11 @@ def build(out, run, report):
                                    cwd=project, env=env, text=True).strip()
     paths = clean.check_paths(base, out, compiler)
     info = {'directory': str(clean_root), 'initial_compiled_modules': 0,
+            'raw_policy_sha256': raw_policy_sha,
             'reused_compiled_inputs': 'pinned Lean compiler and its standard library only',
             'reused_generated_sources': source_hashes, 'dependency_revisions': revisions,
             'lean_path': paths, 'main_policy_sha256': gate.file_hash(gate.POLICY),
-            'source_models': generated, 'status': 'building'}
+            'source_models': generated, 'installed_inputs': installed, 'status': 'building'}
     report['clean_dependencies'] = info
     env['LEAN_NUM_THREADS'] = '8'
     run('clean-main-build', [lake, '--no-cache', 'build', 'LeanRV64D', 'CkbVmProduction',
@@ -95,6 +96,9 @@ def build(out, run, report):
 
     def finish():
         # Recheck source identity after all public proofs, not only before build.
+        gate.require_equal(locations.load(inputs), installed, 'installed clean inputs changed')
+        gate.require_equal(gate.file_hash(locations.RAW_POLICY), raw_policy_sha, 'raw policy changed')
+        gate.require_equal(locations.lower_policy(inputs), raw_policy, 'raw admission changed')
         gate.require_equal(gate.source_evidence(policy, binaries, aeneas), before, 'main sources changed')
         gate.require_equal(gate.generated_evidence(policy), generated, 'main models changed')
         gate.require_equal(gate.file_hash(gate.POLICY), info['main_policy_sha256'], 'main policy changed')

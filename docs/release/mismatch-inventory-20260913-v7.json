@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "runtime": {
+    "path": "artifacts/boundary-check/release-runtime-rq_u6bg_/report.json",
+    "sha256": "81997b413df3485c396dcae4a996b4805ff84b4344f1101ae2625b95cef2e2cc"
+  },
+  "rust_tests": {
+    "path": "artifacts/boundary-check/release-rust-tests-lbzt57o5/report.json",
+    "sha256": "b9c1a93bcd6833255ef1996b3624c930b4eabdc50e9cb0f56dc6503eef6c2ca0"
+  },
+  "semantic_negative_cases": {
+    "a_diverging_instruction_stream_is_located": {
+      "path": "artifacts/boundary-check/paired-negatives-eo1eh276/report.json",
+      "sha256": "f531cad2174929544fb9f57fe3328d95a187cd31ed6d019626ef936d40929e38"
+    },
+    "a_missing_final_event_is_detected": {
+      "path": "artifacts/boundary-check/paired-negatives-eo1eh276/report.json",
+      "sha256": "f531cad2174929544fb9f57fe3328d95a187cd31ed6d019626ef936d40929e38"
+    },
+    "a_trapping_instruction_diverges_and_is_reported_not_hidden": {
+      "path": "artifacts/boundary-check/release-trap-audit-fix-0k1c4qjl/minimized/report.json",
+      "sha256": "f8e94c1a6759ff0a2ba3540f10b17f8de99e9c13729c3c7022e8b411189a1716"
+    }
+  }
+}

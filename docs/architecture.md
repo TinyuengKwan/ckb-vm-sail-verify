@@ -40,7 +40,11 @@ CKB-VM 适配器必须包住真实 VERSION2 Rust interpreter。Sail 适配器消
 - x0 写回统一规范化为无写回。
 - memory 观察缺失不能自动视为相等。
 - mismatch 保存 seed、ELF、双方事件和工具版本，允许重放。
-- RVFI-DII 会话必须从架构复位态开始：首个执行包的 `rvfi_order` 为 0、`pc_rdata` 为 `0x80000000`，否则直接报错。上游模拟器只 `accept` 一次就关闭监听套接字，两个客户端争抢同一端口时，输的一方可能连到别人已经推进过的模拟器；这个检查使那种情况成为错误，而不是一条看起来合理的错误 trace。
+- RVFI-DII 注入会话必须从本项目约定初态开始：首个执行包的 `rvfi_order` 为 0、
+  `pc_rdata` 为 `0x80000000`，否则直接报错。上游模拟器只 `accept` 一次就关闭监听
+  套接字，两个客户端争抢同一端口时，输的一方可能连到别人已经推进过的模拟器；
+  这个检查使那种情况成为错误，而不是一条看起来合理的错误 trace。它只检查首包
+  order/PC，不证明全部寄存器初态或一般平台 reset 可达性。
 
 比较器的检出能力本身要有证据，否则“全部一致”与“比较器失效”无法区分。
 `crates/diff-test/src/mutation.rs` 因此在真实记录的 trace 上注入 6 类 mutation，
@@ -133,11 +137,12 @@ state_rel ckb sail
 
 适用前提必须包含 ISA 开关、特权级、对齐策略、内存范围、异常环境和版本。
 
-上式是一般关系示意，具体 ADD 定理还应从合法输入和外围条件推出两侧成功，避免
-只假设双方已成功而漏掉失败行为。初版范围是对应的已解码 ADD；取指/解码与 cycle
-不在提取根内。`common.add` 和 Sail `execute_RTYPE` 都不推进 PC，包含 PC 的结论
-必须另外连接生成的 CKB `execute` 与 Sail `run_hart_active` / `tick_pc`。
-Sail 的寄存器映射必须具有所需键；全零复位态不是通用 ADD 引理的必要限制。
+上式是一般关系示意。内部 `ProductionAdd.decoded_add_step` 以已解码 ADD 为入口；
+公开 `OuterAdd.cold_public_add_step` 已从同一个 32 位字连接限定配置下的两侧真实 decoder，
+并保留 Rust size/load、Sail 取指/入口/退休和初态关系。cycle 仍不在定理范围。
+`common.add` 和 Sail `execute_RTYPE` 都不推进 PC，当前结论另行连接生成的 CKB `execute`
+与 Sail `run_hart_active` / `tick_pc`。Sail 的寄存器映射必须具有所需键；全零注入初态
+不是通用 ADD 引理的必要限制，也没有由该见证推出一般平台 reset 可达性。
 
 ## 5. 信任边界
 
@@ -146,8 +151,10 @@ Sail 的寄存器映射必须具有所需键；全零复位态不是通用 ADD �
 - Rust compiler/Charon/Aeneas 的翻译正确性假设；
 - Sail compiler 对 Lean 4/Rocq 后端的翻译；
 - 强制证明使用的 Lean 4 kernel，以及兼容性 spike 使用的 Rocq kernel；
-- `DefaultMachine` 到 `DefaultCoreMachine` 的委托：它因 `dyn` 字段无法翻译，在生成物里是 axiom；
-- 实际定理可达的外部声明与显式前提；寄存器总数和 RA 已提取并检查值，wrapper 合同仍未实例化。见 ADD 审计，不能只扫描占位符；
+- `DefaultMachine` 的动态 `MachineRuntime` / `Pause` 容器及其他 opaque 类型；五个实际
+  寄存器/PC 委托已有生成函数体和已证合同实例，但这不证明其余 opaque 方法或所有生产分支；
+- 实际定理可达的外部声明与显式前提；寄存器总数和 RA 已提取并检查值，wrapper 合同
+  已实例化。最终依赖仍须按 [ADD 审计](../proof/lean/reports/ADD_AUDIT.md)逐项固定，不能只扫描占位符；
 - RVFI 适配器只影响测试观察，不影响 VM 行为。
 
 翻译器生成代码应固定 commit，CI 重新生成后必须保持 clean diff。
@@ -183,7 +190,7 @@ proof/{lean,rocq}/generated/
 proof/lean/audit/
   可执行的依赖查询，不是精化定理
 proof/lean/theorems/
-  共同 Lean 4.31.0 双侧 import 工程；state relation 与精化定理待实现
+  共同 Lean 4.31.0 双侧 import 工程；已实现 state relation、wrapper 合同及条件性 ADD 精化定理
 proof/lean/compat/
   Sail 类型作用域兼容补丁、回归探针与实测报告
 proof/rocq/theorems/（计划目录）
@@ -200,9 +207,13 @@ proof/rocq/theorems/（计划目录）
 - 寄存器观察的分辨率是架构状态变化：写回寄存器已有值在两端都不可观察。
 - 注入路径的 CKB ISA 已收敛到 `ISA_IMC | ISA_B`。开启 `ISA_MOP` 会让解码器走 `decode_mop` 并向前读取注入流之外的字节，融合命中时一步退休多条指令；两侧对"一步"的定义必须一致，因此宏操作融合不在范围内。
 - 双侧工程使用共同 Lean 4.31.0，生成流程包含已记录的 Sail 类型作用域补丁；`make proof-step` 检查条件性 dispatch/PC 定理，wrapper 委托已证明，原内部定理审计 137 项依赖。新增公开 ADD decoder 定理审计 158 项，在既定配置和取指条件下推出同码解码；其独立干净复验及集成主门禁实跑均通过。Sail 前缀、物理内存对应与 reset 可达性仍有边界，不能据此标记无条件完整指令 `proved`。
-- 提取不需要修改 `deps/ckb-vm`，因此本轮不需要上游 patch/PR。
-- 寄存器总数与 RA 已从 axiom 补为真实定义；生产 wrapper 方法仍是 axiom，其五个委托合同虽已编译，尚无实例/连接证明。
+- 指令函数体不需要为证明改写；但 `DefaultMachine` 的三个动态字段为可提取性采用了
+  [runtime-container 补丁](../proof/lean/extraction/ADOPTION.md)。当前生产来源是固定上游
+  commit 加该补丁，不能归到原始未修改 commit，也不能把有限合同证明扩大为一般重构等价。
+- 寄存器总数与 RA 已从 axiom 补为真实定义；五个生产 wrapper 方法有生成函数体和
+  已证合同实例。`MachineRuntime`、`Pause` 类型及最终依赖清单中的其他外部声明仍在 TCB。
 
 - mutation 矩阵证明的是**比较器**会失败，不是语料覆盖了 CKB-VM 的输入空间；两者是不同的命题。
 
-因此当前结论是“运行时差分闭环 + 可构建的证明骨架”，不是形式化验证完成。
+因此当前结论是“限定语料的运行时差分闭环 + 指定配置下生产关联的条件性 ADD
+kernel 定理”，不是整个 CKB-VM 的形式化验证，也不是 Week6 release 完成。

@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "candidate": "local-readiness-2026-09-12-v4-exact-install-not-a-release",
+  "pins": {
+    "main_policy": "9308acea6d1dd3d6d1a3be2b4c9e7b6cb7e0f8bc34d698dcdf9705c740e5fb9a",
+    "public_policy": "e2643499ef13d20ed1797dca4d2e6192851fdad0b0e6e53ffc41247ce85fd0b4",
+    "week5_plan": "0116b1cc0b3ededec4c4d2be4d8dd265edd3ed71bb0194a5b9d9ac52a64fcd4b",
+    "week6_plan": "354ee1e4401ef29339695c71219e42be799d1c8563d4a256b7d197138a77cb6c",
+    "overview_plan": "2c92573b561058fadac801b3f73b3bebb080ef83104f4222d588a5b8cff28e62"
+  },
+  "evidence": {
+    "runtime": {
+      "path": "artifacts/boundary-check/release-runtime-yu6dnc03/report.json",
+      "sha256": "a6a961dfa4768db63664884a0330fde02f75112c321ece9cf2f18bbfdeea7b36"
+    },
+    "lean": {
+      "path": "artifacts/proof-check/report.json",
+      "sha256": "dbb8654592aea7dc90c9c5b9b3e1efc669256353e96dae11181c29dcfe2ba4cb"
+    },
+    "rocq": {
+      "path": "artifacts/rocq-spike/run-g9_1a_9v/report.json",
+      "sha256": "4cbcffd9c102714683d3b253103959d677450974532106d1b45dfd36b0ac6c2e"
+    },
+    "rust_tests": {
+      "path": "artifacts/boundary-check/release-rust-tests-ww5kz9l8/report.json",
+      "sha256": "d974f848aa4d6be3cb2a105ce2ab19ebf355d917398c365e8e3e788fd14a5a9b"
+    },
+    "mismatches": {
+      "path": "docs/release/mismatch-inventory-20260912-v4.json",
+      "sha256": "95dec631b1926c1d0af68565ba65a886feede19b593a2ed4d2886bb8cf5385c4"
+    },
+    "clean_room": null,
+    "worktree_audit": null,
+    "ci_download": null,
+    "release_package": null,
+    "maintainer_demo": null,
+    "third_party": null,
+    "public_claims": null
+  }
+}

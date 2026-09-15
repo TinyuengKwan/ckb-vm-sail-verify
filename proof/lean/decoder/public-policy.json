@@ -2,7 +2,7 @@
   "schema_version": 1,
   "status": "adopted-rv64-add-public-v1",
   "production_baseline": "ckb-vm-1ffba3977da9-runtime-container-v1",
-  "inputs": "artifacts/boundary-check/aeneas-branch-ZR2ur7",
+  "inputs": "artifacts/decoder-inputs/public-v1",
   "configuration": {
     "instruction": "normal 32-bit RV64 ADD",
     "version": 2,
@@ -59,16 +59,26 @@
     "proof/lean/decoder/toolchain/full-mir/OuterStepWitness.lean": "0119a5d2d11f0f1c46b43a8717654c68d0ffd1aae1911217068de913450d1a47",
     "proof/lean/decoder/toolchain/full-mir/audit-snapshot.json": "0bf566835a64ba833fde785585c1590a0fe65dde14a95935c93b0b5e8a7e22ba",
     "proof/lean/decoder/toolchain/full-mir/general-audit-snapshot.json": "e8e38a0a0a5e2fe042ca22b738c95eb2556e42bbe998044dbc50dc2131b6fdd6",
-    "scripts/decoder_public_clean.py": "5345525b1fdd06f5f55c5053416b9ddf60fec371c2a91312dd33c9436cfe16bb",
-    "scripts/decoder_public_source.py": "952d6ca1f22ffdfcf9e9035846802bc4b4c00dcb46353ad71c8c9a1352fe979e",
+    "proof/lean/decoder/toolchain/public-harness/Cargo.lock": "023588c4dac3bf3489f629bfd7eef67fa202a76918c737ad8ab1816d9ddfc2c3",
+    "scripts/decoder_harness.py": "f5703983537380efbfaf93dfd083bf75f53441e7ccba25d80ef9866b129bf42f",
+    "scripts/decoder_input_bundle.py": "aada9d531eebf6aea1cfabe1d61063f9dd2af055f0b47df37b97ca0be73a9d34",
+    "scripts/decoder_input_locations.py": "a031e7b37cdeac34a4630c8d773a0722f3c9e6851a77b37ddcbe27b319519c7a",
+    "scripts/decoder_model_identity.py": "056ef05269f6d4f1275b753ccb5a9bc0aedc4540e7d0b066d1322fc6b58fb80a",
+    "scripts/decoder_public_clean.py": "959f42798e9e75575c73488f23f623c771588d07c8fa067d5bdb98bd95823a54",
+    "scripts/decoder_public_source.py": "99ac0546504a4954efa3964d2f21cb68479d6dc33927f610605d37efbda46353",
     "scripts/probes/probe_decoder_full_mir.py": "5f9b87c3d9276bc0f47419b9fbeb1771740cf7af3a383a82dcbfc78caae28f20",
-    "scripts/probes/probe_decoder_public.py": "9e84a83b1c1d9d21b08142192af57e69fa13ec52dc2229ef70f11197884c6ea8",
-    "scripts/public_decoder_acceptance.py": "3f5571a17d244cbf8506e58fb7a9723bcb934f658fd802232516c1fd7ffbe2e8",
-    "scripts/public_decoder_gate.py": "e8f4d4b9eee9808031a821a7add05a6a13dab4f55fd205c61c9f9fc7973029cf",
-    "scripts/tests/test_decoder_public_clean.py": "b48cc0e793c69cd3bcc0bcb04e7d19f3c043d37e264ec259a9f249ed0fb00dce",
+    "scripts/probes/probe_decoder_public.py": "c2817888fc4b56735b58c93c8a80fef05445604fa10845944ec709f9ab881931",
+    "scripts/public_decoder_acceptance.py": "9ad9a1d2ae77a570b1538268e54dee2784a504083eb55b09bd22c6c06e310963",
+    "scripts/public_decoder_gate.py": "154da4ed26c26d5eddf1ae9aae847d96cd5762c86edab41483f3b584b76fe461",
+    "scripts/tests/test_decoder_harness.py": "6b2aca177ccfd5cf06be71342bed6bc486f5ca7bb4fda782192784609a190e46",
+    "scripts/tests/test_decoder_input_bundle.py": "40ce5f22afcafac0dede8c25a6ea58230a0cd32473e21010db1884f97d090415",
+    "scripts/tests/test_decoder_input_locations.py": "2022b9850c7cabc39d073e20dcaac766770f03d711452850d9d0ca99e139e94f",
+    "scripts/tests/test_decoder_iterator_identity.py": "fb5004cda754193f6ee2d84d5bb84d9597c0ac1b22b059cef2a1a7d97dbbad15",
+    "scripts/tests/test_decoder_model_identity.py": "e39fb8b1af82a43420b87318a5a53974548fc393ae980228496e5f5108032df0",
+    "scripts/tests/test_decoder_public_clean.py": "0ab5b46c3d6de9bd40a50f2282a6b06c591f8adbd9fa22135ad92f188b0f320a",
     "scripts/tests/test_decoder_public_source.py": "3bf227c97e51c818f3217f00fad4b9884d9d7e868420310f57ec21d1d7de7daf",
-    "scripts/tests/test_public_decoder_acceptance.py": "f33adeb148c499796c4a292581f9f7d913c6525a04c59db12ac9ae654f8c1605",
-    "scripts/tests/test_public_decoder_gate.py": "ef93cfff94b6aa307e5f75f74b2129f73ef90fd615b7afbe88140d32a3cd8b66"
+    "scripts/tests/test_public_decoder_acceptance.py": "8274f3add4b5a833d6dcce6f5d5fe6af5cb4604096dad6ce98e4c92753df10f3",
+    "scripts/tests/test_public_decoder_gate.py": "7f9dfb8380159938708591b20235765f0f3d90ddad3dbef49b188f71de72cfe8"
   },
   "tool_ids": {
     "charon": "charon-89ac1181-cleanup-suffix-v1",
@@ -121,5 +131,6 @@
     "new_golden_mismatches_structurally_reviewed": 7,
     "full_upstream_suite_passed": false,
     "note": "No golden files refreshed. Twenty-six shared command failures remain; seven residual diagnostic differences are explained by unchanged concurrent target failure reporting. Baseline golden mismatches and missing odoc/Miri/cross targets/clippy coverage are not claimed resolved. Guard/loop/borrow proofs qualify the selected changes, not all Drop/unwind behavior."
-  }
+  },
+  "input_layout": "public-decoder-inputs-v1"
 }

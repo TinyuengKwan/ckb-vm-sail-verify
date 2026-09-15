@@ -7,10 +7,26 @@ PROJECT_DIR="$(dirname "$SCRIPT_DIR")"
 TOOLCHAIN="$PROJECT_DIR/proof/lean/theorems/lean-toolchain"
 BACKEND="${1:?usage: configure_lean_project.sh lean|rust}"
 fail() { echo "ERROR: $*" >&2; exit 1; }
+[ "$#" -le 2 ] || fail "usage: configure_lean_project.sh lean|rust [staged-sail-directory]"
+[ "$#" -lt 2 ] || [ "$BACKEND" = lean ] || fail "staging directory is only supported for Sail"
 
 case "$BACKEND" in
     lean)
         GENERATED="$PROJECT_DIR/proof/lean/generated/sail"
+        if [ "$#" = 2 ]; then
+            # Only a new sibling staging directory created by the transactional
+            # installer may override the published Sail model directory.
+            python3 - "$PROJECT_DIR" "$2" <<'PY'
+from pathlib import Path
+import sys
+root, stage = Path(sys.argv[1]).resolve(), Path(sys.argv[2]).absolute()
+if not (stage == stage.resolve() and stage.is_dir() and stage.name == 'staged' and
+        stage.parent.name.startswith('.sail-install-') and
+        stage.parent.parent == root / 'proof/lean/generated'):
+    sys.exit('ERROR: unexpected Sail staging directory')
+PY
+            GENERATED="$2"
+        fi
         EXPECTATION="$PROJECT_DIR/proof/lean/expected_build_status.txt"
         REV="$(sed -n 's/^lean_sail_rev=//p' "$EXPECTATION")"
         [[ "$REV" =~ ^[0-9a-f]{40}$ ]] || fail "invalid lean-sail revision in $EXPECTATION"

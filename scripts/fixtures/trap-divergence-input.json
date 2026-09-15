@@ -1,0 +1,36 @@
+{
+  "schema_version": 3,
+  "case": {
+    "id": "trap-divergence-input",
+    "description": "Unexecuted input from dii_end_to_end.rs trap negative test; not evidence",
+    "family": "unsupported-trap",
+    "focus_step": 1,
+    "seed": null,
+    "instructions": [5243027, 4219, 7340307]
+  },
+  "instructions_hex": ["0x00500093", "0x0000107b", "0x00700113"],
+  "environment": {
+    "ckb_vm_commit": null,
+    "ckb_vm_source_baseline": null,
+    "sail_riscv_commit": null,
+    "sail_model_version": null,
+    "sail_bin": "deps/sail-riscv/build/c_emulator/sail_riscv_sim",
+    "sail_config": "sail-model/build/ckb_vm_config.json",
+    "sail_config_sha256": null,
+    "ckb_vm_isa_bits": 0,
+    "ckb_vm_isa": "unexecuted input, not environment evidence",
+    "ckb_vm_version": 2,
+    "rustc": null,
+    "cargo": null,
+    "sail_compiler": null
+  },
+  "initial_state": {"pc": 2147483648, "integer_registers": "x0..x31 = 0"},
+  "passed": false,
+  "classification": "input_only",
+  "comparison": null,
+  "error": "Unexecuted input, use the replay runner to capture actual evidence",
+  "ckb_trace": null,
+  "sail_trace": null,
+  "sail_raw_packets": [],
+  "replay": {"from_artifact": "", "from_corpus": null}
+}

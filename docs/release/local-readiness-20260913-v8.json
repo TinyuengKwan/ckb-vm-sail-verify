@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "candidate": "local-readiness-2026-09-13-v8-complete-rebuilt-public-proof-not-a-release",
+  "pins": {
+    "main_policy": "ca6e062b62c448e428fb016a0442d1b271872c26539573077d494b84d074a79f",
+    "public_policy": "63dd6ab1965a50c208d5779b217718d0b349671566ba6de725037d28fb3f19e4",
+    "raw_policy": "a67b275f94ba0797705eec57c31595a9da05f2c70e26c8f011e320a64c1e7b84",
+    "input_admission": "74e7a88b1413f09df12126c0020f2bb9b261043d80bc34d74b03f9bbc875cd8f",
+    "input_catalogue": "b9015281f8a2c4d30aabd0b91eb6993d492b87e15eb83dcf93a8a66df8daa523",
+    "week5_plan": "0116b1cc0b3ededec4c4d2be4d8dd265edd3ed71bb0194a5b9d9ac52a64fcd4b",
+    "week6_plan": "354ee1e4401ef29339695c71219e42be799d1c8563d4a256b7d197138a77cb6c",
+    "overview_plan": "2c92573b561058fadac801b3f73b3bebb080ef83104f4222d588a5b8cff28e62"
+  },
+  "evidence": {
+    "runtime": {
+      "path": "artifacts/boundary-check/release-runtime-rq_u6bg_/report.json",
+      "sha256": "81997b413df3485c396dcae4a996b4805ff84b4344f1101ae2625b95cef2e2cc"
+    },
+    "lean": {
+      "path": "artifacts/boundary-check/approved-rebuilt-proof-YQTKZPMC/report.json",
+      "sha256": "4385aea4114c1aedc07d7db392d641d46089ed12842ded83bcd4e0b2396ac4a6"
+    },
+    "rocq": {
+      "path": "artifacts/rocq-spike/run-uwaywsl6/report.json",
+      "sha256": "859fcf5dfa9703e2e35dede755efaae411404a0dec9848fe8b19aed9559021ba"
+    },
+    "rust_tests": {
+      "path": "artifacts/boundary-check/release-rust-tests-lbzt57o5/report.json",
+      "sha256": "b9c1a93bcd6833255ef1996b3624c930b4eabdc50e9cb0f56dc6503eef6c2ca0"
+    },
+    "mismatches": {
+      "path": "docs/release/mismatch-inventory-20260913-v7.json",
+      "sha256": "22642030613d249df712ecfc0f4e120963c1ef875c78ecec626a3d4811c38f24"
+    },
+    "maintainer_demo": {
+      "path": "artifacts/boundary-check/maintainer-demo-g4y21e4e/report.json",
+      "sha256": "d5cee494fa8c35377ed7920eb4202ede4c8cb6e60a70c757bcd4a6e13dcbc3e0"
+    },
+    "clean_room": null,
+    "worktree_audit": null,
+    "ci_download": null,
+    "release_package": null,
+    "third_party": null,
+    "public_claims": null
+  }
+}

@@ -2,7 +2,11 @@
 
 `ckb_vm_config.json` 是叠加到 sail-riscv 默认 RV64 配置上的 JSON override，不是独立完整配置。
 
-当前 submodule 固定为 sail-riscv `27224ccb`（release `0.13.1`），其构建系统要求 Sail `0.20.2` 或更新版本。
+当前 submodule 固定为 sail-riscv
+`8f91355eee63a85738723603e23d32eecdd763dc`（`0.13.1-7-g8f91355e`）；正式门禁使用
+政策固定的 Sail 源码构建 `8eb1fb6b…`，不能只按 `0.20.2` 版本号替换。旧
+`27224ccb` / released Sail 0.20.2 组合的 Lean 失败只保留为历史记录，见
+[semantic gaps](../docs/semantic-gaps.md)。
 
 运行时使用：
 

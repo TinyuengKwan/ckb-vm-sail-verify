@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "scope": "linux-x86_64-rust-lean-installation-only",
+  "pin_provenance": "versions from repository configuration; executable hashes observed in previously used local installations on 2026-09-12, not independent publisher attestation",
+  "rust": {
+    "1.97.1": {
+      "commit": "8bab26f4f68e0e26f0bb7960be334d5b520ea452",
+      "release": "1.97.1",
+      "components": ["clippy", "rustfmt"],
+      "binaries": {
+        "rustc": "d3a664c970a9fd8361b64194861bebc1ae37b9054e5ee3400dc1c9e691797eea",
+        "cargo": "828980723df339d62434390e9fb8ef8831036583343ae2316b7ab5646b5c1953"
+      }
+    },
+    "nightly-2026-08-18": {
+      "commit": "8fa1c96cfd489e4c27654c144ae871ce2c4db6c6",
+      "release": "1.100.0-nightly",
+      "components": ["llvm-tools", "rust-src", "rustc-dev"],
+      "binaries": {
+        "rustc": "47e8b6d2328416ac07115cd1cf2accb3cebd200a77a0362162386349bc3d1eae",
+        "cargo": "a37b0b7d77433b7bd0b81513f299ee98cc29058abddfe5caaa3716ce358d083b"
+      }
+    }
+  },
+  "lean": {
+    "toolchain": "leanprover/lean4:v4.31.0",
+    "version": "Lean (version 4.31.0, x86_64-unknown-linux-gnu, commit 68218e876d2a38b1985b8590fff244a83c321783, Release)",
+    "lake_version": "Lake version 5.0.0-src+68218e8 (Lean version 4.31.0)",
+    "binaries": {
+      "lean": "e8baaa71855a616dc351028f3ad2200051b0671f423a1696a100e809302d5550",
+      "lake": "60330ab6f07dce20f3fa9ebb08e8b984ea9549eac172afeb15d9d2227060e2b3"
+    }
+  }
+}

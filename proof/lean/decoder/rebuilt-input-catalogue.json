@@ -1,0 +1,848 @@
+{
+  "kind": "rebuilt-decoder-candidate-catalogue",
+  "boundaries": {
+    "tool_adopted": false,
+    "policy_changed": false,
+    "kernel_executed_by_packager": false,
+    "fresh_extraction_executed_by_packager": false,
+    "full_qualification_reexecuted_by_packager": false,
+    "entire_historical_evidence_closure_included": false,
+    "old_report_paths_rewritten": false,
+    "upstream_visitors_constraint_satisfied": false,
+    "full_upstream_suite_passed": false,
+    "clean_room_claimed": false,
+    "release_claimed": false
+  },
+  "source_commits": {
+    "aeneas": "379890b54b4961dc7729e314c6eefdc09fe50981",
+    "charon": "89ac118194b978d8cf753222c19f313521377aa0"
+  },
+  "files": {
+    "bin/aeneas": {
+      "sha256": "dfa656486c7edc719c6e3314fa873e3a8e66b6654f4ea27b948d6a93d519db17",
+      "bytes": 63548888,
+      "mode": 493
+    },
+    "bin/base/aeneas": {
+      "sha256": "98b7f9727b6296a41d2732bdb5a054937869fb1f9f776d6f2de47be17247953d",
+      "bytes": 63459568,
+      "mode": 493
+    },
+    "bin/base/charon": {
+      "sha256": "59363fdaa771e300f576c458c6faab0b9d9fa0ae80706e04f5eae760ed7fb523",
+      "bytes": 269194160,
+      "mode": 493
+    },
+    "bin/base/charon-driver": {
+      "sha256": "e10cea3b756de291fff060e7eac3d58868468fe71c1b2a85162a2ac02be14441",
+      "bytes": 382696112,
+      "mode": 493
+    },
+    "bin/charon": {
+      "sha256": "260b6c239dc79c859db65af811fa43381d96775c7f564b3fb290a6015c0a1f23",
+      "bytes": 269348064,
+      "mode": 493
+    },
+    "bin/charon-driver": {
+      "sha256": "bd4cc808a6f8dfb7ed51908857323e258dc6f9611ef8e3cb4a45554475c498a1",
+      "bytes": 382886264,
+      "mode": 493
+    },
+    "bin/join/aeneas": {
+      "sha256": "af9a5ec84ff951fe4a92ffc0c2a49579e6d761e6f863e889eed758802d72483c",
+      "bytes": 63494760,
+      "mode": 493
+    },
+    "candidate/extraction.json": {
+      "sha256": "90ebb55f95d2d7d61fe15ce993830e31bac56b89664b2c8b97f813f43c5f444e",
+      "bytes": 3364,
+      "mode": 420
+    },
+    "evidence/joint_extraction.json": {
+      "sha256": "db0ddb324274e9ab1fa69650eed19ea661ef5b4f68face18aa72113c96414c9e",
+      "bytes": 54475,
+      "mode": 420
+    },
+    "evidence/lower_extraction.json": {
+      "sha256": "5009ba00993188373dd2d502024486884aa8f67f5982495b64516d98e71d0f35",
+      "bytes": 465688,
+      "mode": 420
+    },
+    "evidence/lower_negatives.json": {
+      "sha256": "1b045c976d4d8de26fbb26443a1d74eb3f7bab320b7a7d2a2939da1dc9e3ad9e",
+      "bytes": 66310,
+      "mode": 420
+    },
+    "evidence/map_equivalence.json": {
+      "sha256": "57cb243c8742513062547a8983b6cafeca689907250146e78f46cbea3d8101cd",
+      "bytes": 9167357,
+      "mode": 420
+    },
+    "evidence/sail_cpp.json": {
+      "sha256": "197438f259cba13b82c4c9cf9a636872050f428b5b8f6663021b561a40d65542",
+      "bytes": 207147,
+      "mode": 420
+    },
+    "evidence/sail_runtime.json": {
+      "sha256": "5f24f40a2b034c40193a917e052171bf70e5732eb6e2a223af55a5e3a80465ed",
+      "bytes": 83767,
+      "mode": 420
+    },
+    "harness/Cargo.lock": {
+      "sha256": "023588c4dac3bf3489f629bfd7eef67fa202a76918c737ad8ab1816d9ddfc2c3",
+      "bytes": 6329,
+      "mode": 420
+    },
+    "harness/lib.rs": {
+      "sha256": "ce89211f2d139f2a7a3f4f5d69e6fe362ad2fd0b8bcf19e8e185cb589a15972c",
+      "bytes": 547,
+      "mode": 420
+    },
+    "llbc/CkbVmProduction.llbc": {
+      "sha256": "7a2001c11a30c227b010f0f3e4e76b2db227f5e895cbdd36dd9233a0a9b02dd9",
+      "bytes": 15041257,
+      "mode": 420
+    },
+    "llbc/FactoryScoped.llbc": {
+      "sha256": "aa93ce7233fecd65372c268704ecf44a0191218f2853bc8ebeb61e167fb29494",
+      "bytes": 2620838,
+      "mode": 420
+    },
+    "llbc/FnPtrFullMir.llbc": {
+      "sha256": "a052ec7e21d68d6a618680d2df6bed7827d4f55096293563fe55de9df0cc308a",
+      "bytes": 527118,
+      "mode": 420
+    },
+    "llbc/LocalFields.llbc": {
+      "sha256": "e305faa73952f471e597ce674a96ab6bf4b87e2e1bf93addac64b6cd9b8a5105",
+      "bytes": 63983,
+      "mode": 420
+    },
+    "llbc/MiniComplete.llbc": {
+      "sha256": "a2cf38656b9f45c4d0ea6e3ae401aaa66893c6883f331fee66609d7807d5e265",
+      "bytes": 121462,
+      "mode": 420
+    },
+    "llbc/OuterClosedDepsV3.llbc": {
+      "sha256": "539a85faef4c4b85509c8bb300763341aef8858988a16c714182d05c56f32347",
+      "bytes": 8954174,
+      "mode": 420
+    },
+    "models/CkbVmProduction.lean": {
+      "sha256": "9eb4be0e65c6653c2c08d3707b475c8d5c38ed032ebe358dd3a330342172fe4e",
+      "bytes": 456490,
+      "mode": 420
+    },
+    "models/FactoryScoped.lean": {
+      "sha256": "5a3ac950964416f148ae417e78dfa42b2d3899db5b0f54c241a705b3d4a7068b",
+      "bytes": 159887,
+      "mode": 420
+    },
+    "models/FnPtrFullMir.lean": {
+      "sha256": "c5847f862c1edadc74d8d2384cdb2699e3fce5f9cb40c474d0e8c151ee9235b1",
+      "bytes": 9547,
+      "mode": 420
+    },
+    "models/LocalFields.lean": {
+      "sha256": "3657ae25ac3b2c690e27a8e520663d64d7996bf7397eb1f182f905a4183f6868",
+      "bytes": 2671,
+      "mode": 420
+    },
+    "models/MiniComplete.lean": {
+      "sha256": "6f65774afd345abc9b3e058f9c47db450057984d4e054838986fb65ae863fd4b",
+      "bytes": 7537,
+      "mode": 420
+    },
+    "models/OuterClosedDepsV3.lean": {
+      "sha256": "e76ce92a9a6fdda32fec250714139da474c8ee9fb93d0427a65efdef532347c7",
+      "bytes": 420577,
+      "mode": 420
+    },
+    "patches/aeneas-join.patch": {
+      "sha256": "5a924e2a6e38696eae8211f6e01b1b181bc85b1c5ce0cbf5fb44766e915f0dd9",
+      "bytes": 5561,
+      "mode": 420
+    },
+    "patches/aeneas.patch": {
+      "sha256": "956a3b1b895c9ffee8376d7cc8f2440efcedba8592908bac8b58c4a07b7c387d",
+      "bytes": 32936,
+      "mode": 420
+    },
+    "patches/charon.patch": {
+      "sha256": "17f5c34ca63f66987498331d9712b8affb00e25867e4746b5b660893d3d6eebf",
+      "bytes": 3839,
+      "mode": 420
+    },
+    "qualification/borrow.json": {
+      "sha256": "624413e13a949f9b3a56442e097dcff9bd5853e5bf193c3828308918a2e62120",
+      "bytes": 72211,
+      "mode": 420
+    },
+    "qualification/charon_diagnostics.json": {
+      "sha256": "066d19a38522d3cef48d33be73c6c74dbb6660207403ea6f2f50e75dd3ec63f4",
+      "bytes": 18982,
+      "mode": 420
+    },
+    "qualification/charon_ui.json": {
+      "sha256": "325e6f340bd365dcea0992309d38a6635b264a198ce70afd8999c9cd8b563e00",
+      "bytes": 17749,
+      "mode": 420
+    },
+    "qualification/fnptr.json": {
+      "sha256": "1ad2d7355f6f517e1f8d1c05b5373e59a5b659fec33ba336c8f617032f061315",
+      "bytes": 73957,
+      "mode": 420
+    },
+    "qualification/guard_equivalence.json": {
+      "sha256": "7d60a0d39587f6d5f5af310ef3ed02ea8acba6778cb58720ec5a35c8856093ce",
+      "bytes": 72210,
+      "mode": 420
+    },
+    "qualification/loop_equivalence.json": {
+      "sha256": "d95e3a00022699e8a773b1aa11458ff7cd34259c066c18206dab4e59d35ec1f2",
+      "bytes": 64818,
+      "mode": 420
+    },
+    "qualification/public_clean.json": {
+      "sha256": "e94b2e9f59e41fffb2e4d2c525cef42e6bc7a786393e842879e053f89d01bf08",
+      "bytes": 334403,
+      "mode": 420
+    },
+    "qualification/sysroot.json": {
+      "sha256": "13d82971a424442ea3fc4fbd4deda0672cb1725c0cda9e32817465830a618516",
+      "bytes": 26187,
+      "mode": 420
+    },
+    "reference/proof/lean/audit/step-policy.json": {
+      "sha256": "9308acea6d1dd3d6d1a3be2b4c9e7b6cb7e0f8bc34d698dcdf9705c740e5fb9a",
+      "bytes": 39657,
+      "mode": 420
+    },
+    "reference/proof/lean/decoder/field-policy.json": {
+      "sha256": "2fd824db64328972468ddb76fd7cdfb4d0cfbf86e8614ab88ee10169b9b40673",
+      "bytes": 3974,
+      "mode": 420
+    },
+    "reference/proof/lean/decoder/public-policy.json": {
+      "sha256": "e2643499ef13d20ed1797dca4d2e6192851fdad0b0e6e53ffc41247ce85fd0b4",
+      "bytes": 11181,
+      "mode": 420
+    },
+    "reference/proof/lean/decoder/raw-policy.json": {
+      "sha256": "407909ee4584c3d1a45dcbf123fa2019d70b2eaac4f22b962caf3dea37596951",
+      "bytes": 29676,
+      "mode": 420
+    },
+    "reference/proof/lean/decoder/toolchain/full-entry/extraction.json": {
+      "sha256": "aaed2661ab316b0cf959034fa8b3e9c836aa88ad52da7746b3b648c707771b1c",
+      "bytes": 3470,
+      "mode": 420
+    },
+    "sources/aeneas.bundle": {
+      "sha256": "e06a4d19f311ace82403ef47f8d6029cbe405e275cf3a6eec29051425b0dcb0e",
+      "bytes": 15891930,
+      "mode": 420
+    },
+    "sources/charon.bundle": {
+      "sha256": "811efe1059afab29ff5c6163c64219ebcb8f0849c0cc8361e0b71a682418ba02",
+      "bytes": 18105726,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libaddr2line-2f512f2177a58049.rlib": {
+      "sha256": "2785e130926634347ac49d6b0645220bdaa916d0e794c0e4bb8051f5aa260fda",
+      "bytes": 624428,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libaddr2line-2f512f2177a58049.rmeta": {
+      "sha256": "8d310a251255e6f44b974d69d736e2cc966d7c8f75fa4a7b32b94536a1946413",
+      "bytes": 401056,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libadler2-29f01afce10158d9.rlib": {
+      "sha256": "a3d561870a3b831bdcca7be99cc39c439c76217e1ee6adea596aafc348dac9c0",
+      "bytes": 95708,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libadler2-29f01afce10158d9.rmeta": {
+      "sha256": "30601d445e66a8a0b9be07afa1164fc23dce3ba36df64c0e6ad0f1902cc9cb1c",
+      "bytes": 37656,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/liballoc-f1d372910061a72c.rlib": {
+      "sha256": "aa03da724799b39a428a25aed85d05fb428a133c20c3baa0a05f6bc14f6cf33c",
+      "bytes": 9313764,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/liballoc-f1d372910061a72c.rmeta": {
+      "sha256": "82704b1509d1dbe81f5b107b90e3cb7130130b598f07eae3b049702d7e785c5a",
+      "bytes": 7276028,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcfg_if-df496177af579db1.rlib": {
+      "sha256": "83e59787f3dc8aec8bde3ee14a4ecdf4075403cd3718797b579f22ea361d1bde",
+      "bytes": 8114,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcfg_if-df496177af579db1.rmeta": {
+      "sha256": "f14b3047e89cc14d0ca207cd751afa223a5f17888f8eba56cfa373d5580f0550",
+      "bytes": 5896,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcompiler_builtins-03e89340dd837725.rlib": {
+      "sha256": "0d25ceffb8ca186bacec4d34f053a1c54a8908b867ce7bf0643b2fe557da0c55",
+      "bytes": 6800290,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcompiler_builtins-03e89340dd837725.rmeta": {
+      "sha256": "75e9016f0f9e95b0d0372e3f89ffbf20040e3ee37bb0866574c01d68a8cc7275",
+      "bytes": 3262198,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcore-66a805290f367a13.rlib": {
+      "sha256": "37bdfb4ebd2cdb385a62b04aa66d7813822a40a7ac935d4f183d636ade957322",
+      "bytes": 74528232,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcore-66a805290f367a13.rmeta": {
+      "sha256": "f0a65c4dc43e57c1295edf019c353390a21a88a3c35caa59924eb1e669bd8d67",
+      "bytes": 68274972,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libdecoder_full_mir_sysroot-0bd9de4d01fa6d5f.rlib": {
+      "sha256": "00cfdb140a2e8f28f004f207606989c93ffa180cdfd6dfa34457edcb46829d60",
+      "bytes": 6896,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libdecoder_full_mir_sysroot-0bd9de4d01fa6d5f.rmeta": {
+      "sha256": "0b1a95592e61d4c1bd79db84b69221bd550c89d731e21f83e7a59360ad652404",
+      "bytes": 2594,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgimli-ab25ea1717afdb64.rlib": {
+      "sha256": "012de5ada6148b3300d78bb1b4659deb809c66f822ccc3855230b43b41283b70",
+      "bytes": 8250718,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgimli-ab25ea1717afdb64.rmeta": {
+      "sha256": "d86ec0ad5dd82e5e8be2228870e117808fc385aaf4acce7cce07e6ea1de3f502",
+      "bytes": 6060235,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libhashbrown-a09a3dfa3e1c61d4.rlib": {
+      "sha256": "f2a09d2aa6997846dbb7548428447e3a9a751078f3a0f1e5fa33322c0d9118f9",
+      "bytes": 1642620,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libhashbrown-a09a3dfa3e1c61d4.rmeta": {
+      "sha256": "9c6cee92d189e05c73e81ca4db61ce4e14a2fed2093ab40dd25abe05bd23848c",
+      "bytes": 1523332,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/liblibc-5e528e6cfc9e3ee1.rlib": {
+      "sha256": "772a880d693f82f6f6361b0deb2edad9017efa3e951a7fe8bbdc816bd2070c59",
+      "bytes": 4666412,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/liblibc-5e528e6cfc9e3ee1.rmeta": {
+      "sha256": "8205866ccca3e9cd5234019c76315f859609bdc4136b5b210f706b5df75f5d0a",
+      "bytes": 4620146,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libmemchr-edfe8b40fb5db6bc.rlib": {
+      "sha256": "9be1ea4a70334a475edf6a131dfba20fd6eab3f818468b77c5499c49dd921ffb",
+      "bytes": 2933904,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libmemchr-edfe8b40fb5db6bc.rmeta": {
+      "sha256": "7f1b8f820b8bf706063dc4225e6ce008b1fe0b004576e45faa19b1bf69a3eb9c",
+      "bytes": 1534976,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libminiz_oxide-dc4835579f9570a6.rlib": {
+      "sha256": "d16aab5b652ad29a2500b6e980570018a312923e848aea5462ef46819f887de9",
+      "bytes": 888794,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libminiz_oxide-dc4835579f9570a6.rmeta": {
+      "sha256": "6401acaf0bb0a5bbe847172eecebff1396d8a1f8a4b054b97ac6dbf01b7f5be8",
+      "bytes": 323030,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libobject-bc8e894af8e5a3db.rlib": {
+      "sha256": "84c11fae02ddcdb223f71c42c7915b0c0d19215fac7fac8a2b194ac0e126c287",
+      "bytes": 11229814,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libobject-bc8e894af8e5a3db.rmeta": {
+      "sha256": "24edc83eacd7df84331e656184224fe6bfb148da09e348a797fdea52a7164ab9",
+      "bytes": 8414885,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_abort-d287b810d1fbfa7f.rlib": {
+      "sha256": "2d31c9f0310cfe253006cc27502711f48338c2bdb403daabcf99f9666d50e161",
+      "bytes": 11932,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_abort-d287b810d1fbfa7f.rmeta": {
+      "sha256": "a161bafa4cc260344f8cfda842f56d5aa261d6db0a8168ef4cda51b991813472",
+      "bytes": 3609,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_unwind-491aea004277da5f.rlib": {
+      "sha256": "37970c0d241a8b838d7fbb619a76afab7526153d900b14d73850cacdad5f4ebb",
+      "bytes": 120156,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_unwind-491aea004277da5f.rmeta": {
+      "sha256": "b4d942ed96e442082896d23c952f4f5dc948a878074918692dd6bd7523c6718e",
+      "bytes": 12684,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libproc_macro-106726910956453f.rlib": {
+      "sha256": "290f94017867321565e71bb1f5f0fb42f4684ce472bdacb75c84af37a8dfd8eb",
+      "bytes": 7625322,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libproc_macro-106726910956453f.rmeta": {
+      "sha256": "9f43c205bd7a5012a511f2d2f8ece7ceba54d378562bc0a0c26ac680e7c9ea31",
+      "bytes": 1743313,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_demangle-d9523304fd23622d.rlib": {
+      "sha256": "fc948932ee68d913f7328d23700130f4ba1de2553c6415f06c0309d01c040d5f",
+      "bytes": 1505112,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_demangle-d9523304fd23622d.rmeta": {
+      "sha256": "9833362fde080a28f507fe0dae31e22463e2aa3e33848bba3329cb2ba299283b",
+      "bytes": 393034,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_literal_escaper-470cd5fdf1ad120d.rlib": {
+      "sha256": "56bc6c318ade0453aa6651e88c8baa466b25711db803c56083d5f7703c5991d4",
+      "bytes": 117680,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_literal_escaper-470cd5fdf1ad120d.rmeta": {
+      "sha256": "4def564aad3396a62855236fad84520fbcd69712cb7e88a4af6091428fdb3fbc",
+      "bytes": 106381,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_alloc-e8baeea3b5202400.rlib": {
+      "sha256": "9ce79ce90e1c20a03a59aca868774a74f6b6e2026a8ed2f655c67ffa13928d94",
+      "bytes": 4864,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_alloc-e8baeea3b5202400.rmeta": {
+      "sha256": "9d932c09a16145339938a358c4bf104aac4964a4ea6625f0c27dd340be406e92",
+      "bytes": 2538,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_core-3fa9ad8550e1557d.rlib": {
+      "sha256": "d80388226b440ab145616a232b12668752ac416b9e1167d48882dd0fd131b061",
+      "bytes": 8750,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_core-3fa9ad8550e1557d.rmeta": {
+      "sha256": "2b7f2ed09bfb2e0df057892b12a754eefc8dff8b8a4fec489e2b2a2b5cf8f35c",
+      "bytes": 6436,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-3ec8f39b166e338d.rlib": {
+      "sha256": "a90126df077c804c3e75329bf7b60e2dc3cc867c031d28f2f49eb9f4a26a58b3",
+      "bytes": 35414950,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-3ec8f39b166e338d.rmeta": {
+      "sha256": "319cddca7ea7c0567bfa3f867e1ea45dd71fad5df49986627376402f2e032b9d",
+      "bytes": 9096087,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd_detect-1a22d129d659225f.rlib": {
+      "sha256": "677d9427dec9146e46d5d23eea32cb9d1e319ff6dc9383ce5bea112908b1cad7",
+      "bytes": 714716,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd_detect-1a22d129d659225f.rmeta": {
+      "sha256": "1600f04d28cf8ab5e40f25a0e2065f45acd1f71a17daf86f2b8ab8d8cf5eecf8",
+      "bytes": 632600,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libunwind-0d0190bce31b82e9.rlib": {
+      "sha256": "60f666c52e5bf5debbdd189336cdeae1d3e5f932eb9f0160d9425d6a686c40bc",
+      "bytes": 23874,
+      "mode": 420
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libunwind-0d0190bce31b82e9.rmeta": {
+      "sha256": "76bbb2f31f5b38b793a8ce3a8cc55819be5db867edc33673d219fc71d5cb7825",
+      "bytes": 21651,
+      "mode": 420
+    }
+  },
+  "provenance": {
+    "qualification/public_clean.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-public-kernel-kahdzauc/report.json",
+      "sha256": "e94b2e9f59e41fffb2e4d2c525cef42e6bc7a786393e842879e053f89d01bf08"
+    },
+    "qualification/borrow.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-borrows-_rl7vzss/report.json",
+      "sha256": "624413e13a949f9b3a56442e097dcff9bd5853e5bf193c3828308918a2e62120"
+    },
+    "qualification/fnptr.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-fnptr-_j1r1xm7/report.json",
+      "sha256": "1ad2d7355f6f517e1f8d1c05b5373e59a5b659fec33ba336c8f617032f061315"
+    },
+    "qualification/charon_ui.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-charon-ui-jtet5h5k/report.json",
+      "sha256": "325e6f340bd365dcea0992309d38a6635b264a198ce70afd8999c9cd8b563e00"
+    },
+    "qualification/charon_diagnostics.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-charon-diagnostics-9mde362w/report.json",
+      "sha256": "066d19a38522d3cef48d33be73c6c74dbb6660207403ea6f2f50e75dd3ec63f4"
+    },
+    "qualification/guard_equivalence.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-guard-qyes6caj/report.json",
+      "sha256": "7d60a0d39587f6d5f5af310ef3ed02ea8acba6778cb58720ec5a35c8856093ce"
+    },
+    "qualification/loop_equivalence.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-loop-4psnamoz/report.json",
+      "sha256": "d95e3a00022699e8a773b1aa11458ff7cd34259c066c18206dab4e59d35ec1f2"
+    },
+    "evidence/joint_extraction.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-extraction-chain-18z20fdd/report.json",
+      "sha256": "db0ddb324274e9ab1fa69650eed19ea661ef5b4f68face18aa72113c96414c9e"
+    },
+    "evidence/lower_extraction.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-lower-models-tt2j7xeu/report.json",
+      "sha256": "5009ba00993188373dd2d502024486884aa8f67f5982495b64516d98e71d0f35"
+    },
+    "evidence/map_equivalence.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/lower-map-kernel-0v7r0ook/report.json",
+      "sha256": "57cb243c8742513062547a8983b6cafeca689907250146e78f46cbea3d8101cd"
+    },
+    "evidence/lower_negatives.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/lower-original-negatives-qridxngh/report.json",
+      "sha256": "1b045c976d4d8de26fbb26443a1d74eb3f7bab320b7a7d2a2939da1dc9e3ad9e"
+    },
+    "evidence/sail_cpp.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-sail-cpp-p7x1idhj/report.json",
+      "sha256": "197438f259cba13b82c4c9cf9a636872050f428b5b8f6663021b561a40d65542"
+    },
+    "evidence/sail_runtime.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-sail-runtime-6t_ouoxe/report.json",
+      "sha256": "5f24f40a2b034c40193a917e052171bf70e5732eb6e2a223af55a5e3a80465ed"
+    },
+    "bin/base/charon": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-charon-oy65t8ts/base/bin/charon",
+      "sha256": "59363fdaa771e300f576c458c6faab0b9d9fa0ae80706e04f5eae760ed7fb523"
+    },
+    "bin/base/charon-driver": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-charon-oy65t8ts/base/bin/charon-driver",
+      "sha256": "e10cea3b756de291fff060e7eac3d58868468fe71c1b2a85162a2ac02be14441"
+    },
+    "bin/base/aeneas": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-aeneas-hksgq6ho/base/aeneas",
+      "sha256": "98b7f9727b6296a41d2732bdb5a054937869fb1f9f776d6f2de47be17247953d"
+    },
+    "bin/charon": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-charon-oy65t8ts/public/bin/charon",
+      "sha256": "260b6c239dc79c859db65af811fa43381d96775c7f564b3fb290a6015c0a1f23"
+    },
+    "bin/charon-driver": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-charon-oy65t8ts/public/bin/charon-driver",
+      "sha256": "bd4cc808a6f8dfb7ed51908857323e258dc6f9611ef8e3cb4a45554475c498a1"
+    },
+    "bin/aeneas": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-aeneas-hksgq6ho/public/aeneas",
+      "sha256": "dfa656486c7edc719c6e3314fa873e3a8e66b6654f4ea27b948d6a93d519db17"
+    },
+    "bin/join/aeneas": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-lower-models-tt2j7xeu/aeneas-join",
+      "sha256": "af9a5ec84ff951fe4a92ffc0c2a49579e6d761e6f863e889eed758802d72483c"
+    },
+    "models/LocalFields.lean": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-lower-models-tt2j7xeu/models/LocalFields.lean",
+      "sha256": "3657ae25ac3b2c690e27a8e520663d64d7996bf7397eb1f182f905a4183f6868"
+    },
+    "llbc/LocalFields.llbc": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-lower-models-tt2j7xeu/LocalFields.llbc",
+      "sha256": "e305faa73952f471e597ce674a96ab6bf4b87e2e1bf93addac64b6cd9b8a5105"
+    },
+    "models/FactoryScoped.lean": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-lower-models-tt2j7xeu/models/FactoryScoped.lean",
+      "sha256": "5a3ac950964416f148ae417e78dfa42b2d3899db5b0f54c241a705b3d4a7068b"
+    },
+    "llbc/FactoryScoped.llbc": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-lower-models-tt2j7xeu/FactoryScoped.llbc",
+      "sha256": "aa93ce7233fecd65372c268704ecf44a0191218f2853bc8ebeb61e167fb29494"
+    },
+    "models/MiniComplete.lean": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-lower-models-tt2j7xeu/models/MiniComplete.lean",
+      "sha256": "6f65774afd345abc9b3e058f9c47db450057984d4e054838986fb65ae863fd4b"
+    },
+    "llbc/MiniComplete.llbc": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-lower-models-tt2j7xeu/MiniComplete.llbc",
+      "sha256": "a2cf38656b9f45c4d0ea6e3ae401aaa66893c6883f331fee66609d7807d5e265"
+    },
+    "models/CkbVmProduction.lean": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-extraction-chain-18z20fdd/main/generated/CkbVmProduction.lean",
+      "sha256": "9eb4be0e65c6653c2c08d3707b475c8d5c38ed032ebe358dd3a330342172fe4e"
+    },
+    "llbc/CkbVmProduction.llbc": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-extraction-chain-18z20fdd/main/CkbVmProduction.llbc",
+      "sha256": "7a2001c11a30c227b010f0f3e4e76b2db227f5e895cbdd36dd9233a0a9b02dd9"
+    },
+    "models/OuterClosedDepsV3.lean": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-extraction-chain-18z20fdd/public/generated/OuterClosedDepsV3.lean",
+      "sha256": "e76ce92a9a6fdda32fec250714139da474c8ee9fb93d0427a65efdef532347c7"
+    },
+    "llbc/OuterClosedDepsV3.llbc": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-extraction-chain-18z20fdd/public/OuterClosedDepsV3.llbc",
+      "sha256": "539a85faef4c4b85509c8bb300763341aef8858988a16c714182d05c56f32347"
+    },
+    "models/FnPtrFullMir.lean": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-extraction-chain-18z20fdd/iterator/generated/FnPtrFullMir.lean",
+      "sha256": "c5847f862c1edadc74d8d2384cdb2699e3fce5f9cb40c474d0e8c151ee9235b1"
+    },
+    "llbc/FnPtrFullMir.llbc": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/rebuilt-extraction-chain-18z20fdd/iterator/FnPtrFullMir.llbc",
+      "sha256": "a052ec7e21d68d6a618680d2df6bed7827d4f55096293563fe55de9df0cc308a"
+    },
+    "patches/aeneas.patch": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/decoder-inputs/public-v1/payload/patches/aeneas.patch",
+      "sha256": "956a3b1b895c9ffee8376d7cc8f2440efcedba8592908bac8b58c4a07b7c387d"
+    },
+    "patches/charon.patch": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/decoder-inputs/public-v1/payload/patches/charon.patch",
+      "sha256": "17f5c34ca63f66987498331d9712b8affb00e25867e4746b5b660893d3d6eebf"
+    },
+    "harness/lib.rs": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/decoder-inputs/public-v1/payload/harness/lib.rs",
+      "sha256": "ce89211f2d139f2a7a3f4f5d69e6fe362ad2fd0b8bcf19e8e185cb589a15972c"
+    },
+    "harness/Cargo.lock": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/decoder-inputs/public-v1/payload/harness/Cargo.lock",
+      "sha256": "023588c4dac3bf3489f629bfd7eef67fa202a76918c737ad8ab1816d9ddfc2c3"
+    },
+    "sources/aeneas.bundle": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/decoder-inputs/public-v1/payload/sources/aeneas.bundle",
+      "sha256": "e06a4d19f311ace82403ef47f8d6029cbe405e275cf3a6eec29051425b0dcb0e"
+    },
+    "sources/charon.bundle": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/decoder-inputs/public-v1/payload/sources/charon.bundle",
+      "sha256": "811efe1059afab29ff5c6163c64219ebcb8f0849c0cc8361e0b71a682418ba02"
+    },
+    "patches/aeneas-join.patch": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/proof/lean/decoder/toolchain/aeneas-join-recovery.patch",
+      "sha256": "5a924e2a6e38696eae8211f6e01b1b181bc85b1c5ce0cbf5fb44766e915f0dd9"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libaddr2line-2f512f2177a58049.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libaddr2line-2f512f2177a58049.rlib",
+      "sha256": "2785e130926634347ac49d6b0645220bdaa916d0e794c0e4bb8051f5aa260fda"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libaddr2line-2f512f2177a58049.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libaddr2line-2f512f2177a58049.rmeta",
+      "sha256": "8d310a251255e6f44b974d69d736e2cc966d7c8f75fa4a7b32b94536a1946413"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libadler2-29f01afce10158d9.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libadler2-29f01afce10158d9.rlib",
+      "sha256": "a3d561870a3b831bdcca7be99cc39c439c76217e1ee6adea596aafc348dac9c0"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libadler2-29f01afce10158d9.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libadler2-29f01afce10158d9.rmeta",
+      "sha256": "30601d445e66a8a0b9be07afa1164fc23dce3ba36df64c0e6ad0f1902cc9cb1c"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/liballoc-f1d372910061a72c.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/liballoc-f1d372910061a72c.rlib",
+      "sha256": "aa03da724799b39a428a25aed85d05fb428a133c20c3baa0a05f6bc14f6cf33c"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/liballoc-f1d372910061a72c.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/liballoc-f1d372910061a72c.rmeta",
+      "sha256": "82704b1509d1dbe81f5b107b90e3cb7130130b598f07eae3b049702d7e785c5a"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcfg_if-df496177af579db1.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcfg_if-df496177af579db1.rlib",
+      "sha256": "83e59787f3dc8aec8bde3ee14a4ecdf4075403cd3718797b579f22ea361d1bde"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcfg_if-df496177af579db1.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcfg_if-df496177af579db1.rmeta",
+      "sha256": "f14b3047e89cc14d0ca207cd751afa223a5f17888f8eba56cfa373d5580f0550"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcompiler_builtins-03e89340dd837725.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcompiler_builtins-03e89340dd837725.rlib",
+      "sha256": "0d25ceffb8ca186bacec4d34f053a1c54a8908b867ce7bf0643b2fe557da0c55"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcompiler_builtins-03e89340dd837725.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcompiler_builtins-03e89340dd837725.rmeta",
+      "sha256": "75e9016f0f9e95b0d0372e3f89ffbf20040e3ee37bb0866574c01d68a8cc7275"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcore-66a805290f367a13.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcore-66a805290f367a13.rlib",
+      "sha256": "37bdfb4ebd2cdb385a62b04aa66d7813822a40a7ac935d4f183d636ade957322"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcore-66a805290f367a13.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libcore-66a805290f367a13.rmeta",
+      "sha256": "f0a65c4dc43e57c1295edf019c353390a21a88a3c35caa59924eb1e669bd8d67"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libdecoder_full_mir_sysroot-0bd9de4d01fa6d5f.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libdecoder_full_mir_sysroot-0bd9de4d01fa6d5f.rlib",
+      "sha256": "00cfdb140a2e8f28f004f207606989c93ffa180cdfd6dfa34457edcb46829d60"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libdecoder_full_mir_sysroot-0bd9de4d01fa6d5f.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libdecoder_full_mir_sysroot-0bd9de4d01fa6d5f.rmeta",
+      "sha256": "0b1a95592e61d4c1bd79db84b69221bd550c89d731e21f83e7a59360ad652404"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgimli-ab25ea1717afdb64.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgimli-ab25ea1717afdb64.rlib",
+      "sha256": "012de5ada6148b3300d78bb1b4659deb809c66f822ccc3855230b43b41283b70"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgimli-ab25ea1717afdb64.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libgimli-ab25ea1717afdb64.rmeta",
+      "sha256": "d86ec0ad5dd82e5e8be2228870e117808fc385aaf4acce7cce07e6ea1de3f502"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libhashbrown-a09a3dfa3e1c61d4.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libhashbrown-a09a3dfa3e1c61d4.rlib",
+      "sha256": "f2a09d2aa6997846dbb7548428447e3a9a751078f3a0f1e5fa33322c0d9118f9"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libhashbrown-a09a3dfa3e1c61d4.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libhashbrown-a09a3dfa3e1c61d4.rmeta",
+      "sha256": "9c6cee92d189e05c73e81ca4db61ce4e14a2fed2093ab40dd25abe05bd23848c"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/liblibc-5e528e6cfc9e3ee1.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/liblibc-5e528e6cfc9e3ee1.rlib",
+      "sha256": "772a880d693f82f6f6361b0deb2edad9017efa3e951a7fe8bbdc816bd2070c59"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/liblibc-5e528e6cfc9e3ee1.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/liblibc-5e528e6cfc9e3ee1.rmeta",
+      "sha256": "8205866ccca3e9cd5234019c76315f859609bdc4136b5b210f706b5df75f5d0a"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libmemchr-edfe8b40fb5db6bc.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libmemchr-edfe8b40fb5db6bc.rlib",
+      "sha256": "9be1ea4a70334a475edf6a131dfba20fd6eab3f818468b77c5499c49dd921ffb"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libmemchr-edfe8b40fb5db6bc.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libmemchr-edfe8b40fb5db6bc.rmeta",
+      "sha256": "7f1b8f820b8bf706063dc4225e6ce008b1fe0b004576e45faa19b1bf69a3eb9c"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libminiz_oxide-dc4835579f9570a6.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libminiz_oxide-dc4835579f9570a6.rlib",
+      "sha256": "d16aab5b652ad29a2500b6e980570018a312923e848aea5462ef46819f887de9"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libminiz_oxide-dc4835579f9570a6.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libminiz_oxide-dc4835579f9570a6.rmeta",
+      "sha256": "6401acaf0bb0a5bbe847172eecebff1396d8a1f8a4b054b97ac6dbf01b7f5be8"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libobject-bc8e894af8e5a3db.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libobject-bc8e894af8e5a3db.rlib",
+      "sha256": "84c11fae02ddcdb223f71c42c7915b0c0d19215fac7fac8a2b194ac0e126c287"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libobject-bc8e894af8e5a3db.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libobject-bc8e894af8e5a3db.rmeta",
+      "sha256": "24edc83eacd7df84331e656184224fe6bfb148da09e348a797fdea52a7164ab9"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_abort-d287b810d1fbfa7f.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_abort-d287b810d1fbfa7f.rlib",
+      "sha256": "2d31c9f0310cfe253006cc27502711f48338c2bdb403daabcf99f9666d50e161"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_abort-d287b810d1fbfa7f.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_abort-d287b810d1fbfa7f.rmeta",
+      "sha256": "a161bafa4cc260344f8cfda842f56d5aa261d6db0a8168ef4cda51b991813472"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_unwind-491aea004277da5f.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_unwind-491aea004277da5f.rlib",
+      "sha256": "37970c0d241a8b838d7fbb619a76afab7526153d900b14d73850cacdad5f4ebb"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_unwind-491aea004277da5f.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libpanic_unwind-491aea004277da5f.rmeta",
+      "sha256": "b4d942ed96e442082896d23c952f4f5dc948a878074918692dd6bd7523c6718e"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libproc_macro-106726910956453f.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libproc_macro-106726910956453f.rlib",
+      "sha256": "290f94017867321565e71bb1f5f0fb42f4684ce472bdacb75c84af37a8dfd8eb"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libproc_macro-106726910956453f.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libproc_macro-106726910956453f.rmeta",
+      "sha256": "9f43c205bd7a5012a511f2d2f8ece7ceba54d378562bc0a0c26ac680e7c9ea31"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_demangle-d9523304fd23622d.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_demangle-d9523304fd23622d.rlib",
+      "sha256": "fc948932ee68d913f7328d23700130f4ba1de2553c6415f06c0309d01c040d5f"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_demangle-d9523304fd23622d.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_demangle-d9523304fd23622d.rmeta",
+      "sha256": "9833362fde080a28f507fe0dae31e22463e2aa3e33848bba3329cb2ba299283b"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_literal_escaper-470cd5fdf1ad120d.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_literal_escaper-470cd5fdf1ad120d.rlib",
+      "sha256": "56bc6c318ade0453aa6651e88c8baa466b25711db803c56083d5f7703c5991d4"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_literal_escaper-470cd5fdf1ad120d.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_literal_escaper-470cd5fdf1ad120d.rmeta",
+      "sha256": "4def564aad3396a62855236fad84520fbcd69712cb7e88a4af6091428fdb3fbc"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_alloc-e8baeea3b5202400.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_alloc-e8baeea3b5202400.rlib",
+      "sha256": "9ce79ce90e1c20a03a59aca868774a74f6b6e2026a8ed2f655c67ffa13928d94"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_alloc-e8baeea3b5202400.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_alloc-e8baeea3b5202400.rmeta",
+      "sha256": "9d932c09a16145339938a358c4bf104aac4964a4ea6625f0c27dd340be406e92"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_core-3fa9ad8550e1557d.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_core-3fa9ad8550e1557d.rlib",
+      "sha256": "d80388226b440ab145616a232b12668752ac416b9e1167d48882dd0fd131b061"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_core-3fa9ad8550e1557d.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/librustc_std_workspace_core-3fa9ad8550e1557d.rmeta",
+      "sha256": "2b7f2ed09bfb2e0df057892b12a754eefc8dff8b8a4fec489e2b2a2b5cf8f35c"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-3ec8f39b166e338d.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-3ec8f39b166e338d.rlib",
+      "sha256": "a90126df077c804c3e75329bf7b60e2dc3cc867c031d28f2f49eb9f4a26a58b3"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-3ec8f39b166e338d.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd-3ec8f39b166e338d.rmeta",
+      "sha256": "319cddca7ea7c0567bfa3f867e1ea45dd71fad5df49986627376402f2e032b9d"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd_detect-1a22d129d659225f.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd_detect-1a22d129d659225f.rlib",
+      "sha256": "677d9427dec9146e46d5d23eea32cb9d1e319ff6dc9383ce5bea112908b1cad7"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd_detect-1a22d129d659225f.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libstd_detect-1a22d129d659225f.rmeta",
+      "sha256": "1600f04d28cf8ab5e40f25a0e2065f45acd1f71a17daf86f2b8ab8d8cf5eecf8"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libunwind-0d0190bce31b82e9.rlib": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libunwind-0d0190bce31b82e9.rlib",
+      "sha256": "60f666c52e5bf5debbdd189336cdeae1d3e5f932eb9f0160d9425d6a686c40bc"
+    },
+    "sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libunwind-0d0190bce31b82e9.rmeta": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/sysroot/lib/rustlib/x86_64-unknown-linux-gnu/lib/libunwind-0d0190bce31b82e9.rmeta",
+      "sha256": "76bbb2f31f5b38b793a8ce3a8cc55819be5db867edc33673d219fc71d5cb7825"
+    },
+    "qualification/sysroot.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/artifacts/boundary-check/isolated-full-mir-r3t1nq8t/report.json",
+      "sha256": "13d82971a424442ea3fc4fbd4deda0672cb1725c0cda9e32817465830a618516"
+    },
+    "reference/proof/lean/audit/step-policy.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/proof/lean/audit/step-policy.json",
+      "sha256": "9308acea6d1dd3d6d1a3be2b4c9e7b6cb7e0f8bc34d698dcdf9705c740e5fb9a"
+    },
+    "reference/proof/lean/decoder/public-policy.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/proof/lean/decoder/public-policy.json",
+      "sha256": "e2643499ef13d20ed1797dca4d2e6192851fdad0b0e6e53ffc41247ce85fd0b4"
+    },
+    "reference/proof/lean/decoder/raw-policy.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/proof/lean/decoder/raw-policy.json",
+      "sha256": "407909ee4584c3d1a45dcbf123fa2019d70b2eaac4f22b962caf3dea37596951"
+    },
+    "reference/proof/lean/decoder/field-policy.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/proof/lean/decoder/field-policy.json",
+      "sha256": "2fd824db64328972468ddb76fd7cdfb4d0cfbf86e8614ab88ee10169b9b40673"
+    },
+    "reference/proof/lean/decoder/toolchain/full-entry/extraction.json": {
+      "source": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify/proof/lean/decoder/toolchain/full-entry/extraction.json",
+      "sha256": "aaed2661ab316b0cf959034fa8b3e9c836aa88ad52da7746b3b648c707771b1c"
+    }
+  }
+}

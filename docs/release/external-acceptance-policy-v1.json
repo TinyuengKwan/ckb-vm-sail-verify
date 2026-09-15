@@ -1,0 +1,84 @@
+{
+  "ci_download": {
+    "artifact_name_prefix": "week6-release-evidence-",
+    "provider": "github-actions",
+    "require_external_download": true,
+    "require_provenance_attestation": true,
+    "signer_workflow": "TinyuengKwan/ckb-vm-sail-verify/.github/workflows/week6-release.yml",
+    "required_jobs": [
+      "fast",
+      "differential",
+      "clean-room",
+      "release-audit",
+      "artifact-download-replay"
+    ],
+    "workflow": ".github/workflows/week6-release.yml"
+  },
+  "clean_room": {
+    "allowed_providers": [
+      "github-actions-ephemeral",
+      "independent-ephemeral-vm"
+    ],
+    "required_stages": [
+      "recursive-checkout",
+      "verify-source-snapshot",
+      "install-rust",
+      "install-sail",
+      "install-aeneas-charon",
+      "install-lean",
+      "install-rocq",
+      "rebuild-rust-model",
+      "rebuild-sail-model",
+      "rust-tests",
+      "runtime-differential",
+      "mutation-matrix",
+      "lean-kernel",
+      "rocq-spike",
+      "worktree-audit",
+      "public-claims"
+    ],
+    "required_tools": [
+      "rust",
+      "sail",
+      "aeneas",
+      "charon",
+      "lean",
+      "rocq"
+    ]
+  },
+  "kind": "week6-external-acceptance-policy-v1",
+  "release_package": {
+    "approved_delivery_profile": null,
+    "approved_signer_identity": null,
+    "approved_version": null,
+    "allowed_signers_path": "docs/release/release-allowed-signers",
+    "require_immutable_publication": true,
+    "signature_namespace": "ckb-vm-sail-release",
+    "required_members": [
+      "source/",
+      "install/",
+      "evidence/",
+      "docs/",
+      "SHA256SUMS",
+      "MANIFEST.json"
+    ]
+  },
+  "repository": "TinyuengKwan/ckb-vm-sail-verify",
+  "schema_version": 1,
+  "third_party": {
+    "allowed_signers_path": "docs/release/third-party-allowed-signers",
+    "require_signature_namespace": "ckb-vm-sail-week6",
+    "required_stages": [
+      "download-release",
+      "verify-package",
+      "restore-source",
+      "install-toolchain",
+      "run-rust-tests",
+      "run-runtime",
+      "run-lean",
+      "run-rocq",
+      "check-worktree",
+      "check-public-claims"
+    ]
+  }
+}

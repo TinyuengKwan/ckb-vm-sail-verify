@@ -12,6 +12,9 @@ import sys
 import check_proof as main
 import check_raw_add as raw
 import check_raw_add_fields as fields
+import decoder_model_identity as identity
+import decoder_rebuilt_locations as locations
+import decoder_harness as harness
 sys.path.insert(0, str(Path(__file__).resolve().parent / 'probes'))
 from probe_decoder_full_mir import MODULES, GENERAL_MODULES, audit_summary
 
@@ -23,7 +26,7 @@ MODELS = {
     'FnPtrFullMir.lean': '3ea3986975afcd389e5cb1b280b8bff43add33eccdb569a4d585a3ccf2c053e3',
 }
 STAGES = ['charon-patch-applies-reverse', 'aeneas-patch-applies-reverse', 'source-baseline',
-          'extract-public-rust', 'extract-iterator-rust', 'translate-public', 'translate-iterator',
+          'fetch-public-rust', 'extract-public-rust', 'extract-iterator-rust', 'translate-public', 'translate-iterator',
           'clean-main-build', 'clean-main-audit'] + [
     'clean-kernel-' + name for name in ['LocalFields', 'RawFields', 'FactoryScoped', 'MiniComplete', *raw.MODULES]
 ] + ['clean-field-audit', 'clean-raw-audit', 'kernel-FnPtrFullMir', 'kernel-OuterRawLinked'] + [
@@ -65,11 +68,56 @@ def check_models(models, directory):
     directory = Path(directory).resolve()
     require(len(models) == len(MODELS) and {Path(p).name for p in models} == set(MODELS),
             'public model set incomplete or duplicated')
+    paths = {}
     for filename, digest in models.items():
         path = Path(filename).resolve()
         require(path.is_relative_to(directory), 'model outside evidence directory')
-        require(digest == MODELS[path.name], 'unreviewed generated model identity')
         require(main.file_hash(path) == digest, 'generated public model changed')
+        paths[path.name] = path
+    try:
+        public_identity = identity.check(paths['OuterClosedDepsV3.lean'], main.ROOT)
+        iterator_identity = identity.check_iterator(paths['FnPtrFullMir.lean'], main.ROOT, directory)
+    except RuntimeError as error:
+        raise RuntimeError('unreviewed generated model identity: ' + str(error)) from error
+    source = paths['OuterClosedDepsV3.lean'].read_bytes()
+    require(source.count(b'import Aeneas\n') == 1, 'ambiguous public import linkage')
+    linked = paths['OuterRawLinked.lean'].read_bytes()
+    require(linked == source.replace(b'import Aeneas\n', b'import Aeneas\nimport CkbVmProduction\n', 1),
+            'production import linkage changed')
+    canonical, _ = identity.canonicalize(linked, main.ROOT)
+    require(hashlib.sha256(canonical).hexdigest() == MODELS['OuterRawLinked.lean'],
+            'unreviewed linked model identity')
+    return {'public': public_identity, 'iterator': iterator_identity}
+
+
+def check_installed_evidence(report, directory):
+    """Reopen installed files, fresh LLBC and harness; no self-reported approval."""
+    import public_decoder_gate as public
+    policy = json.loads(public.POLICY.read_text())
+    inputs = public.input_directory(policy)
+    installed = locations.load(inputs)
+    require(report['installed_inputs'] == installed, 'wrong installed input package')
+    source = report['source_reextraction']
+    require(source['runtime_before'] == source['runtime_after'] == locations.runtime(inputs),
+            'rebuilt runtime installation drift')
+    require(source['configuration_sha256'] == main.file_hash(Path(installed['payload']) / 'candidate/extraction.json'),
+            'rebuilt extraction configuration drift')
+    require(source['installed_inputs'] == installed and
+            report['clean_dependencies']['installed_inputs'] == installed,
+            'extraction/clean dependencies used different installed inputs')
+    actual_harness = harness.verify(directory / 'outer', main.ROOT)
+    require(source['harness_before'] == actual_harness == source['harness_after'],
+            'fresh harness identity changed')
+    require(set(source['inputs']) == {'OuterClosedDepsV3.llbc', 'FnPtrFullMir.llbc'},
+            'fresh extraction roots incomplete')
+    for name, row in source['inputs'].items():
+        path = directory / name
+        require(main.file_hash(path) == row['sha256'], 'fresh LLBC changed: ' + name)
+        fresh = json.loads(path.read_bytes())
+        require(row['options'] == fresh['translated']['options'], 'reported extraction options differ')
+        require(locations.check_extraction(fresh, inputs, name) == row['location_mapping'],
+                'extraction location mapping differs')
+    return installed
 
 
 def validate(report_path):
@@ -92,7 +140,9 @@ def validate(report_path):
     main.check_audit(main_audit, main_policy)
     for name, checker in [('field', fields), ('raw', raw)]:
         checker.check_audit(json.loads((directory / ('clean-' + name + '-audit.json')).read_text()),
-                            json.loads(checker.POLICY.read_text()))
+                            locations.lower_policy(Path(report['installed_inputs']['directory'])) if name == 'raw'
+                            else json.loads(checker.POLICY.read_text()))
+    require(report['clean_dependencies']['raw_policy_sha256'] == main.file_hash(locations.RAW_POLICY), 'raw policy drift')
     snapshot_path = PUBLIC / 'audit-snapshot.json'
     require(main.file_hash(snapshot_path) == '33b76c6791a874357ae9859b57ddb8c7b37e689e3c4a7b8edc900386a82e1135',
             'public audit snapshot changed')
@@ -109,7 +159,9 @@ def validate(report_path):
         for row in summary['theorems'].values():
             require(not any(re.search('sorryAx|_native|native_decide', a) for a in row['axioms']),
                     'unaccepted public proof axiom')
-    check_models(report['models'], directory)
+    installed = check_installed_evidence(report, directory)
+    require(check_models(report['models'], directory) == report['model_identities'],
+            'reported model identity differs from actual generated bytes')
     # Recheck the actual negative output; infrastructure failure is not evidence
     # against an incorrect decoded result.
     negative = (directory / 'negative-wrong-public.log').read_text()
@@ -137,4 +189,4 @@ def validate(report_path):
     return {'report': str(report_path), 'report_sha256': main.file_hash(report_path),
             'theorem': 'OuterAdd.cold_public_add_step', 'axiom_count': 158,
             'public_theorem_count': 68, 'clean_dependency_build': True,
-            'clean_build': clean_build, 'tool_adoption_claimed': False}
+            'clean_build': clean_build, 'installed_inputs': installed, 'tool_adoption_claimed': False}

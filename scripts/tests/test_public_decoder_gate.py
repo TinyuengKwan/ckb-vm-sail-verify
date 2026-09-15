@@ -16,7 +16,8 @@ class PublicGateTests(unittest.TestCase):
         temporary = tempfile.TemporaryDirectory(prefix='public-adapter-test-')
         self.addCleanup(temporary.cleanup)
         self.policy_path = Path(temporary.name) / 'policy.json'
-        self.policy = {'inputs': 'artifacts/boundary-check/fixture',
+        self.policy = {'inputs': 'artifacts/decoder-inputs/fixture',
+                       'input_layout': 'public-decoder-rebuilt-inputs-v2',
                        'configuration': public.CONFIGURATION, 'limitations': public.LIMITATIONS}
         self.policy_path.write_text(json.dumps(self.policy))
 
@@ -26,8 +27,28 @@ class PublicGateTests(unittest.TestCase):
         self.assertEqual(command.count('--inputs'), 1)
         self.assertNotIn('--reuse-report', command)
 
+    def test_main_policy_must_name_actual_public_gate(self):
+        public.check_main_policy_link({'configuration': {
+            'required_public_decoder_policy': str(public.POLICY.relative_to(public.main.ROOT))}})
+
+    def test_missing_old_or_other_public_policy_link_rejected(self):
+        for value in [None, 'proof/lean/decoder/public-policy.json',
+                      'proof/lean/decoder/raw-rebuilt-policy.json']:
+            with self.subTest(value=value), self.assertRaisesRegex(RuntimeError, 'main/public policy link'):
+                public.check_main_policy_link({'configuration': {'required_public_decoder_policy': value}})
+
     def test_inputs_must_stay_isolated(self):
         self.policy['inputs'] = '/tmp/unreviewed-tools'
+        with self.assertRaisesRegex(RuntimeError, 'outside isolated'):
+            public.command(self.policy)
+
+    def test_legacy_layout_rejected(self):
+        self.policy['input_layout'] = 'legacy-experimental'
+        with self.assertRaisesRegex(RuntimeError, 'input layout'):
+            public.command(self.policy)
+
+    def test_legacy_experiment_path_rejected(self):
+        self.policy['inputs'] = 'artifacts/boundary-check/old-tools'
         with self.assertRaisesRegex(RuntimeError, 'outside isolated'):
             public.command(self.policy)
 
@@ -37,17 +58,17 @@ class PublicGateTests(unittest.TestCase):
 
     def test_configuration_change_rejected(self):
         with self.assertRaisesRegex(RuntimeError, 'configuration'):
-            public.check_policy({'schema_version': 1, 'status': 'adopted-rv64-add-public-v1',
+            public.check_policy({'schema_version': 1, 'status': 'adopted-rv64-add-public-rebuilt-v2',
                                  'configuration': dict(public.CONFIGURATION, mop=True)})
 
     def test_omitted_limitations_rejected(self):
         with self.assertRaisesRegex(RuntimeError, 'trust boundary'):
-            public.check_policy({'schema_version': 1, 'status': 'adopted-rv64-add-public-v1',
+            public.check_policy({'schema_version': 1, 'status': 'adopted-rv64-add-public-rebuilt-v2',
                                  'configuration': public.CONFIGURATION, 'limitations': []})
 
     def test_wrong_production_baseline_rejected(self):
         with self.assertRaisesRegex(RuntimeError, 'production baseline'):
-            public.check_policy({'schema_version': 1, 'status': 'adopted-rv64-add-public-v1',
+            public.check_policy({'schema_version': 1, 'status': 'adopted-rv64-add-public-rebuilt-v2',
                 'configuration': public.CONFIGURATION, 'limitations': public.LIMITATIONS,
                 'production_baseline': 'unpatched-upstream'})
 

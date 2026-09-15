@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "runtime": {
+    "path": "artifacts/boundary-check/formal-native-gWE5WMRA/runtime/report.json",
+    "sha256": "ed6571bba185848283578ff50d64b67fed28d071950b2a2b9e74769b31f59a24"
+  },
+  "rust_tests": {
+    "path": "artifacts/boundary-check/formal-native-gWE5WMRA/rust-tests/report.json",
+    "sha256": "69787d4132013cbe291627c6f9ba4de93e2df2e37f4f065e80b19f19844df892"
+  },
+  "semantic_negative_cases": {
+    "a_diverging_instruction_stream_is_located": {
+      "path": "artifacts/boundary-check/paired-negatives-hwewjiop/report.json",
+      "sha256": "48f8b74e8074e42367f861c9a1976b719d53c915baf96ed179f8b46c72c82e58"
+    },
+    "a_missing_final_event_is_detected": {
+      "path": "artifacts/boundary-check/paired-negatives-hwewjiop/report.json",
+      "sha256": "48f8b74e8074e42367f861c9a1976b719d53c915baf96ed179f8b46c72c82e58"
+    },
+    "a_trapping_instruction_diverges_and_is_reported_not_hidden": {
+      "path": "artifacts/boundary-check/formal-trap-9yz9q90l/minimized/report.json",
+      "sha256": "580b7560fa992517bf364d5800c10756ca0e159b8bd2e15e0095e4e2b4be9f98"
+    }
+  }
+}

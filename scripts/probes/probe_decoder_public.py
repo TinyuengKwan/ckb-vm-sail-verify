@@ -31,6 +31,8 @@ if args.clean_dependencies and not args.reextract_rust:
 HERE = args.inputs.resolve()
 sys.path.insert(0, str(ROOT / 'scripts'))
 from probe_decoder_full_mir import audit_summary, MODULES, GENERAL_MODULES
+import decoder_rebuilt_locations as locations
+import decoder_model_identity as model_identity
 
 def sha(p):
     return hashlib.sha256(p.read_bytes()).hexdigest()
@@ -39,7 +41,7 @@ out = Path(tempfile.mkdtemp(prefix='public-check-', dir=ROOT / 'artifacts/bounda
 models = out / 'models'
 models.mkdir()
 report = {'status': 'running', 'main_gate_adopted': False, 'stages': [],
-          'adoption_decision_owner': 'public_decoder_gate.py and public-policy.json',
+          'adoption_decision_owner': 'public_decoder_gate.py and public-rebuilt-policy.json',
           'clean_dependency_build': False, 'rust_reextracted': False,
           'sysroot_rebuilt': False, 'directory': str(out),
           'scope': 'VERSION2 IMC+B, MOP off, fresh cache, arbitrary-PC original ADD word',
@@ -47,6 +49,8 @@ report = {'status': 'running', 'main_gate_adopted': False, 'stages': [],
                    'physical memory coupling and actual SparseMemory implementation',
                    'opaque execution Machine inhabitation/reset reachability']}
 protected = [ROOT / p for p in ['proof/lean/audit/step-policy.json',
+    'proof/lean/decoder/public-rebuilt-policy.json', 'proof/lean/decoder/raw-rebuilt-policy.json',
+    'proof/lean/decoder/rebuilt-input-policy.json',
     'proof/lean/decoder/raw-policy.json', 'artifacts/proof-check/report.json',
     'proof/lean/generated/rust/CkbVmProduction.lean']]
 report['protected_before'] = {str(p.relative_to(ROOT)): sha(p) for p in protected}
@@ -77,15 +81,19 @@ def run(label, command, cwd=ROOT, env=None, reject=None, timeout=300):
     return log.read_text()
 
 try:
-    binary = HERE / 'candidate-v2-bin/aeneas'
-    llbc = HERE / 'OuterClosedDepsV3.llbc'
+    report['installed_inputs'] = locations.load(HERE)
+    payload = Path(report['installed_inputs']['payload'])
+    config = json.loads((payload / 'candidate/extraction.json').read_bytes())
+    binary = payload / 'bin/aeneas'
+    llbc = payload / 'llbc/OuterClosedDepsV3.llbc'
+    aeneas_source = HERE / 'sources/public/aeneas'
     patch = ROOT / 'proof/lean/decoder/toolchain/branch-experimental/aeneas-branch-v2.patch'
-    assert sha(binary) == '1fe7040d9dc5dc2af5320722c23199eddb2d1d540a303f7fcbaa7cb0defacaae'
-    assert sha(llbc) == 'ca80303e64e2010890d43f68bb70afe716a58d3ca568e2e9e831e81873911b10'
+    assert sha(binary) == config['aeneas_binary_sha256']
+    assert sha(llbc) == config['llbc_sha256']
     assert sha(patch) == '956a3b1b895c9ffee8376d7cc8f2440efcedba8592908bac8b58c4a07b7c387d'
-    source_patch = subprocess.check_output(['git', 'diff', '--', 'src'], cwd=HERE / 'aeneas-src')
+    source_patch = subprocess.check_output(['git', 'diff', '--', 'src'], cwd=aeneas_source)
     assert hashlib.sha256(source_patch).hexdigest() == sha(patch)
-    commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=HERE / 'aeneas-src', text=True).strip()
+    commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=aeneas_source, text=True).strip()
     assert commit == '379890b54b4961dc7729e314c6eefdc09fe50981'
     report['tool'] = {'binary_sha256': sha(binary), 'patch_sha256': sha(patch), 'commit': commit,
         'env': {'AENEAS_FACTOR_RETURN_GUARDS': '1', 'AENEAS_EXTRACT_TRY_FROM_INT_ERROR': '1'}}
@@ -97,20 +105,20 @@ try:
     # Check both tool patches as applicable patches, not just opaque byte blobs.
     # A previous Charon archive omitted one trailing context line even though
     # the measured source and binary were correct.
-    charon_exp = HERE.parent / 'charon-cfg-OYcaoK'
-    charon_source = charon_exp / 'charon-src'
+    charon_bin = payload / 'bin'
+    charon_source = HERE / 'sources/public/charon'
     charon_patch = ROOT / 'proof/lean/decoder/toolchain/cfg-experimental/charon-cleanup-suffix.patch'
     assert sha(charon_patch) == '17f5c34ca63f66987498331d9712b8affb00e25867e4746b5b660893d3d6eebf'
     charon_diff = subprocess.check_output(['git', 'diff', '--', 'charon/src'], cwd=charon_source)
     assert hashlib.sha256(charon_diff).hexdigest() == sha(charon_patch)
     charon_commit = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=charon_source, text=True).strip()
     assert charon_commit == '89ac118194b978d8cf753222c19f313521377aa0'
-    assert sha(charon_exp / 'candidate-bin/charon') == 'bb36ff589c4eec04b834504c26fd29308421e24013a3ab44b58ef54b9e9eb3de'
-    assert sha(charon_exp / 'candidate-bin/charon-driver') == 'b6ac4b189fd8b4afa43a02fd65ce3cb6e51b6cb408cd98b973d7345af416f49b'
+    assert sha(charon_bin / 'charon') == config['charon_binary_sha256']
+    assert sha(charon_bin / 'charon-driver') == config['charon_driver_sha256']
     report['charon_tool'] = {'commit': charon_commit, 'patch_sha256': sha(charon_patch),
-        'binaries': {name: sha(charon_exp / 'candidate-bin' / name) for name in ['charon', 'charon-driver']}}
+        'binaries': {name: sha(charon_bin / name) for name in ['charon', 'charon-driver']}}
     run('charon-patch-applies-reverse', ['git', 'apply', '--reverse', '--check', charon_patch], charon_source)
-    run('aeneas-patch-applies-reverse', ['git', 'apply', '--reverse', '--check', patch], HERE / 'aeneas-src')
+    run('aeneas-patch-applies-reverse', ['git', 'apply', '--reverse', '--check', patch], aeneas_source)
     snapshot_path = public / 'audit-snapshot.json'
     snapshot = json.loads(snapshot_path.read_text())
     assert sha(snapshot_path) == '33b76c6791a874357ae9859b57ddb8c7b37e689e3c4a7b8edc900386a82e1135'
@@ -118,25 +126,27 @@ try:
     report['proof_sources'] = {str(p.relative_to(ROOT)): sha(p) for p in public.glob('*.lean')}
     report['script_sha256'] = sha(Path(__file__))
     run('source-baseline', [sys.executable, ROOT / 'scripts/ckb_source_baseline.py'])
-    iterator_llbc = HERE.parent / 'decoder-sysroot-q8nI9W/FnPtrFullMir.llbc'
-    assert sha(iterator_llbc) == 'ec90aafd39b3a6154f98b73b12d99d7e8a567e2461d1c5baec113b20ac699ee4'
+    iterator_llbc = payload / 'llbc/FnPtrFullMir.llbc'
+    assert sha(iterator_llbc) == 'a052ec7e21d68d6a618680d2df6bed7827d4f55096293563fe55de9df0cc308a'
     if args.reextract_rust:
         from decoder_public_source import reextract
         report['source_script_sha256'] = sha(ROOT / 'scripts/decoder_public_source.py')
         llbc, iterator_llbc = reextract(HERE, out, run, report, data,
                                         json.loads(iterator_llbc.read_bytes()))
     generated = out / 'generated'
-    translate_env = dict(os.environ, **report['tool']['env'])
+    runtime = report['source_reextraction']['runtime_after'] if args.reextract_rust else locations.runtime(HERE)
+    translate_env = dict(locations.environment(out, runtime, config), **report['tool']['env'])
     for key in ['AENEAS_BRANCH_DIAGNOSTIC', 'AENEAS_COLLAPSE_DIAGNOSTIC']:
         translate_env.pop(key, None)
-    run('translate-public', [binary, '-backend', 'lean', '-abort-on-error',
+    run('translate-public', locations.translator_command(runtime, binary, ['-backend', 'lean', '-abort-on-error',
         '-no-progress-bar', '-checks', '-sequential', '-namespace', 'OuterDecodeCandidate',
-        '-dest', generated, llbc], env=translate_env)
-    run('translate-iterator', [binary, '-backend', 'lean', '-abort-on-error',
-        '-no-progress-bar', '-checks', '-sequential', '-dest', generated, iterator_llbc], env=translate_env)
+        '-dest', generated, llbc]), env=translate_env)
+    run('translate-iterator', locations.translator_command(runtime, binary, ['-backend', 'lean', '-abort-on-error',
+        '-no-progress-bar', '-checks', '-sequential', '-dest', generated, iterator_llbc]), env=translate_env)
     src = generated / 'OuterClosedDepsV3.lean'
-    assert sha(src) == 'b5333f7d0be08339e4029cd8e38d6068704d0fdee6cc19b84b2cdcf97d8a7061'
-    assert sha(generated / 'FnPtrFullMir.lean') == '3ea3986975afcd389e5cb1b280b8bff43add33eccdb569a4d585a3ccf2c053e3'
+    report['model_identities'] = {
+        'public': model_identity.check(src, ROOT),
+        'iterator': model_identity.check_iterator(generated / 'FnPtrFullMir.lean', ROOT, out)}
     text = src.read_text()
     assert text.count('import Aeneas\n') == 1
     linked = models / 'OuterRawLinked.lean'
@@ -148,7 +158,7 @@ try:
     if args.clean_dependencies:
         from decoder_public_clean import build
         report['clean_script_sha256'] = sha(ROOT / 'scripts/decoder_public_clean.py')
-        project, lean, env, finish_clean = build(out, run, report)
+        project, lean, env, finish_clean = build(out, run, report, HERE)
     else:
         project = ROOT / 'proof/lean/theorems'
         lean = subprocess.check_output(['lake', 'env', 'which', 'lean'], cwd=project, text=True).strip()
@@ -229,6 +239,7 @@ try:
     report['weakened_premise_rejected_by_type_audit'] = True
     if finish_clean is not None:
         finish_clean()
+    assert locations.load(HERE) == report['installed_inputs']
     run('source-baseline-after', [sys.executable, ROOT / 'scripts/ckb_source_baseline.py'])
     report['protected_after'] = {str(p.relative_to(ROOT)): sha(p) for p in protected}
     assert report['protected_after'] == report['protected_before']

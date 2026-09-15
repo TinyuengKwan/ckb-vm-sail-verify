@@ -146,7 +146,13 @@ class ProofCheckTests(unittest.TestCase):
                                 "kernel-step", "theorem-audit", "test_lean_imports",
                                 "test_lean_step", "test_proof_check", "test_ckb_source_baseline",
                                 "test_lean_clean", "test_decoder_public_source", "test_decoder_public_clean",
-                                "test_public_decoder_acceptance", "test_public_decoder_gate", "public-decoder"])
+                                "test_public_decoder_acceptance", "test_public_decoder_gate",
+                                "test_decoder_harness", "test_decoder_model_identity", "test_decoder_iterator_identity",
+                                "test_decoder_input_bundle", "test_decoder_input_locations",
+                                "test_sail_model_transaction", "test_decoder_rebuilt_inputs",
+                                "test_decoder_rebuilt_locations", "test_rebuilt_main_tools",
+                                "test_generate_rebuilt_rust", "test_rebuilt_production_rust",
+                                "test_source_snapshot", "public-decoder"])
         self.assertEqual(report["status"], "passed")
 
 

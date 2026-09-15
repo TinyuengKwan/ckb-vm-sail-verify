@@ -1,0 +1,34 @@
+{
+  "schema_version": 1,
+  "candidate": "local-readiness-2026-09-12-not-a-release",
+  "pins": {
+    "main_policy": "c8315684cf73d118703f98982e79303943d8c52d49e72d99117de25301b3a1af",
+    "public_policy": "e2643499ef13d20ed1797dca4d2e6192851fdad0b0e6e53ffc41247ce85fd0b4",
+    "week5_plan": "0116b1cc0b3ededec4c4d2be4d8dd265edd3ed71bb0194a5b9d9ac52a64fcd4b",
+    "week6_plan": "354ee1e4401ef29339695c71219e42be799d1c8563d4a256b7d197138a77cb6c",
+    "overview_plan": "2c92573b561058fadac801b3f73b3bebb080ef83104f4222d588a5b8cff28e62"
+  },
+  "evidence": {
+    "runtime": {
+      "path": "artifacts/boundary-check/release-runtime-rsk80e9n/report.json",
+      "sha256": "a8cfa59d758ab5c4c4237410f1b0617fe1cc0f422ab368289a9af35f6bbbba53"
+    },
+    "lean": {
+      "path": "artifacts/proof-check/report.json",
+      "sha256": "66fb26d92860e6dde6198d1657a9aaf85b3d18f2c608033cb0340d69628a0dab"
+    },
+    "rocq": {
+      "path": "artifacts/rocq-spike/run-jf7lk0r4/report.json",
+      "sha256": "f8ab9b1a080d98cac2555c6212df47d34149a95270bc5f0f3b4d7b0874cf161b"
+    },
+    "clean_room": null,
+    "rust_tests": null,
+    "mismatches": null,
+    "worktree_audit": null,
+    "ci_download": null,
+    "release_package": null,
+    "maintainer_demo": null,
+    "third_party": null,
+    "public_claims": null
+  }
+}

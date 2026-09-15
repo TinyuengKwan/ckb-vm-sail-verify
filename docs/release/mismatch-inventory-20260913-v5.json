@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "runtime": {
+    "path": "artifacts/boundary-check/release-runtime-epku3001/report.json",
+    "sha256": "c0fe75025d89826590b9e062aea93d8053814d95f1c2133e1d848d6a74cc4f03"
+  },
+  "rust_tests": {
+    "path": "artifacts/boundary-check/release-rust-tests-8z94lst1/report.json",
+    "sha256": "cfbb84e8de84f45eaf3f147e77fe6d399e8f7d6d980363b40b3d959de44530a4"
+  },
+  "semantic_negative_cases": {
+    "a_diverging_instruction_stream_is_located": {
+      "path": "artifacts/boundary-check/paired-negatives-j5qpp8l9/report.json",
+      "sha256": "651f00cc06b73b570f5b2d2e8a5b6c8dd0d97355a65370c0d16967ab3f72fb26"
+    },
+    "a_missing_final_event_is_detected": {
+      "path": "artifacts/boundary-check/paired-negatives-j5qpp8l9/report.json",
+      "sha256": "651f00cc06b73b570f5b2d2e8a5b6c8dd0d97355a65370c0d16967ab3f72fb26"
+    },
+    "a_trapping_instruction_diverges_and_is_reported_not_hidden": {
+      "path": "artifacts/boundary-check/release-trap-v2-1_qr4ufa/minimized/report.json",
+      "sha256": "248997b41efc56be76dea66577271bd533e4042abea37eb9095d31753e9d65f6"
+    }
+  }
+}

@@ -1,0 +1,190 @@
+{
+  "schema_version": 1,
+  "kind": "scoped-rebuilt-decoder-input-admission",
+  "status": "approved-inputs-main-gate-migration-pending",
+  "profile": "rv64-add-rebuilt-inputs-v2",
+  "production_baseline": "ckb-vm-1ffba3977da9-runtime-container-v1",
+  "configuration": {
+    "instruction": "normal 32-bit RV64 ADD",
+    "version": 2,
+    "isa": "IMC+B",
+    "mop": false,
+    "cache": "actual fresh decoder",
+    "theorem": "OuterAdd.cold_public_add_step"
+  },
+  "adoption_basis": "Approve these exact rebuilt Rust translation inputs for the existing conditional ADD scope, based on source restoration, six-root reextraction, source-only kernel audits, lower map equivalence, semantic negatives and scoped regressions. This decision does not activate them in the main proof gate or prove a compiler correct.",
+  "limitations": [
+    "trusted-translators-not-generally-proved-correct",
+    "upstream-ui-not-all-pass",
+    "visitors-20250212-below-declared-20260520-constraint-not-satisfied",
+    "historical-diagnostic-classifier-source-identity-not-established",
+    "lower-map-body-change-requires-explicit-equivalence-not-path-normalization",
+    "physical-memory-reset-full-vm-and-mop-on-not-proved",
+    "host-rust-opam-lean-sail-rocq-installations-not-contained",
+    "historical-evidence-closure-not-contained"
+  ],
+  "catalogue": {
+    "path": "proof/lean/decoder/rebuilt-input-catalogue.json",
+    "sha256": "b9015281f8a2c4d30aabd0b91eb6993d492b87e15eb83dcf93a8a66df8daa523"
+  },
+  "archive_sha256": "1a81921b12215a87106ac2080c05de3f2bf9d51b9bb14bdb80a90ac8c05c58d5",
+  "manifest_sha256": "afa859f41166f9a1ebc412d3096603cc6005c4c679e23399e9a67f75af55799f",
+  "source_variants": {
+    "base/charon": {
+      "family": "charon",
+      "commit": "89ac118194b978d8cf753222c19f313521377aa0",
+      "patch": null,
+      "file_inventory_sha256": "b64c87555d4f56a30cd70409fbcd86831d21b0c3043517609f870ca7744b8a5a"
+    },
+    "public/charon": {
+      "family": "charon",
+      "commit": "89ac118194b978d8cf753222c19f313521377aa0",
+      "patch": "charon.patch",
+      "file_inventory_sha256": "0d844715e4920c23d0938bf255f19a6ecf90aa6c4c4f9275aba32612468191ca"
+    },
+    "base/aeneas": {
+      "family": "aeneas",
+      "commit": "379890b54b4961dc7729e314c6eefdc09fe50981",
+      "patch": null,
+      "file_inventory_sha256": "85093dfa28c1780a3572c992de004b870e66276aa8be2e6a6c4a77ed75ef22fd",
+      "charon_ml_file_inventory_sha256": "b64c87555d4f56a30cd70409fbcd86831d21b0c3043517609f870ca7744b8a5a"
+    },
+    "public/aeneas": {
+      "family": "aeneas",
+      "commit": "379890b54b4961dc7729e314c6eefdc09fe50981",
+      "patch": "aeneas.patch",
+      "file_inventory_sha256": "ef98ba5c25f37d9a62e905ce797fed974569b32c92d4cf745fc0439aa2250d94",
+      "charon_ml_file_inventory_sha256": "b64c87555d4f56a30cd70409fbcd86831d21b0c3043517609f870ca7744b8a5a"
+    },
+    "join/aeneas": {
+      "family": "aeneas",
+      "commit": "379890b54b4961dc7729e314c6eefdc09fe50981",
+      "patch": "aeneas-join.patch",
+      "file_inventory_sha256": "2a61ecdefbc7bedc28230321bd027d00598f2395ca85e2cd886aa1f9d6ab2eb8",
+      "charon_ml_file_inventory_sha256": "b64c87555d4f56a30cd70409fbcd86831d21b0c3043517609f870ca7744b8a5a"
+    }
+  },
+  "qualification": {
+    "public_clean": {
+      "file": "qualification/public_clean.json",
+      "sha256": "e94b2e9f59e41fffb2e4d2c525cef42e6bc7a786393e842879e053f89d01bf08",
+      "status": "rebuilt_public_kernel_checked_admission_pending"
+    },
+    "borrow": {
+      "file": "qualification/borrow.json",
+      "sha256": "624413e13a949f9b3a56442e097dcff9bd5853e5bf193c3828308918a2e62120",
+      "status": "rebuilt_borrow_regressions_checked_admission_pending"
+    },
+    "fnptr": {
+      "file": "qualification/fnptr.json",
+      "sha256": "1ad2d7355f6f517e1f8d1c05b5373e59a5b659fec33ba336c8f617032f061315",
+      "status": "rebuilt_fnptr_regressions_checked_admission_pending"
+    },
+    "charon_ui": {
+      "file": "qualification/charon_ui.json",
+      "sha256": "325e6f340bd365dcea0992309d38a6635b264a198ce70afd8999c9cd8b563e00",
+      "status": "rebuilt_charon_ui_differential_completed_qualification_pending"
+    },
+    "charon_diagnostics": {
+      "file": "qualification/charon_diagnostics.json",
+      "sha256": "066d19a38522d3cef48d33be73c6c74dbb6660207403ea6f2f50e75dd3ec63f4",
+      "status": "rebuilt_diagnostics_classified_tests_still_failed_admission_pending"
+    },
+    "guard_equivalence": {
+      "file": "qualification/guard_equivalence.json",
+      "sha256": "7d60a0d39587f6d5f5af310ef3ed02ea8acba6778cb58720ec5a35c8856093ce",
+      "status": "rebuilt_guard_regression_checked_admission_pending"
+    },
+    "loop_equivalence": {
+      "file": "qualification/loop_equivalence.json",
+      "sha256": "d95e3a00022699e8a773b1aa11458ff7cd34259c066c18206dab4e59d35ec1f2",
+      "status": "rebuilt_loop_regression_checked_admission_pending"
+    }
+  },
+  "known_regression_disposition": {
+    "ui_summary": {
+      "pair_counts": {
+        "ignored": 2,
+        "pair-identical": 423,
+        "pair-different": 10,
+        "incomplete": 0
+      },
+      "sides": {
+        "baseline": {
+          "golden-pass": 386,
+          "golden-mismatch": 21,
+          "command-failed": 24,
+          "missing-golden": 1,
+          "success-output-not-checked": 1
+        },
+        "candidate": {
+          "golden-pass": 379,
+          "golden-mismatch": 28,
+          "command-failed": 24,
+          "missing-golden": 1,
+          "success-output-not-checked": 1
+        }
+      },
+      "changed_exit_cases": [],
+      "pair_different_cases": [
+        "charon/tests/ui/associated_types/mem-discriminant-from-derive.rs",
+        "charon/tests/ui/closures.rs",
+        "charon/tests/ui/control-flow/guarded-owned-error.rs",
+        "charon/tests/ui/control-flow/issue-1051-missing-loop-jump.rs",
+        "charon/tests/ui/issue-120-bare-discriminant-read.rs",
+        "charon/tests/ui/issue-70-override-provided-method.3.rs",
+        "charon/tests/ui/monomorphization/issue-708-from-str-mismatched-generics.rs",
+        "charon/tests/ui/regressions/invalid-reconstruct-assert.rs",
+        "charon/tests/ui/traits.rs",
+        "charon/tests/ui/vec-reconstruct-move-values.rs"
+      ],
+      "full_upstream_suite_passed": false
+    },
+    "diagnostic_counts": {
+      "identical": 12,
+      "first-failed-target-and-line-order": 8,
+      "line-order-only": 4
+    },
+    "historical_classifier_source_identity_matched": false,
+    "full_upstream_suite_passed": false,
+    "upstream_visitors_constraint_satisfied": false,
+    "goldens_updated": false
+  },
+  "lower_model_identity": {
+    "FactoryScoped": {
+      "normalized_sha256": "1847c81fd3b5d081f27f9bdc01b7f2271b9fa9287a20f2e5826dbd36ba3e84b5",
+      "old_normalized_sha256": "dc19ba0509290aadf4ddb903fe2d0e0431bb5e1270ebed1bd129349f37fded68"
+    },
+    "MiniComplete": {
+      "normalized_sha256": "946e9b4242b24e1d41188e397e8960cc4f2726aef17bfc96ea0d519352b037e8",
+      "old_normalized_sha256": "d74c806ad263565153fed59538426c442f948774b18c6c025b0c95c97673791a"
+    }
+  },
+  "admission_evidence": {
+    "packaging": {
+      "path": "artifacts/boundary-check/rebuilt-input-candidate-z2k9y4hg/report.json",
+      "sha256": "326ae28c839496192a98e411fb03f1c00b09a9f77ad357b6c88070267b4a25e1"
+    },
+    "payload_reextraction": {
+      "path": "artifacts/boundary-check/rebuilt-input-reextraction-bjlcd5ip/report.json",
+      "sha256": "e3784350a6232f44e56f49b3668df75ef933b73dbec0020ac4760edfb02ee668",
+      "stages": 51,
+      "positive_exit_zero": 50,
+      "strict_join_exit_code": 2,
+      "source_snapshot_sha256": "99127abf38f30cdf9e6feef11fcdd619bb8eaf328c4e3cabf991d57782d2ca12"
+    },
+    "lower_map_equivalence": {
+      "file": "evidence/map_equivalence.json",
+      "sha256": "57cb243c8742513062547a8983b6cafeca689907250146e78f46cbea3d8101cd"
+    },
+    "lower_original_negatives": {
+      "file": "evidence/lower_negatives.json",
+      "sha256": "1b045c976d4d8de26fbb26443a1d74eb3f7bab320b7a7d2a2939da1dc9e3ad9e"
+    }
+  },
+  "main_gate_adopted": false,
+  "proof_check_claimed": false,
+  "sail_tool_adopted": false,
+  "clean_room_claimed": false,
+  "release_claimed": false
+}

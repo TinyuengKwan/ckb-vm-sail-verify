@@ -199,7 +199,7 @@
     "get_config_print_instr": false,
     "get_config_rvfi": false,
     "instruction": "normal 32-bit RV64 ADD",
-    "required_public_decoder_policy": "proof/lean/decoder/public-policy.json"
+    "required_public_decoder_policy": "proof/lean/decoder/public-rebuilt-policy.json"
   },
   "contract_axioms": {
     "ProductionWrapper.pcDelegation": [
@@ -335,7 +335,7 @@
   },
   "generated_sha256": {
     "rust": "b838212164ab5bdced409a5c34e67db9c9f56e6938b0c288ebc0c526255480df",
-    "sail": "b89f79e521f6d1e9b9c4c2c4b0d552295d4bb925673a6f747d6c67ea0e8fb5f4"
+    "sail": "bccb25934e427c008c7e1b7e0dc329eff61b9a6780ad9db18ca2299cca522d5f"
   },
   "lean_toolchain": "leanprover/lean4:v4.31.0",
   "local_sources": {
@@ -352,7 +352,7 @@
     "crates/core/src/program.rs": "4c6b958ae82961c743efa576f84fc62b11255ce7d5e680a119e293b5e9fe7c2e",
     "crates/diff-test/Cargo.toml": "12f8c9a2ab092f0b33cf5ae4ae3152351c85b1f3a3fb35c32fed48ae1b66d5a3",
     "crates/diff-test/src/artifact.rs": "13ccee0d49e87b7745f301a800d4920da2ecc4b413176493c5b251f02fade5c6",
-    "crates/diff-test/src/corpus.rs": "8781dee01230e2f781cb26f15ca69d81083263a9ade8c6f66e755b9a92a3ed3a",
+    "crates/diff-test/src/corpus.rs": "0a2f89d2a03e391201c0304594adf60397f6cc54c7e7e0fde599e529321c5551",
     "crates/diff-test/src/encode.rs": "a9d546a9b3079db6fc040675f6d9da51c36b4394552909d2661c7dc0c55072bc",
     "crates/diff-test/src/lib.rs": "a0e242eb1f3a980096cb1f5fe761f78ee14e8ae11503cde6e0886f78379250a0",
     "crates/diff-test/src/main.rs": "28eaab709dd90ffd80da6f1d078badedf121763ca508e8c66d52624d9e745539",
@@ -368,7 +368,8 @@
     "proof/lean/audit/ExportStepAudit.lean": "93ff28e00cf7cb95279bf8b38c445cdbbb0fb1712a99f39ffab070b9eae7452a",
     "proof/lean/compat/EnumComputable.lean": "f51c38339cb32568a49b105b96d7738c9e9c751f7ad54351e14ef1549fb23cbf",
     "proof/lean/compat/sail-defs-computable.patch": "79a377d9b7533e5c63fdf8d1465b5d9a91c23360f8b80dc558c0bda741a8eb27",
-    "proof/lean/decoder/public-policy.json": "3a49aed6cf0a07dd7eaecdb9b4f87b93f62665d42144af04e8fb9368aba1f751",
+    "proof/lean/decoder/public-policy.json": "e2643499ef13d20ed1797dca4d2e6192851fdad0b0e6e53ffc41247ce85fd0b4",
+    "proof/lean/decoder/public-rebuilt-policy.json": "63dd6ab1965a50c208d5779b217718d0b349671566ba6de725037d28fb3f19e4",
     "proof/lean/expected_build_status.txt": "1baa4380cf159bf159c53980f257ddee3a7bdcfeb7eec38051427951b4701f3b",
     "proof/lean/extraction/ckb-source-baseline.json": "b627b93becaaa03ee3e07c02f29329ce6bcf962b62e063a8a111302d8592d872",
     "proof/lean/extraction/ckb-vm.json": "376381a95376b9fdf39c12b930f921f321243bb01f66b71bf3c7fb81dde2d0db",
@@ -400,22 +401,40 @@
     "scripts/build_sail_emulator.sh": "88b5dbb98d8617b99760e02a000ca6f7c8c9e939f1dac5ef3ad0855bf7c1875c",
     "scripts/check_lean_clean.py": "92c743c2cb3a6f9078ce9c741ffb56b2d4d8beac341a3da2f5a5f7f251fda58b",
     "scripts/check_lean_imports.sh": "d373fc0e67fb5bb2f054aed28cd2bce8e689a2a3637e27767db128d75a3811d3",
-    "scripts/check_proof.py": "58b86f5c4fd5e0f73ca82990a2225ef4c6e2ef13565c6cfd92a8098861b30e31",
+    "scripts/check_proof.py": "615eb5a997b07d68b14f72a5c03374a677edafe7a662c3d2092e09b2dcc4b101",
+    "scripts/check_raw_add.py": "305d8ca2b5f0b97cc5f1bdee443c0b00be5accc9a67221d7adf7a3f1b3b87930",
+    "scripts/check_raw_add_fields.py": "c6de2baf99e3eec61061c298870dc73dd0cb44f4801de101e675f1d4f034f63c",
     "scripts/ckb_source_baseline.py": "5b553ec35a6146aa55ac6532953d432748e0bd90fee7c805fb0828b9542eef40",
-    "scripts/configure_lean_project.sh": "5c126f95e54ae3e2c14b7e1305275a5823dcd6d82e448bfc21157a51f90b218a",
-    "scripts/generate_proof_model.sh": "c737979814e0686265598547ca78bd08bd34ba753d96a885d551c53c9454defc",
+    "scripts/configure_lean_project.sh": "8dc24dc49575fcd570e13386264f0e5861c7a4acbdf8fc3a9cf58131e1cdb30f",
+    "scripts/decoder_input_bundle.py": "aada9d531eebf6aea1cfabe1d61063f9dd2af055f0b47df37b97ca0be73a9d34",
+    "scripts/decoder_input_locations.py": "a031e7b37cdeac34a4630c8d773a0722f3c9e6851a77b37ddcbe27b319519c7a",
+    "scripts/decoder_public_source.py": "0ad5ae7b445a089db82097ef05422ef76b3d6db5a075ca380a8075a017ab4a72",
+    "scripts/decoder_rebuilt_inputs.py": "b481513fb706be0ef62d93a527c17ffb351dcd034c00ab31a9c1e598bc8251df",
+    "scripts/decoder_rebuilt_locations.py": "5ee4143bf54aa2d33a10d95410421b303e159969e3dd82a3777b87bc211ed27e",
+    "scripts/generate_proof_model.sh": "19eda868313185f04a41e96b782729d5d3fa5862c4b178c9dc3f0d66857305e0",
+    "scripts/generate_rebuilt_rust.py": "b656a225245d2488bd1457269f68da643dbfd09f6c7714d77a827e989452548f",
     "scripts/generate_rust_model.sh": "06478e4f5d7f15544fb2a51df2497ec8ca6584cf9910867b02cca2de5cf9e80e",
     "scripts/prepare_sail_config.sh": "cd47a1de4c75f3690fad73258cf0dbbeea13946770f610e3b7fa4ba2aa91b318",
     "scripts/probes/probe_add_decoder.py": "9f014f3150a665d389c5928fc6c604118d1dd0acfb0681ed57be1c39a415d4ea",
-    "scripts/public_decoder_acceptance.py": "3f5571a17d244cbf8506e58fb7a9723bcb934f658fd802232516c1fd7ffbe2e8",
-    "scripts/public_decoder_gate.py": "e8f4d4b9eee9808031a821a7add05a6a13dab4f55fd205c61c9f9fc7973029cf",
+    "scripts/public_decoder_acceptance.py": "22de49ff599cc67eabb34f32e45fd56af9c1212dd805279d531789fb79f0572c",
+    "scripts/public_decoder_gate.py": "35204f15bea4789ce5054a11673dd27d16a2a9293b988293dd9a479453b513ca",
+    "scripts/rebuilt_main_tools.py": "72493d55bd0da3977c42acb54fe67ee76d74847344ab45ee35f9674a48e46be6",
+    "scripts/rebuilt_production_rust.py": "63829f62174d9fb891077fe49ca560c3980964344a153306eb16292755314089",
+    "scripts/sail_model_transaction.py": "3cac5506d1cbed548db05e49229c0905c7ffc9021528c9e856434ec1b49428b6",
+    "scripts/source_snapshot.py": "be633489963802ef1839531722c339ba211f2334e9351ff721b38e7effc4aa8a",
     "scripts/tests/test_ckb_source_baseline.py": "6f342661611254bbb05781c8f9467e21a83c04374ea1b98736989626669e25cf",
+    "scripts/tests/test_generate_rebuilt_rust.py": "e9d4ff811c558e0480a302d2d5e69868d6a9a24225674e2ece511bf90a061000",
     "scripts/tests/test_lean_clean.py": "e2101e91af522d0c47d6eb13446cb64295e9d7acf661e43bec982086cbbb7a6f",
     "scripts/tests/test_lean_imports.py": "d5a211f393b6d7ac82ff51466b15038e8d1bfa9ae8df4baaa4c4f3c60f57204b",
     "scripts/tests/test_lean_step.py": "b6ecb057b8ef5d1a31e89d87790827f0c20b9c9a824d89c39111e383d4ffe66b",
-    "scripts/tests/test_proof_check.py": "6db35ba56b78656d22ee4640f5a04590082b4618ada0fdec1702ec5605665be0",
+    "scripts/tests/test_proof_check.py": "3cc603e1d7e7e4fc92852d190def9f893b5ddfb1804ae65207cb154d490f2759",
+    "scripts/tests/test_rebuilt_main_tools.py": "957a2b42aed2ba73e89837bdece4237e4a39ea03b13db11eda4614da05e77e75",
+    "scripts/tests/test_rebuilt_production_rust.py": "17d86aadaa835d6fc82cc6dffdc5baa418b30246e34b83c1251fb7ffb23a4149",
+    "scripts/tests/test_sail_model_transaction.py": "55eb61ac585d59d54760b66ad3bc9b1de7515c45bafc088b2986d34d0111906f",
+    "scripts/tests/test_source_snapshot.py": "177c7f47e07fef318db34ffde24e1607c8641bd581018edf18bc9fc5e68bb30a",
     "scripts/verify_environment.sh": "04655fc7750fdcf8203bc88c7844d933f05c043600119c472555de4da90939b3"
   },
+  "main_toolchain": "rebuilt-main-v1",
   "outstanding_contracts": [
     "Initial state relation, Rust size/load and Sail raw-fetch/entry/retirement contracts remain explicit; common physical-memory coupling is not proved.",
     "General Sail initialization/reset reachability remains open; the concrete AddWitness state jointly satisfies all Sail contracts, but is not a reset-reachability theorem.",
@@ -429,13 +448,13 @@
   "schema_version": 1,
   "theorem": "ProductionAdd.decoded_add_step",
   "tool_binaries": {
-    "aeneas": "1d11b29e85632b3140dc9080eb8c5b8dd0cf5a808456cbe27f44aeb50d4a516a",
-    "charon": "433cc345b1574f14c6b648b8e37c119e0d25d798b5657b7a58c2e034027ec9e8",
-    "charon-driver": "1986c445bd60a9c77e10a9f934210be6335afaeb85ee2edfcc333682ebaee8f7",
-    "sail": "5ea16bff5d607483d80ca03702f7af28ea0dc7048507c0b9b9c8212294eafb46"
+    "aeneas": "98b7f9727b6296a41d2732bdb5a054937869fb1f9f776d6f2de47be17247953d",
+    "charon": "59363fdaa771e300f576c458c6faab0b9d9fa0ae80706e04f5eae760ed7fb523",
+    "charon-driver": "e10cea3b756de291fff060e7eac3d58868468fe71c1b2a85162a2ac02be14441",
+    "sail": "783dd162807daafcab8f61afe29e64d7431eb8d8365cc22feb9f74f1633314cf"
   },
   "translator_versions": {
-    "aeneas": "aeneas nightly-2026.09.01-379890b",
+    "aeneas": "aeneas 379890b5",
     "charon": "0.1.247 (89ac118194b978d8cf753222c19f313521377aa0)",
     "sail": "Sail 0.20.2 (HEAD @ 8eb1fb6b5bf9f18c0f89f71e94ff0c5894acd7c1)"
   },

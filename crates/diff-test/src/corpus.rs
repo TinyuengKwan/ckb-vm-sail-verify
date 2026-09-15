@@ -254,6 +254,14 @@ fn fixed_cases() -> Vec<TestProgram> {
             setup2(1, u64::MAX, 2, u64::MAX),
             &[beq(1, 2, 12), nop(), nop(), addi(3, 0, 1)],
         ),
+        TestProgram::new(
+            "beq-self-target",
+            "beq x31, x31, 0 takes a zero-displacement branch; the next injected \
+             instruction executes at the same PC, not from a memory fetch loop",
+            "BEQ",
+            materialize(31, 5),
+            &[beq(31, 31, 0), addi(3, 0, 1)],
+        ),
     ]
 }
 
@@ -350,11 +358,11 @@ mod tests {
         );
         for family in ["ADD", "ADDI", "BEQ"] {
             assert!(
-                corpus.iter().filter(|case| case.family == family).count() >= 3,
-                "{family} needs more than a token case"
+                corpus.iter().filter(|case| case.family == family).count() >= 10,
+                "Week 6 requires at least ten cases for each family: {family}"
             );
         }
-        assert!(corpus.len() >= 10, "Week 3 already requires ten cases");
+        assert!(corpus.len() >= 30, "Week 6 requires three families of ten cases");
     }
 
     #[test]

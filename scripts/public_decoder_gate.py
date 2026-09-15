@@ -9,8 +9,9 @@ import sys
 
 import check_proof as main
 import public_decoder_acceptance as acceptance
+import decoder_rebuilt_locations as locations
 
-POLICY = main.ROOT / 'proof/lean/decoder/public-policy.json'
+POLICY = main.ROOT / 'proof/lean/decoder/public-rebuilt-policy.json'
 CONFIGURATION = {
     'instruction': 'normal 32-bit RV64 ADD', 'version': 2, 'isa': 'IMC+B',
     'mop': False, 'cache': 'actual fresh decoder',
@@ -23,6 +24,8 @@ LIMITATIONS = [
     'MOP-on fusion and non-ADD instruction correctness not proved',
     'physical memory coupling and actual SparseMemory implementation not proved',
     'opaque Rust Machine inhabitation and platform reset reachability not proved',
+    'rebuilt visitors package remains below the upstream declared constraint',
+    'historical diagnostic classifier source identity not established',
 ]
 
 
@@ -31,6 +34,16 @@ def sources():
         'scripts/public_decoder_gate.py', 'scripts/public_decoder_acceptance.py',
         'scripts/probes/probe_decoder_public.py', 'scripts/decoder_public_source.py',
         'scripts/decoder_public_clean.py', 'scripts/probes/probe_decoder_full_mir.py',
+        'scripts/decoder_harness.py', 'scripts/decoder_model_identity.py',
+        'scripts/decoder_input_bundle.py', 'scripts/decoder_input_locations.py',
+        'scripts/decoder_rebuilt_inputs.py', 'scripts/decoder_rebuilt_locations.py',
+        'scripts/tests/test_decoder_rebuilt_inputs.py', 'scripts/tests/test_decoder_rebuilt_locations.py',
+        'proof/lean/decoder/rebuilt-input-policy.json', 'proof/lean/decoder/rebuilt-input-catalogue.json',
+        'proof/lean/decoder/raw-rebuilt-policy.json',
+        'scripts/tests/test_decoder_harness.py', 'scripts/tests/test_decoder_model_identity.py',
+        'scripts/tests/test_decoder_iterator_identity.py', 'scripts/tests/test_decoder_input_bundle.py',
+        'scripts/tests/test_decoder_input_locations.py',
+        'proof/lean/decoder/toolchain/public-harness/Cargo.lock',
         'scripts/tests/test_public_decoder_acceptance.py', 'scripts/tests/test_public_decoder_gate.py',
         'scripts/tests/test_decoder_public_clean.py', 'scripts/tests/test_decoder_public_source.py',
         'proof/lean/decoder/raw-policy.json', 'proof/lean/decoder/field-policy.json',
@@ -55,31 +68,47 @@ def sources():
     return {p: main.file_hash(main.ROOT / p) for p in sorted(set(paths))}
 
 
+def check_main_policy_link(policy):
+    """The declared public gate must be the one this adapter actually executes."""
+    main.require_equal(policy.get('configuration', {}).get('required_public_decoder_policy'),
+                       str(POLICY.relative_to(main.ROOT)), 'main/public policy link')
+
+
 def check_policy(policy):
     main.require_equal(policy['schema_version'], 1, 'public policy schema')
-    main.require_equal(policy['status'], 'adopted-rv64-add-public-v1', 'public tool adoption')
+    main.require_equal(policy['status'], 'adopted-rv64-add-public-rebuilt-v2', 'public tool adoption')
     main.require_equal(policy['configuration'], CONFIGURATION, 'public decoder configuration')
     main.require_equal(policy['limitations'], LIMITATIONS, 'public decoder trust boundary')
     main.require_equal(policy['production_baseline'], 'ckb-vm-1ffba3977da9-runtime-container-v1',
                        'public production baseline')
+    check_main_policy_link(json.loads(main.POLICY.read_text()))
     main.require_equal(policy['sources'], sources(), 'public checker/proof sources')
+    installed = locations.load(input_directory(policy))
+    main.require_equal(policy['input_admission_sha256'], installed['policy_sha256'], 'input admission policy')
+    main.require_equal(policy['raw_policy_sha256'], main.file_hash(locations.RAW_POLICY), 'rebuilt lower policy')
+    locations.lower_policy(input_directory(policy))
+    payload = Path(installed['payload'])
     # Immutable qualification evidence is separate from the fresh run. A caller
     # may not substitute these historical results for current kernel checking.
     required = {'public_clean', 'borrow', 'fnptr', 'charon_ui', 'charon_diagnostics',
                 'guard_equivalence', 'loop_equivalence'}
     main.require_equal(set(policy['qualification']), required, 'tool qualification evidence set')
     for label, entry in policy['qualification'].items():
-        path = (main.ROOT / entry['path']).resolve()
-        if not path.is_relative_to(main.ROOT / 'artifacts/boundary-check'):
-            raise RuntimeError('qualification report outside evidence tree')
+        path = payload / 'qualification' / (label + Path(entry['path']).suffix)
         main.require_equal(main.file_hash(path), entry['sha256'], 'qualification ' + label)
     return policy
 
 
-def command(policy):
+def input_directory(policy):
+    main.require_equal(policy['input_layout'], 'public-decoder-rebuilt-inputs-v2', 'public input layout')
     inputs = (main.ROOT / policy['inputs']).resolve()
-    if not inputs.is_relative_to(main.ROOT / 'artifacts/boundary-check'):
+    if not inputs.is_relative_to(main.ROOT / 'artifacts/decoder-inputs'):
         raise RuntimeError('public inputs outside isolated tool tree')
+    return inputs
+
+
+def command(policy):
+    inputs = input_directory(policy)
     return [sys.executable, str(main.ROOT / 'scripts/probes/probe_decoder_public.py'),
             '--inputs', str(inputs), '--reextract-rust', '--clean-dependencies']
 

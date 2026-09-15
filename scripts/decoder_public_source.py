@@ -35,49 +35,56 @@ def check_reextraction(archived, fresh):
 
 
 def reextract(inputs, out, run, report, archived_public, archived_iterator):
-    """Reuse pinned sysroot/source locations, but no old Cargo target artifacts."""
+    """Use verified installed inputs and a new harness/target, never old builds."""
+    import decoder_rebuilt_locations as locations
+    import decoder_harness as harness
+    installed = locations.load(inputs)
+    payload = Path(installed['payload'])
     fixtures = ROOT / 'proof/lean/decoder/toolchain'
-    config_path = fixtures / 'full-entry/extraction.json'
-    require(sha(config_path) == 'aaed2661ab316b0cf959034fa8b3e9c836aa88ad52da7746b3b648c707771b1c',
-            'public extraction configuration changed')
+    config_path = payload / 'candidate/extraction.json'
     config = json.loads(config_path.read_text())
-    experiment = inputs.parent / 'decoder-sysroot-q8nI9W'
-    outer = experiment / 'outer'
+    outer = out / 'outer'
+    harness_before = harness.prepare(outer, ROOT)
     iterator_source = fixtures / 'fnptr-experimental/fnptr_cases.rs'
     paths = {
         outer / 'lib.rs': config['outer_root_source_sha256'],
         fixtures / 'full-mir/OuterRoot.rs': config['outer_root_source_sha256'],
         outer / 'Cargo.lock': config['outer_cargo_lock_sha256'],
-        outer / 'Cargo.toml': 'a5ff3cc97587a2519b128c89b37e49fc04dfe4505a1f5ece27aa8d0050a46b36',
+        outer / 'Cargo.toml': sha(outer / 'Cargo.toml'),
         iterator_source: '030b33d30abb63491fa97017fc1d558f2d3bf3c49c53eff38792704cf101272e',
     }
     for path, digest in paths.items():
         require(sha(path) == digest, 'Rust input identity changed: ' + str(path))
-    sysroot = experiment / 'sysroot'
+    sysroot = payload / 'sysroot'
     # This earlier, immutable report recorded every library in this sysroot.
     # Recording the current files alone would not pin the standard library.
-    previous = inputs.parent / 'full-mir-check-ykre555d/report.json'
-    require(sha(previous) == '69ea312f2e816dd9575d508f4226dc01ba654d253a9b69afd4c7029f8728f9a8',
+    previous = payload / 'qualification/sysroot.json'
+    require(sha(previous) == '13d82971a424442ea3fc4fbd4deda0672cb1725c0cda9e32817465830a618516',
             'sysroot identity report changed')
     libraries = {p.name: sha(p) for p in sorted(
         (sysroot / 'lib/rustlib/x86_64-unknown-linux-gnu/lib').iterdir()) if p.is_file()}
-    require(libraries == json.loads(previous.read_text())['sysroot_libraries'],
+    require(libraries == json.loads(previous.read_text())['libraries'],
             'full-MIR standard library changed')
-    env = dict(os.environ, RUSTUP_TOOLCHAIN=config['rust_toolchain'])
+    runtime = locations.runtime(inputs)
+    env = locations.environment(out, runtime, config)
     for key in ['RUSTFLAGS', 'CARGO_ENCODED_RUSTFLAGS', 'CARGO_BUILD_RUSTFLAGS',
                 'RUSTC_WRAPPER', 'RUSTC_WORKSPACE_WRAPPER', 'RUSTC', 'RUSTDOC',
                 'CHARON_ARGS', 'CHARON_LOG', 'RUST_LOG']:
         env.pop(key, None)
     target = out / 'cargo-target'
-    require(not target.exists(), 'Cargo target is not new')
+    require(all(not (out / name).exists() for name in ['cargo', 'cargo-target', 'charon-cache']), 'Cargo target/cache is not new')
     env['CARGO_TARGET_DIR'] = str(target)
     version = subprocess.check_output(['rustc', '-vV'], env=env, text=True)
     require('commit-hash: ' + config['rust_commit'] in version, 'Rust compiler changed')
     info = {'configuration_sha256': sha(config_path), 'source_before': {str(p): sha(p) for p in paths},
+            'runtime_before': runtime,
             'sysroot_libraries': libraries, 'rustc_version': version,
-            'cargo_target_initially_absent': True, 'sysroot_rebuilt': False}
+            'cargo_target_initially_absent': True, 'sysroot_rebuilt': False,
+            'installed_inputs': installed, 'harness_before': harness_before}
     report['source_reextraction'] = info
-    charon = inputs.parent / 'charon-cfg-OYcaoK/candidate-bin/charon'
+    run('fetch-public-rust', ['cargo', 'fetch', '--locked', '--target', config['target']], outer, env)
+    env['CARGO_NET_OFFLINE'] = 'true'
+    charon = payload / 'bin/charon'
     public = out / 'OuterClosedDepsV3.llbc'
     iterator = out / 'FnPtrFullMir.llbc'
     command = [charon, 'cargo', '--preset=aeneas', '--sysroot', sysroot, '--dest-file', public]
@@ -94,9 +101,15 @@ def reextract(inputs, out, run, report, archived_public, archived_iterator):
     info['inputs'] = {}
     for path, archived in [(public, archived_public), (iterator, archived_iterator)]:
         data = json.loads(path.read_bytes())
-        check_reextraction(archived, data)
-        info['inputs'][path.name] = {'sha256': sha(path), 'options': data['translated']['options']}
+        mapping = locations.check_extraction(data, inputs, path.name)
+        info['inputs'][path.name] = {'sha256': sha(path), 'options': data['translated']['options'],
+                                    'location_mapping': mapping}
+    info['harness_after'] = harness.verify(outer, ROOT)
+    require(info['harness_after'] == harness_before, 'harness changed during extraction')
+    require(locations.load(inputs) == installed, 'installed inputs changed during extraction')
     info['source_after'] = {str(p): sha(p) for p in paths}
     require(info['source_after'] == info['source_before'], 'Rust extraction inputs changed during run')
+    info['runtime_after'] = locations.runtime(inputs)
+    require(info['runtime_after'] == runtime, 'runtime installation changed')
     report['rust_reextracted'] = True
     return public, iterator
