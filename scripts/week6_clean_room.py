@@ -544,10 +544,14 @@ def stage_environment(environment, name):
     if name in NATIVE_STAGES:
         rustup = CANONICAL / "artifacts/boundary-check/isolated-rust-lean-ad7o1fsn/rustup"
         prefix = rustup / "toolchains" / RUST_TOOLCHAIN / "bin"
+        # The differential tool identifies the Sail compiler with `sail --version`
+        # from PATH and the mismatch minimizer refuses an unidentified replay
+        # environment, so the fixed compiler prefix follows the fixed Rust prefix.
+        sail_prefix = tool_paths(CANONICAL)["sail"].parent
         cargo_homes = {"rust-tests": "rust-tests-cargo-home",
                        "runtime-differential": "runtime-cargo-home",
                        "mutation-matrix": "negative-cargo-home"}
-        result.update(PATH=str(prefix) + ":/usr/bin:/bin", RUSTUP_HOME=str(rustup),
+        result.update(PATH=str(prefix) + ":" + str(sail_prefix) + ":/usr/bin:/bin", RUSTUP_HOME=str(rustup),
                       RUSTUP_TOOLCHAIN=RUST_TOOLCHAIN, RUSTUP_NO_UPDATE_CHECK="1",
                       CARGO_HOME=str(product(CANONICAL, "week6-native-clean-room") /
                                      cargo_homes[name]), CARGO_TERM_COLOR="never")

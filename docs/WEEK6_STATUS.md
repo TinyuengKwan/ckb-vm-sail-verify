@@ -74,6 +74,14 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-15 候选 `0dcac56` 的第六次 VM 实跑：** 第 1 到 11 阶段再次通过；第 12 阶段的 trap 最小化器拒绝
+"未识别的重放环境：sail_compiler"。原因是控制器直接发起的重放没有把固定 Sail 编译器放到 PATH，差分工具记录
+`sail_compiler: null`（runtime 阶段由探针自行补 PATH，所以其报告是正常的）。现已把固定 Sail 前缀加入三个
+native 阶段的 PATH，并用第六次带回的 guest 二进制（差分工具、模拟器、配置）在宿主上实跑重放与最小化：编译器
+身份被记录，4 次试验完成、状态 `minimized`（记录在该次证据根的 `week6-trap-localcheck/`）。清单核验与演示录制
+依赖 guest 内的 CMake cache，未在宿主模拟，其调用形状与已接受记录一致。失败运行 `…-run-20260915f` 保留；
+需要新的候选提交与推送后重跑。
+
 **2026-09-15 候选 `305f50c` 的第五次 VM 实跑：** 第 1 到 11 阶段在 guest 内全部通过，首次在全新环境完成了
 Sail 模拟器冷构建、Rust 模型重建、78 项 Rust 测试与 runtime 差分。第 12 阶段 `mutation-matrix` 的负例生成失败：
 控制器把 trap 重放产物写死为 `original/candidate.json`，而差分工具按案例名写为 `trap-divergence-input.json`

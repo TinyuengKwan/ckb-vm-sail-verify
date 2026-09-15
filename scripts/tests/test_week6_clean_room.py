@@ -81,6 +81,12 @@ class CleanRoomTests(unittest.TestCase):
         self.assertEqual(native["RUSTUP_HOME"], str(rustup))
         self.assertEqual(native["RUSTUP_TOOLCHAIN"], MODULE.RUST_TOOLCHAIN)
         self.assertTrue(native["PATH"].startswith(str(rustup / "toolchains" / MODULE.RUST_TOOLCHAIN / "bin")))
+        sail_bin = self.root / "artifacts/boundary-check/isolated-sail-nrdi23ds/sail-install/bin"
+        self.assertEqual(native["PATH"].split(":")[1], str(sail_bin))
+        self.assertTrue(native["PATH"].endswith(":/usr/bin:/bin"))
+        with patch.object(MODULE, "CANONICAL", self.root):
+            negative = MODULE.stage_environment(environment, "mutation-matrix")
+        self.assertIn(str(sail_bin), negative["PATH"].split(":"))
         self.assertTrue(native["CARGO_HOME"].endswith("week6-native-clean-room/runtime-cargo-home"))
         host = self.root / "host"; host.mkdir()
         executable = host / "opam"
