@@ -457,9 +457,13 @@ def stage_action(name, state_path):
 
 def new_output(root, path):
     root, path = Path(root).resolve(), Path(path).absolute()
-    require(path == root / "artifacts/boundary-check/week6-clean-room" and
-            path.parent.is_dir() and not path.parent.is_symlink() and not path.exists() and not path.is_symlink(),
-            "new canonical Week6 clean-room output required")
+    require(path == root / "artifacts/boundary-check/week6-clean-room" and not path.exists() and
+            not path.is_symlink(), "new canonical Week6 clean-room output required")
+    # Git ignores artifacts/*/, so a fresh recursive checkout has no evidence
+    # parent directory yet; every later stage writes below it.
+    require(not any(parent.is_symlink() for parent in (path.parent, *path.parent.parents)),
+            "linked clean-room output ancestor")
+    path.parent.mkdir(parents=True, exist_ok=True)
     path.mkdir()
     return path
 

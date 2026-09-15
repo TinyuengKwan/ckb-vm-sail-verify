@@ -154,8 +154,8 @@
       "sha256": "00b696caac4ad0d794e52b3a424c4920aa025cd46dcbc79572e4dc9bce4a530e"
     },
     "docs/WEEK6_STATUS.md": {
-      "claim_paragraphs": 94,
-      "claim_paragraphs_sha256": "a1c070f0c2b0300b085a347473ab9d7d961aacf1b1d7440926c0fb003b96fa26",
+      "claim_paragraphs": 95,
+      "claim_paragraphs_sha256": "5e2e9015b7e50282f95de5307da06209409475162406111433851f8b728fbebb",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -168,7 +168,7 @@
       ],
       "classification": "current_assurance",
       "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "e641f9827b719094bfe6fed3f0a9a5dc5ac7756901aa8f65623dc6c52dc32943"
+      "sha256": "e0f6ab4a40f10c542fbb32a4a24613e69c0fd1e81613374f62da2cb4417fede2"
     },
     "docs/architecture.md": {
       "claim_paragraphs": 17,

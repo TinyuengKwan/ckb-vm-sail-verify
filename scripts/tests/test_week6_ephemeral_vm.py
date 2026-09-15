@@ -144,6 +144,9 @@ class EphemeralVmTests(unittest.TestCase):
         argv = MODULE.qemu_argv("/usr/bin/qemu-system-x86_64", "o.qcow2", "e.raw", "s.raw", "seed.iso",
                                 "console.log", 8, 16)
         self.assertEqual(argv[argv.index("-machine") + 1], "q35,accel=kvm")
+        self.assertIn("virtio-blk-pci,drive=root,bootindex=0", argv)
+        self.assertLess(argv.index("virtio-blk-pci,drive=root,bootindex=0"),
+                        argv.index("virtio-blk-pci,drive=evidence,serial=week6-evidence"))
         self.assertIn("virtio-blk-pci,drive=evidence,serial=week6-evidence", argv)
         self.assertIn("virtio-blk-pci,drive=secrets,serial=week6-secrets", argv)
         self.assertIn("-no-reboot", argv)

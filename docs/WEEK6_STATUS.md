@@ -74,6 +74,15 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-15 候选 `a105db3a` 的首次 VM 实跑：** 候选分支已推送；固定输入已作为 pre-release
+`week6-fixed-inputs-v1` 发布，服务端摘要与匿名下载哈希均与固定值一致；guest 镜像已批准并经 Canonical 签名的
+校验清单核对。两次启动都在真正执行 16 阶段之前失败，各自的 launcher 失败记录保留：第一次 SeaBIOS 把显式
+挂载的证据盘当作第一块硬盘、引导失败后不再尝试 overlay（launcher 现给 overlay 设 `bootindex=0`，修正后引导
+验证通过）；第二次 guest 内 apt、代理、GitHub 克隆全部成功，控制器却因全新 clone 里没有被 Git 忽略的
+`artifacts/boundary-check/` 父目录而拒绝创建输出（控制器现自行创建该父目录并拒绝链接祖先）。这是第三个
+仅在新鲜检出中暴露的缺陷；两处修正各有回归测试。控制器源码变更意味着 `a105db3a` 不再是可执行候选，
+需要新的候选提交与推送后重跑。clean-room 仍未执行，五个外部槽仍缺失。
+
 **外部槽验收器更新：** `clean_room`、`ci_download`、`release_package`、
 `third_party` 已由 [v8 聚合器](release/AUDIT_RELEASE.md)接入严格 schema 和跨组件连接。
 CI 必须实际离线验证 GitHub provenance attestation；发布包和第三方声明必须使用

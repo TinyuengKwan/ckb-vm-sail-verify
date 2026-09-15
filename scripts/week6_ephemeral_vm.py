@@ -250,7 +250,10 @@ def qemu_argv(qemu, overlay, evidence, secrets, seed, console, vcpus, memory_gb)
     argv = [str(qemu), "-machine", "q35,accel=kvm", "-cpu", "host", "-smp", str(vcpus),
             "-m", str(memory_gb) + "G", "-display", "none", "-no-reboot",
             "-serial", "file:" + str(console),
-            "-drive", "file=" + str(overlay) + ",if=virtio,format=qcow2,cache=unsafe",
+            # SeaBIOS boots only the first hard disk it enumerates; without an
+            # explicit bootindex the evidence disk wins and the guest never starts.
+            "-drive", "file=" + str(overlay) + ",if=none,format=qcow2,cache=unsafe,id=root",
+            "-device", "virtio-blk-pci,drive=root,bootindex=0",
             "-drive", "file=" + str(evidence) + ",if=none,format=raw,id=evidence",
             "-device", "virtio-blk-pci,drive=evidence,serial=week6-evidence",
             "-drive", "file=" + str(secrets) + ",if=none,format=raw,id=secrets,readonly=on",

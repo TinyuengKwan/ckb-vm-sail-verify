@@ -240,6 +240,22 @@ class CleanRoomTests(unittest.TestCase):
             MODULE.public_run(args)
         run.assert_not_called()
 
+    def test_new_output_creates_the_ignored_evidence_parent_in_a_fresh_checkout(self):
+        fresh = self.root.parent / "fresh"
+        (fresh / "artifacts").mkdir(parents=True)
+        out = MODULE.new_output(fresh, fresh / "artifacts/boundary-check/week6-clean-room")
+        self.assertTrue(out.is_dir())
+        with self.assertRaisesRegex(RuntimeError, "new canonical"):
+            MODULE.new_output(fresh, fresh / "artifacts/boundary-check/week6-clean-room")
+        with self.assertRaisesRegex(RuntimeError, "new canonical"):
+            MODULE.new_output(fresh, fresh / "artifacts/boundary-check/other")
+        linked, elsewhere = self.root.parent / "linked", self.root.parent / "elsewhere"
+        linked.mkdir()
+        elsewhere.mkdir()
+        (linked / "artifacts").symlink_to(elsewhere)
+        with self.assertRaisesRegex(RuntimeError, "linked"):
+            MODULE.new_output(linked, linked / "artifacts/boundary-check/week6-clean-room")
+
     def test_parser_does_not_accept_an_arbitrary_stage(self):
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             MODULE.parser().parse_args(["_stage", "--name", "run-shell", "--state", "x"])
