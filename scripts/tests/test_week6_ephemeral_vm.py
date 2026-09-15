@@ -128,6 +128,8 @@ class EphemeralVmTests(unittest.TestCase):
         self.assertIn("--install-archive-sha256 " + MODULE.INSTALL_ARCHIVE_SHA, text)
         self.assertNotIn("@@", text)
         self.assertNotIn("set -x", text)
+        # cargo target directories contain hard links; the guest must store them as files.
+        self.assertIn("--hard-dereference", text)
         self.assertNotIn("secret.invalid", text)
         self.assertIn("uid: 1000", text)
         blob = MODULE.secrets_blob(self.environment)

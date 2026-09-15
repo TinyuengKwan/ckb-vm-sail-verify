@@ -156,7 +156,8 @@ finish() {
             -exec find {} -type f \( -name '*.json' -o -name '*.log' -o -name '*.stdout' -o -name '*.stderr' \
             -o -name '*.txt' \) -size -8M \; 2>/dev/null
     } | sort -u > /root/week6-evidence-members.txt
-    tar -C / --no-recursion --ignore-failed-read -cf "$EVIDENCE_DISK" -T /root/week6-evidence-members.txt \
+    tar -C / --no-recursion --ignore-failed-read --hard-dereference -cf "$EVIDENCE_DISK" \
+        -T /root/week6-evidence-members.txt \
         2>> "$RUN/controller.stderr"
     sync
     systemctl poweroff

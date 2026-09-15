@@ -317,8 +317,10 @@ def produce_negatives(root):
               "deps/sail-riscv/build/c_emulator/sail_riscv_sim", "--sail-config",
               "sail-model/build/ckb_vm_config.json"]
     command(replay, root, codes=(1,))
+    # The differential tool names the replay artifact after the case id, as the
+    # accepted local record (final-support-refresh) minimized it.
     command(["/usr/bin/python3", "-B", "-O", "scripts/minimize_mismatch.py",
-             "--artifact", str(trap / "original/candidate.json"), "--output", str(trap / "minimized"),
+             "--artifact", str(trap / "original/trap-divergence-input.json"), "--output", str(trap / "minimized"),
              "--classification", "unsupported", "--rationale",
              "The injected 0x0000107b word is outside the supported ADD/ADDI/BEQ scope.",
              "--differential-binary", str(binary)], root)

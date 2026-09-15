@@ -74,6 +74,14 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-15 候选 `305f50c` 的第五次 VM 实跑：** 第 1 到 11 阶段在 guest 内全部通过，首次在全新环境完成了
+Sail 模拟器冷构建、Rust 模型重建、78 项 Rust 测试与 runtime 差分。第 12 阶段 `mutation-matrix` 的负例生成失败：
+控制器把 trap 重放产物写死为 `original/candidate.json`，而差分工具按案例名写为 `trap-divergence-input.json`
+（本地被接受的记录正是这样调用最小化器的）；已修正并加入负例生成形状测试。另一处：guest 回传证据时 cargo 目标
+目录中的硬链接被 tar 记为 link 成员、宿主按规则拒绝，导致该次证据未解出（已从 raw 盘直接读取日志定位）；
+guest 现以 `--hard-dereference` 打包。失败运行 `…-run-20260915e` 与其 raw 证据盘保留。这是第五、六个仅在
+新鲜检出中暴露的缺陷；需要新的候选提交与推送后重跑。
+
 **2026-09-15 候选 `7890148` 的第四次 VM 实跑：** 第 8 阶段 `rebuild-rust-model` 通过（诊断目录也已带回）；
 第 9 阶段 `rebuild-sail-model` 在 sail-riscv 本地构建 GMP 的 configure 处失败，guest 缺 `m4`。同时发现一处
 卫生问题：预检的 `rustup --version` 在仓库目录内执行，被 `rust-toolchain.toml` 触发自动向网络下载了一套工具链到

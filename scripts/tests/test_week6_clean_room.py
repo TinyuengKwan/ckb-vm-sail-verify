@@ -220,6 +220,32 @@ class CleanRoomTests(unittest.TestCase):
             MODULE.stage_action("install-sail", state)
         command.assert_not_called()
 
+    def test_negative_production_minimizes_the_case_named_replay_artifact(self):
+        native = MODULE.product(self.root, "week6-native-clean-room")
+        (native / "runtime").mkdir(parents=True)
+        (native / "runtime/report.json").write_text("{}\n")
+        (native / "rust-tests").mkdir()
+        (native / "rust-tests/report.json").write_text("{}\n")
+        calls = []
+        def fake_command(argv, cwd, codes=(0,), env=None, timeout=None):
+            calls.append([str(item) for item in argv])
+            if "minimize_mismatch.py" in argv[3]:
+                minimized = MODULE.product(self.root, "week6-trap-clean-room") / "minimized"
+                minimized.mkdir(parents=True, exist_ok=True)
+                (minimized / "report.json").write_text("{}\n")
+            if "paired_negative_evidence.py" in argv[3]:
+                paired = MODULE.product(self.root, "week6-paired-negatives-clean-room")
+                paired.mkdir(parents=True, exist_ok=True)
+                (paired / "report.json").write_text("{}\n")
+        with patch.object(MODULE, "command", side_effect=fake_command):
+            MODULE.produce_negatives(self.root)
+        replay = next(call for call in calls if "--replay" in call)
+        minimize = next(call for call in calls if "minimize_mismatch.py" in call[3])
+        artifact_dir = replay[replay.index("--artifact-dir") + 1]
+        self.assertEqual(minimize[minimize.index("--artifact") + 1], artifact_dir + "/trap-divergence-input.json")
+        self.assertEqual(replay[replay.index("--replay") + 1], "scripts/fixtures/trap-divergence-input.json")
+        self.assertTrue((MODULE.product(self.root, "week6-mismatch-clean-room") / "inventory.json").is_file())
+
     def test_decoder_stage_runs_the_admitted_source_installation(self):
         state = self.out / "state.json"
         state.write_text(json.dumps({"candidate": "a" * 40,
