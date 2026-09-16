@@ -101,6 +101,26 @@ class ReviewTests(unittest.TestCase):
     def test_unknown_rocq_source_rejected(self):
         with self.assertRaises(RuntimeError): self.node(review.ROCQ + '/rust/unreviewed.v')
 
+    def test_operation_inventory_allows_only_explained_modifications(self):
+        def changes(modified, extra_added=('artifacts/boundary-check/x/report.json',), deleted=()):
+            rows = {name: {'operation': 'modified', 'after': {'kind': 'file'}} for name in modified}
+            rows.update({name: {'operation': 'added', 'after': {'kind': 'file'}} for name in extra_added})
+            rows.update({name: {'operation': 'deleted', 'after': None} for name in deleted})
+            return rows
+        mandatory = set(review.MANDATORY_MODIFICATIONS)
+        self.assertEqual(review.check_operations(changes(mandatory)), mandatory)
+        # A cold Sail SMT memo cache may be rewritten in a fresh environment.
+        self.assertEqual(review.check_operations(changes(mandatory | {review.SOLVER_MEMO_CACHE})),
+                         mandatory | {review.SOLVER_MEMO_CACHE})
+        with self.assertRaisesRegex(RuntimeError, 'unexplained formal modifications'):
+            review.check_operations(changes(mandatory | {'proof/lean/theorems/Other.lean'}))
+        with self.assertRaisesRegex(RuntimeError, 'expected formal modifications absent'):
+            review.check_operations(changes(mandatory - {'target/CkbVmProduction.llbc'}))
+        with self.assertRaisesRegex(RuntimeError, 'unexpected formal operation inventory'):
+            review.check_operations(changes(mandatory, deleted=('proof/lean/generated/sail/x.lean',)))
+        with self.assertRaisesRegex(RuntimeError, 'unexpected formal operation inventory'):
+            review.check_operations({})
+
     def test_unbound_deletion_rejected(self):
         with self.assertRaises(RuntimeError):
             review.classify('x', {'operation': 'deleted', 'after': None}, {}, [])

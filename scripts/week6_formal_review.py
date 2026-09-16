@@ -229,6 +229,30 @@ def transaction_mapping(destination, backup):
     return [destination, backup]
 
 
+MANDATORY_MODIFICATIONS = frozenset([
+    'proof/lean/generated/rust/SOURCE_BASELINE.json',
+    'proof/lean/theorems/.lake/step-build.log',
+    'target/CkbVmProduction.llbc',
+])
+# Sail memoizes Z3 results in the emulator build (--memo-z3-path); regenerating
+# the model may rewrite that file in a fresh environment where the cache is
+# still cold.  It is solver bookkeeping, not model or proof content.
+SOLVER_MEMO_CACHE = 'deps/sail-riscv/build/model/sail_smt_cache'
+EXPLAINED_MODIFICATIONS = MANDATORY_MODIFICATIONS | {SOLVER_MEMO_CACHE}
+
+
+def check_operations(changes):
+    """Only additions and the explicitly explained modifications may appear; no deletions."""
+    operations = Counter(v['operation'] for v in changes.values())
+    require(operations and set(operations) <= {'added', 'modified'}, 'unexpected formal operation inventory')
+    modified = {name for name, change in changes.items() if change['operation'] == 'modified'}
+    require(MANDATORY_MODIFICATIONS <= modified, 'expected formal modifications absent: ' +
+            json.dumps(sorted(MANDATORY_MODIFICATIONS - modified)))
+    require(modified <= EXPLAINED_MODIFICATIONS, 'unexplained formal modifications: ' +
+            json.dumps(sorted(modified - EXPLAINED_MODIFICATIONS)))
+    return modified
+
+
 def compute():
     report_data = regular_bytes(FORMAL + '/report.json')
     config = read(OUT / 'input.json')
@@ -242,9 +266,7 @@ def compute():
     before, after = read(ROOT / FORMAL / 'before-expanded.json'), read(ROOT / FORMAL / 'after/snapshot.json')
     delta = read(ROOT / FORMAL / 'delta.json')
     require(inventory.compare(before, after) == delta, 'delta is not the recorded full comparison')
-    operations = Counter(v['operation'] for v in delta['changes'].values())
-    require(operations and set(operations) <= {'added', 'modified'} and operations.get('modified') == 3,
-            'unexpected formal operation inventory')
+    modified = check_operations(delta['changes'])
     a, b = before['entries'], after['entries']
     source = read(ROOT / FORMAL / 'source-before.json')
     require(source == read(ROOT / FORMAL / 'source-after.json'), 'formal source drift')
@@ -339,6 +361,15 @@ def compute():
     require(tail and tail in regular_bytes(FORMAL + '/main/kernel-step.log'), 'build log tail/stage mismatch')
     bind(log_name, 'build_log', {'stage': FORMAL + '/main/kernel-step.log',
          'last_20_lines_identical': True, 'old_log_bytes_recovered': False})
+    if SOLVER_MEMO_CACHE in delta['changes']:
+        change = delta['changes'][SOLVER_MEMO_CACHE]
+        require(change['after'] is not None and change['after']['kind'] == 'file' and
+                change['operation'] in ('added', 'modified'), 'solver memo cache change shape')
+        bytes_at(SOLVER_MEMO_CACHE)
+        bind(SOLVER_MEMO_CACHE, 'solver_memo_cache', {
+            'sail_option': '--memo-z3-path', 'operation': change['operation'],
+            'before_sha256': (change.get('before') or {}).get('sha256'),
+            'content_is_evidence': False})
 
     # Cargo archives and every extracted member, checked without unpacking.
     registry_facts = {}

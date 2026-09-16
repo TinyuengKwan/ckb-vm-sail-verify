@@ -74,6 +74,15 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-16 候选 `349fbfd` 的 VM 实跑：** 第 1 到 13 阶段通过后，第 14 阶段的正式记录器在 guest 内完整跑完
+（第二次 Lean、Rocq spike、两次全量输出清单、独立验收），delta 为 45,875 项新增、4 项修改，与本机已接受记录的
+46,648 项新增、3 项修改同形。失败在紧随其后的正式 delta 审查器：它把"修改恰好 3 项"写死为本机历史形状，而 guest
+多出的第 4 项修改是 `deps/sail-riscv/build/model/sail_smt_cache`——Sail 的 `--memo-z3-path` 求解缓存，在缓存尚冷的
+新环境里被重新生成模型的过程改写，本机上它早已"热"。审查器现改为：操作只允许 added/modified，三项必现修改
+（SOURCE_BASELINE、step-build.log、LLBC）必须在场，额外允许并显式绑定该缓存文件为 `solver_memo_cache`
+（内容不是证据），其它任何修改仍拒绝；不放宽计数以外的任何规则。失败运行 `…-run-20260916e`（约 232 分钟）保留。
+需要新的候选提交与推送后重跑。
+
 **2026-09-16 候选 `3a368e5` 的 VM 实跑：** 代理修正后检出一次通过；第 1 到 13 阶段在 guest 内全部通过，其中
 第 13 阶段 `lean-kernel`（`make proof-check BACKEND=lean`）首次在全新环境完成，第 12 阶段的负例、mismatch 清单与
 演示录制也已产出。第 14 阶段 `rocq-spike` 的正式记录器在第一步就拒绝：`record_generation.py` 要求被 Git 忽略的
