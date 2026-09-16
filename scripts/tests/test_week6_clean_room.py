@@ -309,6 +309,8 @@ class CleanRoomTests(unittest.TestCase):
         (fresh / "artifacts").mkdir(parents=True)
         out = MODULE.new_output(fresh, fresh / "artifacts/boundary-check/week6-clean-room")
         self.assertTrue(out.is_dir())
+        for name in ["generation-runs", "proof-check", "rocq-spike", "release-audit"]:
+            self.assertTrue((fresh / "artifacts" / name).is_dir(), name)
         with self.assertRaisesRegex(RuntimeError, "new canonical"):
             MODULE.new_output(fresh, fresh / "artifacts/boundary-check/week6-clean-room")
         with self.assertRaisesRegex(RuntimeError, "new canonical"):

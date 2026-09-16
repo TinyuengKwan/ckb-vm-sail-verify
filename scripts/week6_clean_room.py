@@ -46,6 +46,7 @@ INJECTION_ENV = {"BASH_ENV", "ENV", "LD_PRELOAD", "LD_LIBRARY_PATH", "PYTHONHOME
 TOOL_ENV_PREFIXES = ("CARGO", "RUST", "OPAM", "OCAML", "CHARON", "AENEAS", "ELAN", "LEAN",
                      "SAIL", "MIRI", "SCCACHE", "CCACHE")
 NATIVE_STAGES = {"rust-tests", "runtime-differential", "mutation-matrix"}
+IGNORED_EVIDENCE_PARENTS = ["boundary-check", "generation-runs", "proof-check", "rocq-spike", "release-audit"]
 RUST_TOOLCHAIN = "1.97.1-x86_64-unknown-linux-gnu"
 # Every host command the fixed-host input review recorded for the fixed
 # installations and build scripts, plus the controller's own needs.  Unpinned
@@ -490,10 +491,14 @@ def new_output(root, path):
     require(path == root / "artifacts/boundary-check/week6-clean-room" and not path.exists() and
             not path.is_symlink(), "new canonical Week6 clean-room output required")
     # Git ignores artifacts/*/, so a fresh recursive checkout has no evidence
-    # parent directory yet; every later stage writes below it.
+    # parent directories yet; every later stage writes below one of them and
+    # the generation recorder insists that its parent already exists.
     require(not any(parent.is_symlink() for parent in (path.parent, *path.parent.parents)),
             "linked clean-room output ancestor")
-    path.parent.mkdir(parents=True, exist_ok=True)
+    for name in IGNORED_EVIDENCE_PARENTS:
+        parent = root / "artifacts" / name
+        require(not parent.is_symlink(), "linked evidence parent: " + name)
+        parent.mkdir(parents=True, exist_ok=True)
     path.mkdir()
     return path
 

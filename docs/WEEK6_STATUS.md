@@ -74,6 +74,13 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-16 候选 `3a368e5` 的 VM 实跑：** 代理修正后检出一次通过；第 1 到 13 阶段在 guest 内全部通过，其中
+第 13 阶段 `lean-kernel`（`make proof-check BACKEND=lean`）首次在全新环境完成，第 12 阶段的负例、mismatch 清单与
+演示录制也已产出。第 14 阶段 `rocq-spike` 的正式记录器在第一步就拒绝：`record_generation.py` 要求被 Git 忽略的
+`artifacts/generation-runs` 目录预先存在。控制器现在在创建输出目录时一并创建 `generation-runs`、`proof-check`、
+`rocq-spike`、`release-audit` 四个被忽略的证据父目录；输出清单对缺失的规范根本就容忍（本机也没有 `build/`）。
+失败运行 `…-run-20260916d`（约 146 分钟）保留。需要新的候选提交与推送后重跑；预计单次完整运行 5 到 6 小时。
+
 **2026-09-16 候选 `d3c373b` 的 VM 实跑与代理根因：** 检出日志这次成功带回：顶层克隆成功，两个子模块克隆报
 "Failed to connect to github.com port 443"，是直连而非走代理时的错误；重试后整个检出阶段在 1800 秒超时。
 诊断 VM 打印控制器视角的环境与 git 的 curl 详细输出后确认根因：guest 脚本用 `env -i` 启动控制器时把未设置的
