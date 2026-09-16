@@ -74,6 +74,14 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-16 候选 `9b3cdae` 的两次 VM 实跑：** 两次都在控制器的递归检出阶段失败（第 12 分钟与第 6 分钟），
+发生在输出目录创建之前，日志留在 guest 内。用同一份 seed 起的诊断 VM 把日志打到串口后确认：bootstrap 克隆刚成功，
+紧接着对同一仓库的正式克隆报 `GnuTLS recv error (-110): The TLS connection was non-properly terminated`，
+是代理链路的间歇性 TLS 断连，宿主同一时刻对两个子模块仓库的完整克隆均正常。控制器现对 `git clone` 与子模块更新
+做最多 3 次重试（失败的部分克隆先清空；commit 与子模块指针固定，重试不改变检出内容），`checkout`、补丁与
+`fsck` 不重试；launcher 同时把 `week6-checkout-*` 的检出日志带回。两次失败运行 `…-run-20260916a/b` 保留。
+需要新的候选提交与推送后重跑。
+
 **2026-09-15 候选 `0dcac56` 的第六次 VM 实跑：** 第 1 到 11 阶段再次通过；第 12 阶段的 trap 最小化器拒绝
 "未识别的重放环境：sail_compiler"。原因是控制器直接发起的重放没有把固定 Sail 编译器放到 PATH，差分工具记录
 `sail_compiler: null`（runtime 阶段由探针自行补 PATH，所以其报告是正常的）。现已把固定 Sail 前缀加入三个

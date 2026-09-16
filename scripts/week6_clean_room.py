@@ -558,19 +558,41 @@ def stage_environment(environment, name):
     return result
 
 
+NETWORK_ATTEMPTS = 3
+
+
+def network_command(argv, cwd, reset=None):
+    """Run one network-bound git step with bounded retries.
+
+    Proxy links drop TLS sessions intermittently; the candidate commit and the
+    submodule commits are pinned, so a retry cannot change what is checked out.
+    Every attempt is recorded in the stage log by the command itself.
+    """
+    for attempt in range(1, NETWORK_ATTEMPTS + 1):
+        try:
+            return command(argv, cwd, timeout=1800)
+        except RuntimeError as error:
+            print("network step attempt " + str(attempt) + " failed: " + str(error), file=sys.stderr)
+            if attempt == NETWORK_ATTEMPTS:
+                raise
+            if reset is not None:
+                reset()
+
+
 def bootstrap_checkout(commit):
     require(OID.fullmatch(commit or "") and CANONICAL.is_dir() and not CANONICAL.is_symlink() and
             not any(CANONICAL.iterdir()),
             "bootstrap checkout target/candidate differs")
-    commands = [
-        ["/usr/bin/git", "clone", "--no-checkout", "https://github.com/" + REPOSITORY + ".git",
-         "."],
-        ["/usr/bin/git", "checkout", "--detach", commit],
-        ["/usr/bin/git", "submodule", "update", "--init", "--recursive"],
-        ["/usr/bin/make", "ckb-baseline-apply"],
-        ["/usr/bin/git", "fsck", "--full"],
-    ]
-    for index, argv in enumerate(commands):
+
+    def empty_canonical():
+        for entry in CANONICAL.iterdir():
+            shutil.rmtree(entry) if entry.is_dir() and not entry.is_symlink() else entry.unlink()
+
+    network_command(["/usr/bin/git", "clone", "--no-checkout", "https://github.com/" + REPOSITORY + ".git", "."],
+                    CANONICAL, reset=empty_canonical)
+    command(["/usr/bin/git", "checkout", "--detach", commit], CANONICAL, timeout=1800)
+    network_command(["/usr/bin/git", "submodule", "update", "--init", "--recursive"], CANONICAL)
+    for argv in [["/usr/bin/make", "ckb-baseline-apply"], ["/usr/bin/git", "fsck", "--full"]]:
         command(argv, CANONICAL, timeout=1800)
 
 

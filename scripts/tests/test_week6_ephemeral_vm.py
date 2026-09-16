@@ -179,6 +179,11 @@ class EphemeralVmTests(unittest.TestCase):
             RUN + "/exit-code": b"1\n"})
         self.assertIn(("evidence", "artifacts/boundary-check/rebuilt-production-rust-abc/report.json"),
                       set(MODULE.evidence_members(diagnostics).values()))
+        parent = MODULE.CANONICAL.parent.relative_to("/").as_posix()
+        logs = archive("checkout-logs.tar", {parent + "/week6-checkout-abc12/stderr": b"fatal: tls\n",
+                                             RUN + "/exit-code": b"1\n"})
+        self.assertIn(("guest", "checkout-logs/abc12/stderr"), set(MODULE.evidence_members(logs).values()))
+        self.assertIn("week6-checkout-", MODULE.user_data("a" * 40, "env-1"))
         for package in ["rustup", "jq", "m4", "bzip2", "curl", "gawk", "patch", "xz-utils", "build-essential",
                         "bsdutils", "libgmp-dev", "zlib1g", "libzstd1", "libatomic1"]:
             self.assertIn(package, MODULE.GUEST_PACKAGES)

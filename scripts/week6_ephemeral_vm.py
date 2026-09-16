@@ -149,6 +149,8 @@ finish() {
     rm -f "$RUN/secrets.env"
     {
         cd / && find "${RUN#/}" -mindepth 1 \( -type f -o -type d \) 2>/dev/null
+        cd / && find "$(dirname "${CANONICAL#/}")" -mindepth 1 -maxdepth 1 -type d -name 'week6-checkout-*' \
+            -exec find {} -type f \; 2>/dev/null
         cd / && find "${CANONICAL#/}/artifacts/boundary-check" -mindepth 1 -maxdepth 1 -name 'week6-*' \
             -exec find {} \( -type f -o -type d \) \; 2>/dev/null
         cd / && find "${CANONICAL#/}/artifacts/boundary-check" -mindepth 1 -maxdepth 1 -type d \
@@ -286,6 +288,7 @@ def evidence_members(archive):
     """Inventory the guest tar; only regular files/directories under the two allowed prefixes."""
     canonical = CANONICAL.relative_to("/").as_posix() + "/"
     run = GUEST_RUN.relative_to("/").as_posix() + "/"
+    checkout_logs = CANONICAL.parent.relative_to("/").as_posix() + "/week6-checkout-"
     members = {}
     with tarfile.open(archive, "r:") as tar:
         for member in tar:
@@ -305,6 +308,10 @@ def evidence_members(archive):
                 target = ("evidence", name[len(canonical):])
             elif name.startswith(run):
                 target = ("guest", name[len(run):])
+            elif name.startswith(checkout_logs):
+                # The controller's recursive-checkout logs live beside the canonical
+                # checkout until the output directory exists; keep them for diagnosis.
+                target = ("guest", "checkout-logs/" + name[len(checkout_logs):])
             else:
                 raise RuntimeError("guest evidence member outside allowed prefixes: " + name)
             require(name not in members, "duplicate guest evidence member")

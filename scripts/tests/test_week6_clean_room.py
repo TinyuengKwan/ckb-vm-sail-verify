@@ -311,6 +311,32 @@ class CleanRoomTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, "linked"):
             MODULE.new_output(linked, linked / "artifacts/boundary-check/week6-clean-room")
 
+    def test_bootstrap_checkout_retries_network_steps_but_not_pinned_ones(self):
+        canonical = self.root.parent / "canonical"
+        canonical.mkdir()
+        calls = []
+        def flaky(argv, cwd, codes=(0,), env=None, timeout=None):
+            calls.append(argv[1])
+            if argv[1] == "clone" and calls.count("clone") < 3:
+                (canonical / ".git").mkdir(exist_ok=True)
+                raise RuntimeError("command failed (exit 128): /usr/bin/git")
+            if argv[1] == "submodule" and calls.count("submodule") < 2:
+                raise RuntimeError("command failed (exit 128): /usr/bin/git")
+        with patch.object(MODULE, "CANONICAL", canonical), patch.object(MODULE, "command", side_effect=flaky), \
+                redirect_stderr(io.StringIO()):
+            MODULE.bootstrap_checkout("a" * 40)
+        self.assertEqual(calls, ["clone", "clone", "clone", "checkout", "submodule", "submodule",
+                                 "ckb-baseline-apply", "fsck"])
+        self.assertFalse((canonical / ".git").exists())  # partial clones are wiped before a retry
+        calls.clear()
+        def hopeless(argv, cwd, codes=(0,), env=None, timeout=None):
+            calls.append(argv[1])
+            raise RuntimeError("command failed (exit 128): /usr/bin/git")
+        with patch.object(MODULE, "CANONICAL", canonical), patch.object(MODULE, "command", side_effect=hopeless), \
+                redirect_stderr(io.StringIO()), self.assertRaisesRegex(RuntimeError, "exit 128"):
+            MODULE.bootstrap_checkout("a" * 40)
+        self.assertEqual(calls, ["clone"] * MODULE.NETWORK_ATTEMPTS)
+
     def test_parser_does_not_accept_an_arbitrary_stage(self):
         with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             MODULE.parser().parse_args(["_stage", "--name", "run-shell", "--state", "x"])
