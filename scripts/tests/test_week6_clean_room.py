@@ -75,6 +75,15 @@ class CleanRoomTests(unittest.TestCase):
         self.assertEqual(lean["PATH"], "/usr/bin:/bin")
         self.assertEqual(lean["HTTP_PROXY"], "proxy")
         self.assertEqual(lean["GIT_TERMINAL_PROMPT"], "0")
+        self.assertEqual((lean["GIT_CONFIG_COUNT"], lean["GIT_CONFIG_KEY_2"], lean["GIT_CONFIG_VALUE_2"]),
+                         ("3", "http.proxy", "proxy"))
+        mixed = MODULE.base_environment({"HTTPS_PROXY": "http://p:1", "https_proxy": "", "no_proxy": ""})
+        self.assertEqual(mixed["GIT_CONFIG_VALUE_2"], "http://p:1")
+        self.assertNotIn("https_proxy", mixed)  # an empty lower-case variant would disable the proxy in curl
+        self.assertNotIn("no_proxy", mixed)
+        plain = MODULE.base_environment({})
+        self.assertEqual(plain["GIT_CONFIG_COUNT"], "2")
+        self.assertNotIn("GIT_CONFIG_KEY_2", plain)
         with patch.object(MODULE, "CANONICAL", self.root):
             native = MODULE.stage_environment(environment, "runtime-differential")
         rustup = self.root / "artifacts/boundary-check/isolated-rust-lean-ad7o1fsn/rustup"

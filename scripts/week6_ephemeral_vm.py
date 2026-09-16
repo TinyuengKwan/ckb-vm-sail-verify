@@ -171,6 +171,16 @@ umask 022
 set -a
 . "$RUN/secrets.env"
 set +a
+# libcurl gives lower-case proxy variables precedence and treats an empty one as
+# "no proxy", so never export an empty variant; mirror whichever case is set.
+[ -n "${HTTPS_PROXY:-}" ] && [ -z "${https_proxy:-}" ] && export https_proxy="$HTTPS_PROXY"
+[ -n "${HTTP_PROXY:-}" ] && [ -z "${http_proxy:-}" ] && export http_proxy="$HTTP_PROXY"
+[ -n "${https_proxy:-}" ] && [ -z "${HTTPS_PROXY:-}" ] && export HTTPS_PROXY="$https_proxy"
+[ -n "${http_proxy:-}" ] && [ -z "${HTTP_PROXY:-}" ] && export HTTP_PROXY="$http_proxy"
+PROXY_ENV=()
+for v in HTTP_PROXY HTTPS_PROXY NO_PROXY http_proxy https_proxy no_proxy; do
+    [ -n "${!v:-}" ] && PROXY_ENV+=("$v=${!v}")
+done
 export DEBIAN_FRONTEND=noninteractive
 if [ -n "${HTTP_PROXY:-}" ]; then
     printf 'Acquire::http::Proxy "%s";\nAcquire::https::Proxy "%s";\n' "$HTTP_PROXY" "${HTTPS_PROXY:-$HTTP_PROXY}" \
@@ -192,8 +202,7 @@ runuser -u @@GUEST_USER@@ -- env -i PATH=/usr/bin:/bin HOME=/home/@@GUEST_USER@@
     WEEK6_INSTALL_ARCHIVE_URL="${WEEK6_INSTALL_ARCHIVE_URL:-}" \
     WEEK6_INSTALL_MANIFEST_URL="${WEEK6_INSTALL_MANIFEST_URL:-}" \
     WEEK6_DECODER_ARCHIVE_URL="${WEEK6_DECODER_ARCHIVE_URL:-}" \
-    HTTP_PROXY="${HTTP_PROXY:-}" HTTPS_PROXY="${HTTPS_PROXY:-}" NO_PROXY="${NO_PROXY:-}" \
-    http_proxy="${http_proxy:-}" https_proxy="${https_proxy:-}" no_proxy="${no_proxy:-}" \
+    "${PROXY_ENV[@]}" \
     /usr/bin/python3 -B -O "$BOOTSTRAP/scripts/week6_clean_room.py" \
         --repository @@REPOSITORY@@ --commit @@COMMIT@@ --canonical-checkout "$CANONICAL" \
         --install-archive-sha256 @@INSTALL_ARCHIVE_SHA@@ --install-manifest-sha256 @@INSTALL_MANIFEST_SHA@@ \

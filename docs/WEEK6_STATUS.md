@@ -74,6 +74,14 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-16 候选 `d3c373b` 的 VM 实跑与代理根因：** 检出日志这次成功带回：顶层克隆成功，两个子模块克隆报
+"Failed to connect to github.com port 443"，是直连而非走代理时的错误；重试后整个检出阶段在 1800 秒超时。
+诊断 VM 打印控制器视角的环境与 git 的 curl 详细输出后确认根因：guest 脚本用 `env -i` 启动控制器时把未设置的
+小写 `https_proxy`/`http_proxy` 传成了空字符串，而 libcurl 规定小写变量优先且空值等于"不用代理"，于是 git 一律
+直连 github；宿主与 guest 的直连链路时通时不通，正好解释了 2026-09-15 至 16 日检出阶段的随机失败与 TLS 断连。
+修正：guest 只向控制器传递非空代理变量并镜像大小写；控制器的基础环境在存在代理时显式写入 git 的 `http.proxy`
+并删除空的代理变量。失败运行 `…-run-20260916c` 与两个诊断记录保留。需要新的候选提交与推送后重跑。
+
 **2026-09-16 候选 `9b3cdae` 的两次 VM 实跑：** 两次都在控制器的递归检出阶段失败（第 12 分钟与第 6 分钟），
 发生在输出目录创建之前，日志留在 guest 内。用同一份 seed 起的诊断 VM 把日志打到串口后确认：bootstrap 克隆刚成功，
 紧接着对同一仓库的正式克隆报 `GnuTLS recv error (-110): The TLS connection was non-properly terminated`，

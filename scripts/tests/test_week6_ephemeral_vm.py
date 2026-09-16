@@ -132,6 +132,11 @@ class EphemeralVmTests(unittest.TestCase):
         self.assertIn("--hard-dereference", text)
         self.assertNotIn("secret.invalid", text)
         self.assertIn("uid: 1000", text)
+        # Only non-empty proxy variables may reach the controller; an empty lower-case
+        # https_proxy would make libcurl ignore HTTPS_PROXY and dial GitHub directly.
+        self.assertNotIn('https_proxy="${https_proxy:-}"', text)
+        self.assertIn('"${PROXY_ENV[@]}"', text)
+        self.assertIn('export https_proxy="$HTTPS_PROXY"', text)
         blob = MODULE.secrets_blob(self.environment)
         self.assertEqual(len(blob), MODULE.SECRETS_BYTES)
         self.assertIn(b"WEEK6_INSTALL_ARCHIVE_URL='" + SECRET.encode() + b"'", blob)
