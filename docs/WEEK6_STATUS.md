@@ -74,6 +74,14 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-17 候选 `880da16` 的 VM 实跑：** delta 审查器越过事务备份检查、LLBC 差异（611 行短名一致）、Cargo
+归档、clean 工程副本、锁定依赖 Git blob、公开 harness 与负例夹具等全部内容核对，到达最终逐路径分类时只剩 6 个
+未分类节点：首次生成的 Rocq Sail 模型（`deps/sail-riscv/build/rocq/rv64d*.v` 两个原始输出，
+`proof/rocq/generated/sail/` 下两个安装副本与配置及其校验文件）。本机上这些路径早已存在、不在 delta 里，从未需要
+规则。审查器现按事务记录的 `raw_files`/`installed_files` 清单绑定这类新增文件：安装副本必须与原始输出逐字节相同，
+配置副本必须等于 `sail-model/build/ckb_vm_config.json`，校验文件必须写明该摘要与目标路径；安装的 Rocq 模型另与
+Rocq spike 报告记录的模型哈希交叉核对。失败运行 `…-run-20260917b`（约 310 分钟）保留。需要新的候选提交与推送后重跑。
+
 **2026-09-17 候选 `236c094` 的 VM 实跑：** 正式记录器再次完整跑完，delta 审查器越过操作清单检查后在 Sail 事务
 备份断言处拒绝："missing Sail backups"。本机上 Lean 与 Rocq 两份 Sail 模型都早已存在，重新生成时都有旧输出可备份；
 全新环境里 Rocq 模型在第 14 阶段第一次生成，事务如实记录 `old_*_saved=false`。审查器现按精确不变量核对：

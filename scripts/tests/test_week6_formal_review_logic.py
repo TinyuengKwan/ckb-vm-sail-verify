@@ -142,6 +142,45 @@ class ReviewTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'flag shape'):
             review.sail_backup_expectations(paths, {'old_source_saved': None, 'old_destination_saved': False}, {})
 
+    def test_fresh_generation_outputs_are_bound_to_their_transaction(self):
+        import hashlib
+        config = b'{"cfg": 1}\n'
+        digest = hashlib.sha256(config).hexdigest()
+        checksum = (digest + '  /abs/proof/rocq/generated/sail/ckb_vm_config.json\n').encode()
+        def node(data, kind='file'):
+            return {'kind': kind, 'sha256': hashlib.sha256(data).hexdigest(), 'size': len(data), 'mode': 0o644}
+        src, dst = 'deps/sail-riscv/build/rocq', 'proof/rocq/generated/sail'
+        after = {src + '/rv64d.v': node(b'model'), dst + '/rv64d.v': node(b'model'),
+                 dst + '/ckb_vm_config.json': node(config), dst + '/ckb_vm_config.json.sha256': node(checksum)}
+        changes = {name: {'operation': 'added', 'after': n} for name, n in after.items()}
+        record = {'raw_files': ['rv64d.v'], 'installed_files': ['ckb_vm_config.json', 'ckb_vm_config.json.sha256', 'rv64d.v']}
+        bindings = {}
+        bind = lambda name, category, evidence: bindings.__setitem__(name, {'category': category, 'evidence': evidence})
+        bound = review.bind_generation_outputs({'source': src, 'destination': dst}, record, changes, after, bind, config,
+                                               '/abs/proof/rocq/generated/sail')
+        self.assertEqual(bound, 4)
+        self.assertEqual(bindings[dst + '/rv64d.v']['category'], 'installed_generation_output')
+        self.assertEqual(bindings[src + '/rv64d.v']['category'], 'raw_generation_output')
+        self.assertEqual(bindings[dst + '/ckb_vm_config.json']['category'], 'installed_generation_config')
+        # Nothing in the delta means nothing to bind (the producing host's warm case).
+        self.assertEqual(review.bind_generation_outputs({'source': src, 'destination': dst}, record, {}, after,
+                                                        bind, config, '/abs/x'), 0)
+        broken = dict(after); broken[dst + '/rv64d.v'] = node(b'tampered')
+        with self.assertRaisesRegex(RuntimeError, 'differs from raw output'):
+            review.bind_generation_outputs({'source': src, 'destination': dst}, record, changes, broken, bind, config,
+                                           '/abs/proof/rocq/generated/sail')
+        with self.assertRaisesRegex(RuntimeError, 'configuration differs'):
+            review.bind_generation_outputs({'source': src, 'destination': dst}, record, changes, after, bind,
+                                           b'other', '/abs/proof/rocq/generated/sail')
+        modified = dict(changes); modified[dst + '/rv64d.v'] = {'operation': 'modified', 'after': after[dst + '/rv64d.v']}
+        with self.assertRaisesRegex(RuntimeError, 'not a fresh file'):
+            review.bind_generation_outputs({'source': src, 'destination': dst}, record, modified, after, bind, config,
+                                           '/abs/proof/rocq/generated/sail')
+        with self.assertRaisesRegex(RuntimeError, 'inventory shape'):
+            review.bind_generation_outputs({'source': src, 'destination': dst},
+                                           {'raw_files': ['a'], 'installed_files': ['a', 'extra.txt']}, {}, after, bind,
+                                           config, '/abs/x')
+
     def test_unbound_deletion_rejected(self):
         with self.assertRaises(RuntimeError):
             review.classify('x', {'operation': 'deleted', 'after': None}, {}, [])

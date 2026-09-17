@@ -266,6 +266,58 @@ def sail_backup_expectations(paths, flags, before_entries):
     return mappings, first
 
 
+CONFIG_NAME = 'ckb_vm_config.json'
+
+
+def bind_generation_outputs(paths, record, changes, after, bind, config_bytes, destination_abs):
+    """Explain freshly generated Sail model files by the transaction that produced them.
+
+    On the producing host the generated trees pre-exist and regenerating them
+    leaves no delta.  In a fresh environment the first generation adds the raw
+    Sail output under the transaction source and the adapted copy under the
+    destination.  Installed model files must be byte-identical to the raw output;
+    the configuration copy must equal the materialized configuration and its
+    checksum file must name that digest and the destination path.  Anything
+    else under those directories stays unclassified.
+    """
+    source, destination = paths['source'], paths['destination']
+    raw, installed = set(record['raw_files']), set(record['installed_files'])
+    require(raw <= installed and installed - raw <= {CONFIG_NAME, CONFIG_NAME + '.sha256'},
+            'transaction file inventory shape')
+    bound = 0
+    for name in sorted(installed):
+        target = destination + '/' + name
+        if target not in changes:
+            continue
+        require(changes[target]['operation'] == 'added' and after.get(target, {}).get('kind') == 'file',
+                'installed generation output is not a fresh file: ' + target)
+        if name == CONFIG_NAME:
+            require(after[target]['sha256'] == sha(config_bytes), 'installed configuration differs: ' + target)
+            bind(target, 'installed_generation_config', {'transaction_destination': destination})
+        elif name == CONFIG_NAME + '.sha256':
+            expected = (sha(config_bytes) + '  ' + destination_abs + '/' + CONFIG_NAME + '\n').encode()
+            require(after[target]['sha256'] == sha(expected) and after[target]['size'] == len(expected),
+                    'installed configuration checksum differs: ' + target)
+            bind(target, 'installed_generation_config', {'transaction_destination': destination})
+        else:
+            raw_node = after.get(source + '/' + name)
+            require(raw_node is not None and raw_node['kind'] == 'file' and
+                    raw_node['sha256'] == after[target]['sha256'], 'installed output differs from raw output: ' + target)
+            bind(target, 'installed_generation_output', {'raw_output': source + '/' + name,
+                                                          'sha256': after[target]['sha256']})
+        bound += 1
+    for name in sorted(raw):
+        target = source + '/' + name
+        if target not in changes:
+            continue
+        require(changes[target]['operation'] == 'added' and after.get(target, {}).get('kind') == 'file',
+                'raw generation output is not a fresh file: ' + target)
+        bind(target, 'raw_generation_output', {'installed_copy': destination + '/' + name,
+                                                'sha256': after[target]['sha256']})
+        bound += 1
+    return bound
+
+
 def check_operations(changes):
     """Only additions and the explicitly explained modifications may appear; no deletions."""
     operations = Counter(v['operation'] for v in changes.values())
@@ -331,7 +383,7 @@ def compute():
     # All retained originals, including LLBC, are mapped exactly to pre-run nodes.
     tx_names = [n for n in delta['changes'] if n.endswith('/transaction.json') and not n.startswith('artifacts/')]
     require(len(tx_names) == 3, 'unexpected transaction count')
-    retained, mappings, first_generations = {}, [], []
+    retained, mappings, first_generations, generation_bound = {}, [], [], 0
     for name in tx_names:
         tx = json.loads(bytes_at(name))
         require(tx['status'] == 'installed' and tx['policy_changed'] is False, 'transaction status/policy')
@@ -350,6 +402,9 @@ def compute():
                 {key: tx[key] for key in ('old_source_saved', 'old_destination_saved')}, a)
             mappings.extend(tx_mappings)
             first_generations.extend({'transaction': name, **row} for row in first)
+            generation_bound += bind_generation_outputs(
+                {key: relative(tx[key]) for key in ('source', 'destination')}, tx, delta['changes'], b, bind,
+                bytes_at('sail-model/build/' + CONFIG_NAME), tx['destination'])
     for old, backup in mappings:
         for name, node in a.items():
             if name == old or name.startswith(old + '/'):
@@ -362,6 +417,7 @@ def compute():
     facts['retained_original_nodes'] = len(retained)
     facts['transaction_mappings'] = mappings
     facts['first_generations'] = first_generations
+    facts['fresh_generation_output_nodes'] = generation_bound
 
     # Three modified files: exact representation change, new provenance, build log.
     old_prov = rust_backup + '/previous/SOURCE_BASELINE.json'
@@ -586,6 +642,10 @@ def compute():
     for name, digest in rocq['model_sha256'].items():
         path = ROCQ + '/' + name
         require(sha(bytes_at(path)) == digest, 'Rocq model source identity')
+        installed = 'proof/rocq/generated/sail/' + name
+        if installed in bindings:
+            require(bindings[installed]['category'] == 'installed_generation_output' and
+                    bindings[installed]['evidence']['sha256'] == digest, 'installed Rocq model differs from spike input')
         bind(path, 'rocq_model_or_repro_source', {'extra_proof_coverage': False})
     for s in rocq['stages']:
         records.add(ROCQ + '/' + s['log'])
