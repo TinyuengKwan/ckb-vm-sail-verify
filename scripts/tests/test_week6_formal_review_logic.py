@@ -121,6 +121,27 @@ class ReviewTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'unexpected formal operation inventory'):
             review.check_operations({})
 
+    def test_sail_backups_required_exactly_when_outputs_pre_existed(self):
+        paths = {'source': 'proof/rocq/generated/sail', 'destination': 'proof/rocq/generated/installed',
+                 'generation_backup': 'proof/rocq/generated/.sail-generation-x',
+                 'installation_backup': 'proof/rocq/generated/.sail-install-y'}
+        before_warm = {'proof/rocq/generated/sail/rv64d.v': {}, 'proof/rocq/generated/installed/rv64d.v': {}}
+        mappings, first = review.sail_backup_expectations(
+            paths, {'old_source_saved': True, 'old_destination_saved': True}, before_warm)
+        self.assertEqual(mappings, [['proof/rocq/generated/sail', 'proof/rocq/generated/.sail-generation-x/previous'],
+                                    ['proof/rocq/generated/installed', 'proof/rocq/generated/.sail-install-y/previous']])
+        self.assertEqual(first, [])
+        mappings, first = review.sail_backup_expectations(
+            paths, {'old_source_saved': False, 'old_destination_saved': False}, {'target/x.llbc': {}})
+        self.assertEqual(mappings, [])
+        self.assertEqual([row['first_generation'] for row in first], [True, True])
+        with self.assertRaisesRegex(RuntimeError, 'missing Sail backup for pre-existing source'):
+            review.sail_backup_expectations(paths, {'old_source_saved': False, 'old_destination_saved': True}, before_warm)
+        with self.assertRaisesRegex(RuntimeError, 'absent before the run'):
+            review.sail_backup_expectations(paths, {'old_source_saved': True, 'old_destination_saved': True}, {})
+        with self.assertRaisesRegex(RuntimeError, 'flag shape'):
+            review.sail_backup_expectations(paths, {'old_source_saved': None, 'old_destination_saved': False}, {})
+
     def test_unbound_deletion_rejected(self):
         with self.assertRaises(RuntimeError):
             review.classify('x', {'operation': 'deleted', 'after': None}, {}, [])

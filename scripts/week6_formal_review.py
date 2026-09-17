@@ -241,6 +241,31 @@ SOLVER_MEMO_CACHE = 'deps/sail-riscv/build/model/sail_smt_cache'
 EXPLAINED_MODIFICATIONS = MANDATORY_MODIFICATIONS | {SOLVER_MEMO_CACHE}
 
 
+def sail_backup_expectations(paths, flags, before_entries):
+    """A Sail transaction must back up exactly what existed before it ran.
+
+    On the producing host both the generation source and the installed
+    destination usually pre-exist, so both backups are saved.  In a fresh
+    environment the Rocq model is generated for the first time inside the
+    formal record and nothing can be backed up; that is legitimate only when the
+    before-inventory really has no node under the path.  Returns the mappings
+    to retained originals and the first-generation records.
+    """
+    mappings, first = [], []
+    for key, saved, flag in [('source', 'generation_backup', 'old_source_saved'),
+                             ('destination', 'installation_backup', 'old_destination_saved')]:
+        old = paths[key]
+        existed = any(name == old or name.startswith(old + '/') for name in before_entries)
+        if flags[flag] is True:
+            require(existed, 'Sail backup claimed for a path absent before the run: ' + old)
+            mappings.append(transaction_mapping(old, paths[saved] + '/previous'))
+        else:
+            require(flags[flag] is False, 'Sail backup flag shape')
+            require(not existed, 'missing Sail backup for pre-existing ' + key + ': ' + old)
+            first.append({key: old, 'first_generation': True})
+    return mappings, first
+
+
 def check_operations(changes):
     """Only additions and the explicitly explained modifications may appear; no deletions."""
     operations = Counter(v['operation'] for v in changes.values())
@@ -306,7 +331,7 @@ def compute():
     # All retained originals, including LLBC, are mapped exactly to pre-run nodes.
     tx_names = [n for n in delta['changes'] if n.endswith('/transaction.json') and not n.startswith('artifacts/')]
     require(len(tx_names) == 3, 'unexpected transaction count')
-    retained, mappings = {}, []
+    retained, mappings, first_generations = {}, [], []
     for name in tx_names:
         tx = json.loads(bytes_at(name))
         require(tx['status'] == 'installed' and tx['policy_changed'] is False, 'transaction status/policy')
@@ -320,9 +345,11 @@ def compute():
             retained[old_llbc] = relative(tx['llbc'])
             rust_backup = backup
         else:
-            require(tx['old_source_saved'] is True and tx['old_destination_saved'] is True, 'missing Sail backups')
-            for key, saved in [('source', 'generation_backup'), ('destination', 'installation_backup')]:
-                mappings.append(transaction_mapping(relative(tx[key]), relative(tx[saved]) + '/previous'))
+            tx_mappings, first = sail_backup_expectations(
+                {key: relative(tx[key]) for key in ('source', 'destination', 'generation_backup', 'installation_backup')},
+                {key: tx[key] for key in ('old_source_saved', 'old_destination_saved')}, a)
+            mappings.extend(tx_mappings)
+            first_generations.extend({'transaction': name, **row} for row in first)
     for old, backup in mappings:
         for name, node in a.items():
             if name == old or name.startswith(old + '/'):
@@ -334,6 +361,7 @@ def compute():
         bind(name, 'retained_original', old)
     facts['retained_original_nodes'] = len(retained)
     facts['transaction_mappings'] = mappings
+    facts['first_generations'] = first_generations
 
     # Three modified files: exact representation change, new provenance, build log.
     old_prov = rust_backup + '/previous/SOURCE_BASELINE.json'

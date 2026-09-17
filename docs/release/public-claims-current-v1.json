@@ -168,7 +168,7 @@
       ],
       "classification": "current_assurance",
       "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "f2d25213f21fc1a7ec57fd4ad9e78224022c0fee19b5f9439fef6f9b1dd3563c"
+      "sha256": "65dbb38c538fc7022affb0af42ff83f143f4c8b5f96c7f69f9437bf5fc51d92c"
     },
     "docs/architecture.md": {
       "claim_paragraphs": 17,
