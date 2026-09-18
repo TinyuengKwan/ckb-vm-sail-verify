@@ -4,6 +4,7 @@ import importlib.util
 import json
 from pathlib import Path
 import sys
+import re
 import unittest
 
 HERE = Path(__file__).resolve().parent
@@ -180,6 +181,12 @@ class ReviewTests(unittest.TestCase):
             review.bind_generation_outputs({'source': src, 'destination': dst},
                                            {'raw_files': ['a'], 'installed_files': ['a', 'extra.txt']}, {}, after, bind,
                                            config, '/abs/x')
+
+    def test_expected_review_test_count_is_derived_from_the_test_file(self):
+        here = Path(__file__).read_bytes()
+        self.assertEqual(review.expected_review_tests(here), len(re.findall(rb'(?m)^    def test_', here)))
+        with self.assertRaisesRegex(RuntimeError, 'lost coverage'):
+            review.expected_review_tests(b'    def test_only_one(self):\n')
 
     def test_unbound_deletion_rejected(self):
         with self.assertRaises(RuntimeError):

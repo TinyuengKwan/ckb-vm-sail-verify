@@ -206,8 +206,17 @@ def validate_summary(report, facts, reviews):
     require(all(report.get(k) is v for k, v in FLAGS.items()), 'review assurance flags changed')
 
 
+def expected_review_tests(test_source):
+    """The self-test count is the number of test methods in the copied test file, not a literal."""
+    count = len(re.findall(rb'(?m)^    def test_[A-Za-z0-9_]+\(self\):', test_source))
+    require(count >= 26, 'review test file lost coverage')
+    return count
+
+
 def test_evidence():
-    files = {'test_review.py': sha((OUT / 'test_review.py').read_bytes())}
+    test_source = (OUT / 'test_review.py').read_bytes()
+    files = {'test_review.py': sha(test_source)}
+    expected = expected_review_tests(test_source)
     for name, options in [('ordinary', []), ('optimized', ['-O'])]:
         stage = 'test-review-' + name
         finished = stage + '-finished.json'
@@ -218,10 +227,10 @@ def test_evidence():
         log = stage + '.log'
         data = (OUT / log).read_bytes()
         require(sha(data) == row['log_sha256'] and
-                re.findall(rb'(?m)^Ran (\d+) tests? in ', data) == [b'26'] and
+                re.findall(rb'(?m)^Ran (\d+) tests? in ', data) == [str(expected).encode()] and
                 re.search(rb'(?m)^OK\s*\Z', data), 'review test completion mismatch')
         files[finished], files[log] = sha((OUT / finished).read_bytes()), sha(data)
-    return {'tests_per_mode': 26, 'modes': ['ordinary', 'optimized'], 'files': files}
+    return {'tests_per_mode': expected, 'modes': ['ordinary', 'optimized'], 'files': files}
 
 
 def transaction_mapping(destination, backup):
