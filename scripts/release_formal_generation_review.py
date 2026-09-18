@@ -25,7 +25,12 @@ CATEGORIES = {'directory', 'execution_or_audit_record', 'rocq_build_cache',
               'lake_input_hash_metadata', 'support_source_copy', 'lower_proof_source',
               'recorded_kernel_output', 'extracted_or_linked_model', 'public_harness',
               'negative_fixture', 'retained_original', 'transaction_record',
-              'installed_provenance', 'build_log', 'llbc_representation'}
+              'installed_provenance', 'build_log', 'llbc_representation',
+              # Fresh-environment categories: Sail's Z3 memo cache rewritten by
+              # regeneration, and model files generated for the first time inside
+              # the formal record, bound to their transaction inventory.
+              'solver_memo_cache', 'raw_generation_output', 'installed_generation_output',
+              'installed_generation_config'}
 ACCEPTANCE_CODE = ('import json,sys; from pathlib import Path; sys.path.insert(0,"scripts"); '
                    'import release_evidence as e; '
                    'print("FORMAL_FINAL_CHECK_JSON="+json.dumps({"lean":e.check_lean(Path(sys.argv[1])),'

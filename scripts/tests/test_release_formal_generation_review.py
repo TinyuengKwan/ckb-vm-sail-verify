@@ -249,6 +249,12 @@ class FormalReviewTests(unittest.TestCase):
     def test_wrong_change_hash(self):
         next(iter(self.rows.values()))['change_sha256'] = 'b' * 64; self.rejects()
 
+    def test_fresh_environment_categories_are_known_without_upgrading_claims(self):
+        for category in ['solver_memo_cache', 'raw_generation_output', 'installed_generation_output',
+                         'installed_generation_config']:
+            self.assertIn(category, gate.CATEGORIES)
+        self.assertNotIn("approved", gate.CATEGORIES)
+
     def test_unknown_category(self):
         next(iter(self.rows.values()))['category'] = 'approved'; self.rejects()
 

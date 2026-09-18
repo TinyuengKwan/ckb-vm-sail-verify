@@ -74,6 +74,13 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-18 候选 `1c495d4` 的 VM 实跑：** 第 14 阶段的 delta 审查器在 guest 内完整通过：45,879 项变化逐路径分类、
+记录写出、`--check` 独立复算一致、30 项自测双模式通过。失败挪到审查记录的严格验证器
+`release_formal_generation_review.py`：它维护一份已知分类白名单，本轮为新环境新增的四个分类
+（`solver_memo_cache`、`raw_generation_output`、`installed_generation_output`、`installed_generation_config`）
+不在其中而被判"unknown formal review category"。现已把四个分类加入白名单并加测试；它们不升级任何交付或批准
+结论。失败运行 `…-run-20260918b`（约 226 分钟）保留。需要新的候选提交与推送后重跑。
+
 **2026-09-18 候选 `1012a7d` 的 VM 实跑：** delta 审查器的 compute() 在 guest 内首次完整通过（全部变化逐路径分类
 成功），失败挪到它对自身回归测试证据的核对：它把自测用例数写死为 26，而本轮为覆盖新环境已把用例增至 29，guest 内
 两种模式都 "Ran 29 tests / OK" 却被判"completion mismatch"。现改为从复制进记录的测试文件本身统计 `def test_` 数量
