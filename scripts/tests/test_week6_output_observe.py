@@ -64,6 +64,18 @@ class ObservationTests(unittest.TestCase):
         finally:
             temporary.cleanup()
 
+    def test_scope_gate_accepts_ancestor_coverage_like_the_projection(self):
+        formal = 'artifacts/boundary-check/week6-formal-clean-room'
+        native = 'artifacts/boundary-check/week6-native-clean-room'
+        historical = [formal + '/rocq', 'artifacts/rebuilt-main-runtime', 'proof/lean/generated', 'target']
+        selected = [formal, native, 'artifacts/rebuilt-main-runtime', 'proof/lean/generated', 'target']
+        self.assertTrue(MODULE.scope_covers(historical, selected, [formal, native]))
+        self.assertFalse(MODULE.scope_covers(historical + ['artifacts/boundary-check/other'], selected, [formal, native]))
+        self.assertFalse(MODULE.scope_covers(historical, [formal, 'artifacts/rebuilt-main-runtime',
+                                                         'proof/lean/generated', 'target'], [formal, native]))
+        # A prefix match must be on a path boundary, not a string prefix.
+        self.assertFalse(MODULE.scope_covers([formal + '-other/x'], [formal, native], [formal, native]))
+
     def test_copy_rejects_symlink(self):
         with tempfile.TemporaryDirectory() as name:
             root = Path(name)

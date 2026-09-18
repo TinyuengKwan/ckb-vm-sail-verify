@@ -80,6 +80,18 @@ def copy_regular(source_path, destination):
                    'observation support copy changed')
 
 
+def scope_covers(historical_roots, selected, required):
+    """Every historical root must be observed, exactly or through an observed ancestor.
+
+    The formal record inventories its own Rocq subtree as a root; the current
+    observation lists the whole formal record directory instead, because output
+    roots may not overlap.  Coverage through the ancestor is what the projection
+    step implements, so the gate uses the same rule rather than set inclusion.
+    """
+    covered = all(any(root == r or root.startswith(r + '/') for r in selected) for root in historical_roots)
+    return covered and all(name in selected for name in required)
+
+
 def main(output, inputs_path):
     global OUT
     OUT = new_output(output)
@@ -156,8 +168,7 @@ def main(output, inputs_path):
             'recording_directory_excluded_from_its_own_inventory': OUT.relative_to(ROOT).as_posix(),
             'additional_roots_have_no_invented_historical_baseline': True,
             'whole_workspace_coverage_claimed': False, 'final_delivery_scope_approved': False}
-        common.require(set(old['roots']) <= set(selected) and formal_name in selected and
-                       native.relative_to(ROOT).as_posix() in selected,
+        common.require(scope_covers(old['roots'], selected, [formal_name, native.relative_to(ROOT).as_posix()]),
                        'observed scope changed; inspect before scanning')
         recorder.write(OUT / 'scope.json', scope)
         recorder.write(OUT / 'evidence-parent-before.json', now)
