@@ -74,6 +74,14 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-18 候选 `1890cff` 的 VM 实跑：** 第 15 阶段的输出观察在 guest 内首次完整通过：清单/投影测试双模式、
+全量当前清单、正式范围投影、与正式记录对比零差异；新增节点 10,137 个（native 10,011、正式记录 103、正式审查 23）。
+三分区审查器随即拒绝：审查政策 `week6-review-policy-v1.json` 的 `output_review.allowed_root_prefixes` 只列了
+`week6-formal-review-` 与 `week6-native-`，漏掉了正式记录目录 `week6-formal-clean-room` 本身（其 `/rocq` 子树是
+历史根，其余 103 个节点是记录文件与日志）。这个生产审查器此前只用夹具测过，没有在真实观察上运行过。政策前缀
+现改为 `week6-formal-`，同时覆盖正式记录与正式审查两个 Week6 生产者目录；分类规则（registry/build/record）不变。
+失败运行 `…-run-20260918d`（约 228 分钟）保留。需要新的候选提交与推送后重跑。
+
 **2026-09-18 候选 `83f89a2` 的 VM 实跑：** 第 14 阶段 `rocq-spike` 首次在 guest 内完整通过（正式记录、delta 审查、
 严格验证器）。第 15 阶段 `worktree-audit` 的输出观察器在扫描前的作用域门禁处拒绝："observed scope changed"。原因：
 正式记录把自己的 Rocq 子目录登记为一个输出根，而当前观察按"输出根不得重叠"的规则改为观察整个正式记录目录；

@@ -32,7 +32,7 @@
   "kind": "week6-source-review-policy-v1",
   "output_review": {
     "allowed_root_prefixes": [
-      "artifacts/boundary-check/week6-formal-review-",
+      "artifacts/boundary-check/week6-formal-",
       "artifacts/boundary-check/week6-native-"
     ],
     "build_markers": [
