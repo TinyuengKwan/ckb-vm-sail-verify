@@ -80,6 +80,11 @@ class GateArchiveTests(unittest.TestCase):
                              "artifacts/boundary-check/week6-clean-room/report.json")
             self.assertTrue((destination / manifest["clean_room_report"]).is_file())
             self.assertFalse((destination / "MANIFEST.json").exists())
+            # Replay members never touch the checkout root (they would alter the source snapshot).
+            self.assertTrue((destination / GATE.REPLAY_ROOT / "bin/ckb-vm-sail-diff").is_file())
+            self.assertTrue((destination / GATE.REPLAY_ROOT / "cases/add-signed-overflow.json").is_file())
+            self.assertFalse((destination / "bin").exists())
+            self.assertFalse((destination / "cases").exists())
 
     def test_rejects_traversal(self):
         with tempfile.TemporaryDirectory() as name:
@@ -108,15 +113,20 @@ class GateArchiveTests(unittest.TestCase):
             clean_dir = root / "artifacts/boundary-check/week6-clean-room"
             clean_dir.mkdir(parents=True)
             (clean_dir / "report.json").write_text('{"provider": {"kind": "independent-ephemeral-vm"}}\n')
-            audit_manifest = clean_dir / "audit-manifest.json"
-            audit_manifest.write_text('{"fixture": true}\n')
             runtime = clean_dir / "runtime-report.json"
             runtime.write_text('{"fixture": "runtime"}\n')
+            reference = {"path": "artifacts/boundary-check/week6-clean-room/runtime-report.json",
+                         "sha256": ARCHIVE.sha(runtime)}
+            absent = {"path": "artifacts/boundary-check/week6-native-clean-room/rust-tests/report.json",
+                      "sha256": "a" * 64}
+            verified_slots = ["runtime", "lean", "rocq", "rust_tests", "mismatches", "maintainer_demo", "public_claims"]
+            audit_manifest = clean_dir / "audit-manifest.json"
+            audit_manifest.write_text(json.dumps({"evidence": {
+                slot: (absent if slot == "rust_tests" else reference) for slot in verified_slots}}) + "\n")
             checks = {slot: {"status": "missing", "reason": "x"} for slot in GATE.audit_release.SLOTS}
-            for slot in ["runtime", "lean", "rocq", "rust_tests", "mismatches", "maintainer_demo", "public_claims"]:
+            for slot in verified_slots:
                 checks[slot] = {"status": "verified_existing_evidence",
-                                "reference": {"path": "artifacts/boundary-check/week6-clean-room/runtime-report.json",
-                                              "sha256": ARCHIVE.sha(runtime)}}
+                                "reference": dict(absent if slot == "rust_tests" else reference)}
             checks["clean_room"] = {"status": "incomplete",
                                     "reason": "independent ephemeral VM host provenance record absent"}
             checks["worktree_audit"] = {"status": "incomplete", "reason": "partial"}
@@ -137,7 +147,7 @@ class GateArchiveTests(unittest.TestCase):
                 (lambda a: a.update(manifest_sha256="0" * 64), "identity"),
                 (lambda a: a["checks"]["runtime"].update(status="invalid"), "not verified"),
                 (lambda a: a["checks"]["clean_room"].update(reason="clean-room report invalid"), "deferred host record"),
-                (lambda a: a["checks"]["runtime"]["reference"].update(sha256="1" * 64), "hash differs"),
+                (lambda a: a["checks"]["runtime"]["reference"].update(sha256="1" * 64), "differs from manifest"),
                 (lambda a: a.update(release_claimed=True), "boundary"),
             ]:
                 broken = json.loads(json.dumps(aggregate)); mutate(broken)
@@ -154,8 +164,8 @@ class GateArchiveTests(unittest.TestCase):
             source.mkdir(); output.mkdir(); destination.mkdir()
             args = self.producer_args(source, output)
             ARCHIVE.create(args)
-            (destination / "bin").mkdir()
-            (destination / "bin/ckb-vm-sail-diff").write_text("occupied")
+            (destination / GATE.REPLAY_ROOT / "bin").mkdir(parents=True)
+            (destination / GATE.REPLAY_ROOT / "bin/ckb-vm-sail-diff").write_text("occupied")
             with self.assertRaisesRegex(RuntimeError, "occupied/aliased"):
                 GATE.extract_and_validate(args.out, destination, CANDIDATE)
 

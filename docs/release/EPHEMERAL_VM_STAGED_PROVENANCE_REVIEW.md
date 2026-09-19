@@ -185,3 +185,14 @@ A 仍是 provenance 最强的方案；若日后取得组织与 larger runner，v
 重新验证 clean-room 报告与 VM provenance；release-audit 任务改用"归档聚合"模式核对 guest 记录的聚合，因为
 runner 没有固定工具链。workflow 已采纳为 `.github/workflows/week6-release.yml`，仅 `workflow_dispatch`，
 `candidate_ready` 默认 false。
+
+## 2026-09-19 补记二：归档聚合模式的范围
+
+候选 `54e48fc` 的第二次完整运行通过后，用其 bundle 在本机模拟 intake、release-audit 与重放三个任务，
+发现 release-audit 的"归档聚合"模式把 guest 已 verified 的七个槽逐一要求引用文件存在于 runner 检出，
+而 CI 归档按设计只携带 clean-room 目录与重放输入。修正后该模式的义务是：归档聚合的清单哈希与审计清单绑定、
+状态为 `incomplete`、outstanding 槽集合与预期精确相等、每个 verified 槽的引用与审计清单逐行相同、
+存在的引用文件哈希一致、clean_room 槽的唯一短缺是"宿主记录缺失"，并在宿主侧用 `check_vm_provenance`
+绑定 VM 记录；缺席文件的验证责任明确归 intake 任务对完整 bundle 的 `unpack`。重放输入改解到被忽略的
+`artifacts/boundary-check/week6-ci-replay/`，不再改变源码快照。门禁是快照的一部分，最终 clean-room 需在含此修正的
+候选上重跑；本补记不改变任何槽的状态。

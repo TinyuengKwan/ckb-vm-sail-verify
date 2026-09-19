@@ -105,6 +105,19 @@ def expected_members(manifest, candidate):
     return result
 
 
+# Replay members (bin/, cases/, config/) must not land at the checkout root:
+# untracked files there would change the source snapshot the clean-room report
+# is bound to.  They are extracted under an ignored evidence directory instead;
+# the distinct download/replay job extracts the archive into its own directory.
+REPLAY_ROOT = "artifacts/boundary-check/week6-ci-replay"
+
+
+def member_target(destination, name):
+    if name.startswith(ALLOWED_PREFIXES[0]):
+        return Path(destination) / name
+    return Path(destination) / REPLAY_ROOT / name
+
+
 def extract_and_validate(archive_path, destination, candidate):
     archive_path = Path(archive_path).absolute()
     destination = Path(destination).absolute()
@@ -128,7 +141,7 @@ def extract_and_validate(archive_path, destination, candidate):
                 continue
             require(any(name.startswith(prefix) for prefix in ALLOWED_PREFIXES) and name not in observed,
                     "extra/duplicate CI member")
-            target = destination / name
+            target = member_target(destination, name)
             require(target.resolve(strict=False) == target and not target.exists() and not target.is_symlink(),
                     "CI member target occupied/aliased")
             target.parent.mkdir(parents=True, exist_ok=True)
@@ -148,7 +161,7 @@ def extract_and_validate(archive_path, destination, candidate):
     expected = expected_members(manifest, candidate)
     require(observed == expected, "CI archive member inventory differs")
     for name, row in observed.items():
-        path = destination / name
+        path = member_target(destination, name)
         require(path.is_file() and not path.is_symlink() and path.stat().st_size == row["size"] and
                 sha(path) == row["sha256"], "extracted CI member differs")
     require(sha(archive_path) == archive_before, "CI archive changed during extraction")
@@ -167,6 +180,8 @@ def validate_archived_aggregate(root, audit_manifest, archived_report, expected,
     against the same clean-room report.
     """
     report = decode_json(archived_report.read_bytes(), "archived aggregate")
+    manifest = decode_json(audit_manifest.read_bytes(), "audit manifest")
+    require(type(manifest) is dict and type(manifest.get("evidence")) is dict, "audit manifest evidence rows")
     require(type(report) is dict and report.get("status") == "incomplete" and
             report.get("manifest_sha256") == sha(audit_manifest), "archived aggregate identity")
     require(report.get("release_claimed") is False and report.get("week6_closed") is False and
@@ -185,8 +200,17 @@ def validate_archived_aggregate(root, audit_manifest, archived_report, expected,
             continue
         require(status == "verified_existing_evidence", "archived slot not verified: " + name)
         reference = row.get("reference")
-        require(type(reference) is dict and set(reference) == {"path", "sha256"}, "archived slot reference")
-        audit_release.evidence.linked(root, safe_name(reference["path"]), reference["sha256"])
+        require(type(reference) is dict and set(reference) == {"path", "sha256"} and
+                SHA256.fullmatch(reference["sha256"] or ""), "archived slot reference")
+        safe_name(reference["path"])
+        # The CI archive carries the clean-room record, not every evidence tree; the
+        # intake job validated the complete bundle.  Here the aggregate's verified
+        # references must be exactly the manifest rows it was computed from, and any
+        # referenced file that is present must still carry the recorded digest.
+        require(manifest["evidence"].get(name) == reference, "archived slot reference differs from manifest: " + name)
+        present = root / reference["path"]
+        if present.exists():
+            audit_release.evidence.linked(root, reference["path"], reference["sha256"])
         verified += 1
     provenance = external.check_vm_provenance(clean_report)
     return {"archived_aggregate_sha256": sha(archived_report), "verified_slots": verified,
