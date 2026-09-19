@@ -96,6 +96,14 @@ class CleanRoomTests(unittest.TestCase):
         with patch.object(MODULE, "CANONICAL", self.root):
             negative = MODULE.stage_environment(environment, "mutation-matrix")
         self.assertIn(str(sail_bin), negative["PATH"].split(":"))
+        # Validator stages re-probe rustc/cargo/sail and must resolve the fixed toolchains, not the proxy.
+        for name in ["worktree-audit", "public-claims"]:
+            with patch.object(MODULE, "CANONICAL", self.root):
+                validator = MODULE.stage_environment(environment, name)
+            self.assertTrue(validator["PATH"].startswith(str(rustup / "toolchains" / MODULE.RUST_TOOLCHAIN / "bin")))
+            self.assertIn(str(sail_bin), validator["PATH"].split(":"))
+            self.assertEqual(validator["RUSTUP_HOME"], str(rustup))
+            self.assertEqual(validator["RUSTUP_NO_UPDATE_CHECK"], "1")
         self.assertTrue(native["CARGO_HOME"].endswith("week6-native-clean-room/runtime-cargo-home"))
         host = self.root / "host"; host.mkdir()
         executable = host / "opam"

@@ -46,6 +46,11 @@ INJECTION_ENV = {"BASH_ENV", "ENV", "LD_PRELOAD", "LD_LIBRARY_PATH", "PYTHONHOME
 TOOL_ENV_PREFIXES = ("CARGO", "RUST", "OPAM", "OCAML", "CHARON", "AENEAS", "ELAN", "LEAN",
                      "SAIL", "MIRI", "SCCACHE", "CCACHE")
 NATIVE_STAGES = {"rust-tests", "runtime-differential", "mutation-matrix"}
+# Validators re-probe `rustc`/`cargo`/`sail --version` while re-checking the
+# recorded runtime environment; they must see the fixed toolchains directly,
+# never the Ubuntu rustup proxy, which would honour rust-toolchain.toml and
+# try to download a toolchain.
+VALIDATOR_STAGES = {"worktree-audit", "public-claims"}
 IGNORED_EVIDENCE_PARENTS = ["boundary-check", "generation-runs", "proof-check", "rocq-spike", "release-audit"]
 RUST_TOOLCHAIN = "1.97.1-x86_64-unknown-linux-gnu"
 # Every host command the fixed-host input review recorded for the fixed
@@ -556,7 +561,7 @@ def stage_environment(environment, name):
                  if name == "install-rust" else
                  {"WEEK6_DECODER_ARCHIVE_URL"} if name == "install-aeneas-charon" else set())
     result.update({key: environment[key] for key in permitted if key in environment})
-    if name in NATIVE_STAGES:
+    if name in NATIVE_STAGES | VALIDATOR_STAGES:
         rustup = CANONICAL / "artifacts/boundary-check/isolated-rust-lean-ad7o1fsn/rustup"
         prefix = rustup / "toolchains" / RUST_TOOLCHAIN / "bin"
         # The differential tool identifies the Sail compiler with `sail --version`
@@ -565,7 +570,9 @@ def stage_environment(environment, name):
         sail_prefix = tool_paths(CANONICAL)["sail"].parent
         cargo_homes = {"rust-tests": "rust-tests-cargo-home",
                        "runtime-differential": "runtime-cargo-home",
-                       "mutation-matrix": "negative-cargo-home"}
+                       "mutation-matrix": "negative-cargo-home",
+                       "worktree-audit": "validator-cargo-home",
+                       "public-claims": "validator-cargo-home"}
         result.update(PATH=str(prefix) + ":" + str(sail_prefix) + ":/usr/bin:/bin", RUSTUP_HOME=str(rustup),
                       RUSTUP_TOOLCHAIN=RUST_TOOLCHAIN, RUSTUP_NO_UPDATE_CHECK="1",
                       CARGO_HOME=str(product(CANONICAL, "week6-native-clean-room") /
@@ -686,8 +693,10 @@ def public_run(args):
     audit = out / "audit"; audit.mkdir()
     manifest = audit / "manifest.json"
     audit_manifest(CANONICAL, args.commit, evidence_rows(CANONICAL, out, public=True, clean=True), manifest)
+    # The aggregator re-probes the fixed toolchains like the validator stages.
     command(["/usr/bin/python3", "-B", "-O", "scripts/audit_release.py", "--manifest", str(manifest),
-             "--out", str(audit / "result")], CANONICAL, codes=(2,), env=base_env)
+             "--out", str(audit / "result")], CANONICAL, codes=(2,),
+            env=stage_environment(os.environ, "public-claims"))
     external.check_clean_room(out / "report.json", args.commit, root=CANONICAL)
     return report
 

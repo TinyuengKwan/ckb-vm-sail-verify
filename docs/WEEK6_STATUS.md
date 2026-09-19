@@ -74,6 +74,13 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-19 候选 `567fe9a` 的 VM 实跑：** 第 15 阶段 `worktree-audit` 首次在 guest 内完整通过（观察、三分区审查、
+精确重扫、未批准的 v3 worktree envelope）。第 16 阶段 `public-claims` 的预聚合把 runtime、rust_tests、mismatches
+判为 invalid，原因相同：验证器复核记录环境时探测 `rustc --version`，而该阶段用基础环境（PATH 仅
+`/usr/bin:/bin`、无 `RUSTUP_HOME`），`/usr/bin/rustc` 是 rustup 代理，遇到 `rust-toolchain.toml` 去下载工具链，
+30 秒超时；本机 `~/.rustup` 早有该工具链故瞬间返回。控制器现让两个验证类阶段与阶段后的最终聚合都使用固定
+Rust/Sail 前缀与 `RUSTUP_HOME`。失败运行 `…-run-20260918e`（约 237 分钟）保留。需要新的候选提交与推送后重跑。
+
 **2026-09-18 候选 `1890cff` 的 VM 实跑：** 第 15 阶段的输出观察在 guest 内首次完整通过：清单/投影测试双模式、
 全量当前清单、正式范围投影、与正式记录对比零差异；新增节点 10,137 个（native 10,011、正式记录 103、正式审查 23）。
 三分区审查器随即拒绝：审查政策 `week6-review-policy-v1.json` 的 `output_review.allowed_root_prefixes` 只列了
