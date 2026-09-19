@@ -152,7 +152,7 @@ finish() {
         cd / && find "$(dirname "${CANONICAL#/}")" -mindepth 1 -maxdepth 1 -type d -name 'week6-checkout-*' \
             -exec find {} -type f \; 2>/dev/null
         cd / && find "${CANONICAL#/}/artifacts/boundary-check" -mindepth 1 -maxdepth 1 -name 'week6-*' \
-            -exec find {} \( -type f -o -type d \) \; 2>/dev/null
+            -exec find {} \( -path '*/week6-clean-room/fixed-inputs' -prune \) -o \( -type f -o -type d \) -print \; 2>/dev/null
         cd / && find "${CANONICAL#/}/artifacts/boundary-check" -mindepth 1 -maxdepth 1 -type d \
             ! -name 'week6-*' ! -name 'isolated-*' ! -name 'aeneas-opam-*' \
             -exec find {} -type f \( -name '*.json' -o -name '*.log' -o -name '*.stdout' -o -name '*.stderr' \
@@ -308,6 +308,8 @@ def evidence_members(archive):
             if member.isdir():
                 continue
             boundary = canonical + CLEAN_ROOM_OUT.rsplit("/", 1)[0] + "/"
+            require(not name.startswith(canonical + CLEAN_ROOM_OUT + "/fixed-inputs/"),
+                    "downloaded fixed inputs are hash-pinned public inputs, not evidence: " + name)
             if name.startswith(boundary):
                 top = name[len(boundary):].split("/", 1)[0]
                 require(not top.startswith(RESTORED_ROOT_PREFIXES),

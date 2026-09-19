@@ -154,8 +154,8 @@
       "sha256": "00b696caac4ad0d794e52b3a424c4920aa025cd46dcbc79572e4dc9bce4a530e"
     },
     "docs/WEEK6_STATUS.md": {
-      "claim_paragraphs": 109,
-      "claim_paragraphs_sha256": "9bfc57c009edfde64f9909fab490ae50271c89eb11f489e8d2c302e909bf76c1",
+      "claim_paragraphs": 110,
+      "claim_paragraphs_sha256": "812c70ceb8d3b485350aedf3bc11bb84e824f9f90f8e147d7b18c03e0d4eb935",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -168,7 +168,7 @@
       ],
       "classification": "current_assurance",
       "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "94a4de98333c34b73ad49c51b39ddcfdd918c81fc2052ce6711d47a80a47e288"
+      "sha256": "9b7bc48ddd8a0c0199882350bb1fdfa6ee3ecd4f6f44c422257eeccafdb83057"
     },
     "docs/architecture.md": {
       "claim_paragraphs": 17,
@@ -339,13 +339,13 @@
       "sha256": "94cb089e68a9dd28be7b1a23e21b928a3338a4b2ec79160eeb4a540d9fee2762"
     },
     "docs/release/EPHEMERAL_VM_STAGED_PROVENANCE_REVIEW.md": {
-      "sha256": "d938d2b4b6fadf98bd334305efba3ac4b9ad43c1fd8c702e2f0dbf4b95d25469",
+      "sha256": "236db032e5feaa5c142a78427d328b46b95d505bc945963950c04f632f467acd",
       "classification": "historical_record",
       "claims": [
         "historical_scope"
       ],
-      "claim_paragraphs": 10,
-      "claim_paragraphs_sha256": "4fb668c95411a43e832dede131f1add23fdb77b2eedc8160160c5ce69141d8b7",
+      "claim_paragraphs": 11,
+      "claim_paragraphs_sha256": "6c57f168fcda8c20b26ea310c6e62559948ba2142b04ce6f3b1efe966e852f80",
       "review": "Reviewed as the ephemeral-VM / staged-execution / provenance design review: it reports local regression results and a controller fix, admits that no guest was booted, nothing was pushed or dispatched, and keeps every external slot and Week6 open; provenance for the VM path is stated as operator-attested, not platform-signed."
     },
     "docs/release/FINAL_SUPPORT_REFRESH.md": {

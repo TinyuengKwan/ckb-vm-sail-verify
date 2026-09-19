@@ -79,6 +79,10 @@ def tree_files(root):
         require(entry.is_dir() and not entry.is_symlink(), "linked/non-directory evidence root: " + entry.name)
         for directory, names, filenames in os.walk(entry, followlinks=False):
             directory = Path(directory)
+            if directory == root / CLEAN:
+                # The downloaded fixed inputs are hash-pinned public inputs; the
+                # bundle carries evidence, not a second copy of 2 GB of inputs.
+                names[:] = [name for name in names if name != "fixed-inputs"]
             for name in names:
                 require(not (directory / name).is_symlink(), "linked evidence directory")
             for name in filenames:

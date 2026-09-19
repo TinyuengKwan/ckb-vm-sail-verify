@@ -8,6 +8,7 @@ from pathlib import Path
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 HERE = Path(__file__).resolve().parent
@@ -100,6 +101,51 @@ class GateArchiveTests(unittest.TestCase):
             raw_archive(archive, [("bin/tool", b"", "symlink")])
             with self.assertRaisesRegex(RuntimeError, "unsafe CI archive metadata"):
                 GATE.extract_and_validate(archive, destination, CANDIDATE)
+
+    def test_archived_aggregate_mode_binds_host_provenance_without_recomputing(self):
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            clean_dir = root / "artifacts/boundary-check/week6-clean-room"
+            clean_dir.mkdir(parents=True)
+            (clean_dir / "report.json").write_text('{"provider": {"kind": "independent-ephemeral-vm"}}\n')
+            audit_manifest = clean_dir / "audit-manifest.json"
+            audit_manifest.write_text('{"fixture": true}\n')
+            runtime = clean_dir / "runtime-report.json"
+            runtime.write_text('{"fixture": "runtime"}\n')
+            checks = {slot: {"status": "missing", "reason": "x"} for slot in GATE.audit_release.SLOTS}
+            for slot in ["runtime", "lean", "rocq", "rust_tests", "mismatches", "maintainer_demo", "public_claims"]:
+                checks[slot] = {"status": "verified_existing_evidence",
+                                "reference": {"path": "artifacts/boundary-check/week6-clean-room/runtime-report.json",
+                                              "sha256": ARCHIVE.sha(runtime)}}
+            checks["clean_room"] = {"status": "incomplete",
+                                    "reason": "independent ephemeral VM host provenance record absent"}
+            checks["worktree_audit"] = {"status": "incomplete", "reason": "partial"}
+            expected = ["clean_room", "ci_download", "release_package", "third_party", "worktree_audit"]
+            aggregate = {"status": "incomplete", "manifest_sha256": ARCHIVE.sha(audit_manifest),
+                         "release_claimed": False, "week6_closed": False, "fresh_execution_claimed": False,
+                         "outstanding": expected, "checks": checks}
+            archived = clean_dir / "audit-result.json"
+            archived.write_text(json.dumps(aggregate) + "\n")
+            with patch.object(GATE.external, "check_vm_provenance", return_value={"operator_attested": True}) as prov, \
+                    patch.object(GATE.audit_release, "aggregate") as recompute:
+                result = GATE.validate_archived_aggregate(root, audit_manifest, archived, expected, clean_dir / "report.json")
+            prov.assert_called_once_with(clean_dir / "report.json")
+            recompute.assert_not_called()
+            self.assertEqual(result["verified_slots"], 7)
+            for mutate, pattern in [
+                (lambda a: a.update(outstanding=expected[1:]), "boundary differs"),
+                (lambda a: a.update(manifest_sha256="0" * 64), "identity"),
+                (lambda a: a["checks"]["runtime"].update(status="invalid"), "not verified"),
+                (lambda a: a["checks"]["clean_room"].update(reason="clean-room report invalid"), "deferred host record"),
+                (lambda a: a["checks"]["runtime"]["reference"].update(sha256="1" * 64), "hash differs"),
+                (lambda a: a.update(release_claimed=True), "boundary"),
+            ]:
+                broken = json.loads(json.dumps(aggregate)); mutate(broken)
+                archived.write_text(json.dumps(broken) + "\n")
+                with self.subTest(pattern=pattern), \
+                        patch.object(GATE.external, "check_vm_provenance", return_value={"operator_attested": True}), \
+                        self.assertRaisesRegex(RuntimeError, pattern):
+                    GATE.validate_archived_aggregate(root, audit_manifest, archived, expected, clean_dir / "report.json")
 
     def test_rejects_occupied_target(self):
         with tempfile.TemporaryDirectory() as name:

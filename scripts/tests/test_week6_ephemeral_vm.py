@@ -189,6 +189,11 @@ class EphemeralVmTests(unittest.TestCase):
                                              RUN + "/exit-code": b"1\n"})
         self.assertIn(("guest", "checkout-logs/abc12/stderr"), set(MODULE.evidence_members(logs).values()))
         self.assertIn("week6-checkout-", MODULE.user_data("a" * 40, "env-1"))
+        self.assertIn("fixed-inputs' -prune", MODULE.user_data("a" * 40, "env-1"))
+        inputs = archive("inputs.tar", {CANONICAL + "/artifacts/boundary-check/week6-clean-room/fixed-inputs/extra-installations.tar.xz": b"x",
+                                        RUN + "/exit-code": b"0\n"})
+        with self.assertRaisesRegex(RuntimeError, "hash-pinned public inputs"):
+            MODULE.evidence_members(inputs)
         for package in ["rustup", "jq", "m4", "bzip2", "curl", "gawk", "patch", "xz-utils", "build-essential",
                         "bsdutils", "libgmp-dev", "zlib1g", "libzstd1", "libatomic1"]:
             self.assertIn(package, MODULE.GUEST_PACKAGES)

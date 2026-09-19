@@ -174,3 +174,14 @@ A 仍是 provenance 最强的方案；若日后取得组织与 larger runner，v
 
 未启动 guest；未推送、未 dispatch、未发布、未签名；未修改原计划、政策或验收定义；
 `clean_room`、`ci_download`、`release_package`、`third_party`、`worktree_audit` 五个槽仍未关闭。
+
+## 2026-09-19 补记：首次完整运行与 workflow 采纳
+
+候选 `422e584` 的 16 阶段在 guest 内全部通过，宿主侧 `check_clean_room` 与 `check_vm_provenance` 通过；
+此前 15 次实跑逐一暴露并修正了只在新鲜检出中出现的缺陷（详见 [WEEK6_STATUS](../WEEK6_STATUS.md)）。
+两点结构性结论：其一，12 槽共用一个源码快照，CI 槽又要求 workflow 存在于该 commit，所以最终 clean-room
+必须在采纳 workflow 之后的候选上运行；其二，bundle 哈希无法写成 workflow 字面值（bundle 绑定含该文件的快照），
+因此作为 `workflow_dispatch` 输入传入，intake 任务用 `week6_vm_evidence_bundle.py unpack` 对检出 commit
+重新验证 clean-room 报告与 VM provenance；release-audit 任务改用"归档聚合"模式核对 guest 记录的聚合，因为
+runner 没有固定工具链。workflow 已采纳为 `.github/workflows/week6-release.yml`，仅 `workflow_dispatch`，
+`candidate_ready` 默认 false。

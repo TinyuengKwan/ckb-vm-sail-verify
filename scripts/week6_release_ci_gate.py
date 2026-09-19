@@ -155,6 +155,44 @@ def extract_and_validate(archive_path, destination, candidate):
     return manifest, archive_before
 
 
+def validate_archived_aggregate(root, audit_manifest, archived_report, expected, clean_report):
+    """Accept the aggregate the guest recorded instead of recomputing it.
+
+    The intake runner has none of the fixed toolchains, so the local components
+    (runtime, Rust tests, mismatches) cannot be re-probed here.  The guest's own
+    final aggregate is bound to the extracted audit manifest by hash, every slot
+    it verified must reference a file present in the archive with the recorded
+    digest, the only clean-room shortfall it may report is the host provenance
+    record that is written after extraction, and that record is validated here
+    against the same clean-room report.
+    """
+    report = decode_json(archived_report.read_bytes(), "archived aggregate")
+    require(type(report) is dict and report.get("status") == "incomplete" and
+            report.get("manifest_sha256") == sha(audit_manifest), "archived aggregate identity")
+    require(report.get("release_claimed") is False and report.get("week6_closed") is False and
+            report.get("fresh_execution_claimed") is False, "archived aggregate boundary")
+    require(report.get("outstanding") == expected, "archived aggregate boundary differs")
+    checks = report.get("checks")
+    require(type(checks) is dict and set(checks) == set(audit_release.SLOTS), "archived aggregate slots")
+    verified = 0
+    for name, row in checks.items():
+        status = row.get("status")
+        if name in expected:
+            require(status in ("missing", "incomplete"), "outstanding slot is not merely open: " + name)
+            if name == "clean_room":
+                require(status == "incomplete" and "provenance record absent" in str(row.get("reason")),
+                        "guest clean-room shortfall is not the deferred host record")
+            continue
+        require(status == "verified_existing_evidence", "archived slot not verified: " + name)
+        reference = row.get("reference")
+        require(type(reference) is dict and set(reference) == {"path", "sha256"}, "archived slot reference")
+        audit_release.evidence.linked(root, safe_name(reference["path"]), reference["sha256"])
+        verified += 1
+    provenance = external.check_vm_provenance(clean_report)
+    return {"archived_aggregate_sha256": sha(archived_report), "verified_slots": verified,
+            "outstanding": expected, "vm_provenance": provenance}
+
+
 def run(args):
     root = Path(args.root).resolve()
     require(root == PROJECT.resolve(), "gate must run against its own checkout")
@@ -168,8 +206,17 @@ def run(args):
             "archive/clean-room source snapshot differs")
     audit_manifest = root / safe_name(args.audit_manifest)
     require(audit_manifest.is_file() and not audit_manifest.is_symlink(), "pre-CI audit manifest absent")
-    result, code = audit_release.aggregate(audit_release.evidence.read(audit_manifest))
     expected = args.expected_outstanding.split(",")
+    if args.archived_aggregate:
+        archived = root / safe_name(args.archived_aggregate)
+        require(archived.is_file() and not archived.is_symlink(), "archived aggregate absent")
+        archived_result = validate_archived_aggregate(root, audit_manifest, archived, expected, clean)
+        return {"status": "downloaded_clean_room_host_provenance_and_archived_boundary_verified",
+                "candidate": args.candidate, "archive_sha256": archive_sha,
+                "source_snapshot_sha256": manifest["source_snapshot_sha256"],
+                "clean_room": clean_result, "archived_aggregate": archived_result,
+                "audit_outstanding": expected, "release_claimed": False, "week6_closed": False}
+    result, code = audit_release.aggregate(audit_release.evidence.read(audit_manifest))
     require(code == 2 and result["status"] == "incomplete" and result["outstanding"] == expected and
             result["release_claimed"] is False and result["week6_closed"] is False,
             "pre-publication audit boundary differs")
@@ -188,6 +235,8 @@ def main():
     parser.add_argument("--archive-sha256", required=True)
     parser.add_argument("--audit-manifest", required=True)
     parser.add_argument("--expected-outstanding", required=True)
+    parser.add_argument("--archived-aggregate", default=None,
+                        help="root-relative path of the guest's final aggregate report; validated instead of recomputed")
     args = parser.parse_args()
     print(json.dumps(run(args), indent=2, sort_keys=True))
 

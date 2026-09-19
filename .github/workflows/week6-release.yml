@@ -1,0 +1,273 @@
+# Week6 release evidence workflow (intake mode).
+#
+# The sixteen-stage clean-room chain runs in an independent ephemeral VM, a
+# provider the external acceptance policy admits; this workflow only verifies,
+# validates, attests and re-downloads that evidence. The `clean-room` job name
+# is fixed by the policy; its steps say explicitly that the execution provider
+# is independent-ephemeral-vm, so the attestation must not be read as proof
+# that GitHub executed the chain. Nothing runs unless it is dispatched with
+# candidate_ready=true for an exact commit; the default gate is false.
+name: Week6 release evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_commit:
+        description: Exact pushed candidate commit containing this workflow
+        required: true
+        type: string
+      candidate_ready:
+        description: Set only after every preflight in contract-v2.json is closed
+        required: true
+        default: false
+        type: boolean
+      bundle_sha256:
+        description: >-
+          SHA-256 of the packed independent-ephemeral-vm evidence bundle produced
+          by running this exact commit. It cannot be a literal here: the bundle
+          binds this commit's source snapshot, which includes this file. The
+          intake job validates the bundle against the checked-out commit.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: week6-release-${{ inputs.candidate_commit }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: never
+  SAIL_COMMIT: 8eb1fb6b5bf9f18c0f89f71e94ff0c5894acd7c1
+  CANONICAL_CHECKOUT: /home/clair/tinyueng_workplace/ckb-vm-sail-verify
+  INSTALL_ARCHIVE_SHA256: c8e8ca2797aeabcbee3935949f6ad6b622a40468d77a7f5d79a50b1854a67ff4
+  INSTALL_MANIFEST_SHA256: ac7b468e6715e6a4b956376a0ded0ee6e4d9cfc632d4323b439877916e74708e
+  DECODER_ARCHIVE_SHA256: 1a81921b12215a87106ac2080c05de3f2bf9d51b9bb14bdb80a90ac8c05c58d5
+  REPLAY_CASE: add-signed-overflow
+
+jobs:
+  fast:
+    name: fast
+    if: ${{ inputs.candidate_ready }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.candidate_commit }}
+          submodules: false
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reject a different commit
+        env:
+          EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
+      - name: Checkout CKB and apply the reviewed source baseline
+        run: |
+          git submodule update --init deps/ckb-vm
+          make ckb-baseline-apply
+      - name: Fast source and Rust checks
+        run: |
+          python3 scripts/tests/test_ckb_source_baseline.py
+          make check
+          make test
+
+  differential:
+    name: differential
+    if: ${{ inputs.candidate_ready }}
+    needs: [fast]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact candidate recursively
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.candidate_commit }}
+          submodules: recursive
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reject a different commit and apply the reviewed overlay
+        env:
+          EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
+          make ckb-baseline-apply
+      - name: Install host build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            opam pkg-config libgmp-dev ninja-build jq z3
+          opam init --yes --no-setup --shell=sh --compiler=5.4.1
+      - name: Build exact Sail compiler and emulator
+        run: |
+          eval "$(opam env)"
+          make sail-compiler
+          echo "$HOME/.local/share/sail-src/bin" >> "$GITHUB_PATH"
+      - name: Run differential and mutation acceptance
+        run: |
+          export PATH="$HOME/.local/share/sail-src/bin:$PATH"
+          make sail-emu
+          make verify-env
+          make verify-dii
+
+  clean-room:
+    name: clean-room
+    if: ${{ inputs.candidate_ready }}
+    needs: [fast, differential]
+    # Standard GitHub-hosted runner: this job downloads, verifies and packages
+    # evidence; it does not need the 13 GB fixed installations or the 6+ hour
+    # execution budget of the sixteen-stage chain.
+    runs-on: ubuntu-24.04
+    outputs:
+      artifact_name: ${{ steps.package.outputs.artifact_name }}
+      archive_sha256: ${{ steps.package.outputs.archive_sha256 }}
+    env:
+      # Dispatch-selected, not trusted: the intake job re-validates the bundle's
+      # clean-room report and VM provenance record against this checkout.
+      VM_EVIDENCE_BUNDLE_SHA256: ${{ inputs.bundle_sha256 }}
+      WEEK6_VM_EVIDENCE_URL: ${{ secrets.WEEK6_VM_EVIDENCE_URL }}
+    steps:
+      - name: Require GitHub-hosted provenance for the intake job itself
+        env:
+          RUNNER_ENVIRONMENT: ${{ runner.environment }}
+        run: test "$RUNNER_ENVIRONMENT" = github-hosted
+      - name: Checkout exact candidate recursively
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.candidate_commit }}
+          submodules: recursive
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reject a different commit, apply the reviewed overlay, require the bundle URL
+        env:
+          EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
+          make ckb-baseline-apply
+          test -n "$WEEK6_VM_EVIDENCE_URL"
+          printf '%s\n' "$VM_EVIDENCE_BUNDLE_SHA256" | grep -Eq '^[0-9a-f]{64}$'
+      - name: Download the independent-ephemeral-vm evidence bundle (URL never recorded)
+        run: |
+          mkdir intake
+          python3 - <<'PY'
+          import hashlib, os, sys, urllib.request
+          url = os.environ["WEEK6_VM_EVIDENCE_URL"]
+          expected = os.environ["VM_EVIDENCE_BUNDLE_SHA256"]
+          digest = hashlib.sha256()
+          try:
+              with urllib.request.urlopen(url, timeout=120) as source, open("intake/vm-evidence.tar.gz", "xb") as target:
+                  while block := source.read(1024 * 1024):
+                      digest.update(block); target.write(block)
+          except Exception:
+              sys.exit("vm evidence download failed")
+          sys.exit(0 if digest.hexdigest() == expected else "vm evidence bundle hash differs")
+          PY
+      - name: Unpack into the candidate checkout and validate clean-room + VM provenance
+        env:
+          EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
+        run: |
+          python3 scripts/week6_vm_evidence_bundle.py unpack \
+            --bundle intake/vm-evidence.tar.gz \
+            --bundle-sha256 "$VM_EVIDENCE_BUNDLE_SHA256" \
+            --root "$GITHUB_WORKSPACE" \
+            --candidate "$EXPECTED_COMMIT"
+      - name: Package the evidence archive for the distinct download/replay job
+        id: package
+        env:
+          EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
+        run: |
+          python3 scripts/week6_ci_archive.py create \
+            --root "$GITHUB_WORKSPACE" \
+            --clean-room "$GITHUB_WORKSPACE/artifacts/boundary-check/week6-clean-room/report.json" \
+            --candidate "$EXPECTED_COMMIT" \
+            --replay-case add-signed-overflow \
+            --replay-case-file "$GITHUB_WORKSPACE/artifacts/boundary-check/week6-native-clean-room/runtime/original/add-signed-overflow.json" \
+            --diff-binary "$GITHUB_WORKSPACE/artifacts/boundary-check/week6-native-clean-room/runtime/cargo-target/debug/ckb-vm-sail-diff" \
+            --sail-binary "$GITHUB_WORKSPACE/artifacts/boundary-check/week6-clean-room/replay-inputs/sail_riscv_sim" \
+            --sail-config "$GITHUB_WORKSPACE/artifacts/boundary-check/week6-clean-room/replay-inputs/ckb_vm_config.json" \
+            --out "$GITHUB_WORKSPACE/week6-evidence.tar.gz" \
+            --manifest-out "$GITHUB_WORKSPACE/MANIFEST.json"
+          archive_sha256="$(sha256sum "$GITHUB_WORKSPACE/week6-evidence.tar.gz" | cut -d' ' -f1)"
+          artifact_name="week6-release-evidence-$EXPECTED_COMMIT"
+          echo "archive_sha256=$archive_sha256" >> "$GITHUB_OUTPUT"
+          echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
+      - name: Attest the exact tar archive (attests packaging on GitHub, not VM execution)
+        id: attest
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
+        with:
+          subject-path: ${{ github.workspace }}/week6-evidence.tar.gz
+      - name: Upload archive, manifest and attestation bundle
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ steps.package.outputs.artifact_name }}
+          path: |
+            ${{ github.workspace }}/week6-evidence.tar.gz
+            ${{ github.workspace }}/MANIFEST.json
+            ${{ steps.attest.outputs.bundle-path }}
+          if-no-files-found: error
+          retention-days: 30
+
+  release-audit:
+    name: release-audit
+    if: ${{ inputs.candidate_ready }}
+    needs: [clean-room]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.candidate_commit }}
+          submodules: recursive
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Apply reviewed source overlay
+        run: make ckb-baseline-apply
+      - name: Download the clean-room artifact
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ needs.clean-room.outputs.artifact_name }}
+          path: downloaded
+      - name: Validate fresh component and expected pre-publication audit boundary
+        env:
+          EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
+          EXPECTED_SHA256: ${{ needs.clean-room.outputs.archive_sha256 }}
+        run: |
+          # The runner has no fixed toolchains, so the local components cannot be
+          # re-probed here; the gate validates the aggregate the guest recorded,
+          # binds the clean-room report to its host provenance record, and checks
+          # the pre-publication boundary.
+          python3 scripts/week6_release_ci_gate.py \
+            --root "$GITHUB_WORKSPACE" \
+            --candidate "$EXPECTED_COMMIT" \
+            --archive downloaded/week6-evidence.tar.gz \
+            --archive-sha256 "$EXPECTED_SHA256" \
+            --audit-manifest artifacts/boundary-check/week6-clean-room/audit/manifest.json \
+            --archived-aggregate artifacts/boundary-check/week6-clean-room/audit/result/report.json \
+            --expected-outstanding clean_room,ci_download,release_package,third_party,worktree_audit
+
+  artifact-download-replay:
+    name: artifact-download-replay
+    if: ${{ inputs.candidate_ready }}
+    needs: [clean-room, release-audit]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download in a distinct job and new destination
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ needs.clean-room.outputs.artifact_name }}
+          path: downloaded
+      - name: Verify archive bytes and replay only the downloaded case
+        env:
+          EXPECTED_SHA256: ${{ needs.clean-room.outputs.archive_sha256 }}
+        run: |
+          test "$(sha256sum downloaded/week6-evidence.tar.gz | cut -d' ' -f1)" = "$EXPECTED_SHA256"
+          mkdir replay
+          tar -xzf downloaded/week6-evidence.tar.gz -C replay
+          replay/bin/ckb-vm-sail-diff \
+            --sail-bin replay/bin/sail_riscv_sim \
+            --sail-config replay/config/ckb_vm_config.json \
+            --replay replay/cases/add-signed-overflow.json \
+            --artifact-dir replay/result

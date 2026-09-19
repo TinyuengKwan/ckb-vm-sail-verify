@@ -31,6 +31,8 @@ class VmEvidenceBundleTests(unittest.TestCase):
         (native / "report.json").write_text("{}\n")
         (native / "ckb-vm-sail-diff").write_bytes(b"\x7fELF fixture")
         (native / "ckb-vm-sail-diff").chmod(0o755)
+        (self.source / bundle.CLEAN / "fixed-inputs").mkdir()
+        (self.source / bundle.CLEAN / "fixed-inputs/extra-installations.tar.xz").write_bytes(b"not evidence")
         (self.source / bundle.PREFIX / "isolated-rust-lean-x").mkdir()
         (self.source / bundle.PREFIX / "isolated-rust-lean-x/rustc").write_text("not evidence\n")
 
@@ -53,6 +55,7 @@ class VmEvidenceBundleTests(unittest.TestCase):
         with tarfile.open(self.base / "a.tar.gz") as tar:
             names = tar.getnames()
         self.assertNotIn(bundle.PREFIX + "/isolated-rust-lean-x/rustc", names)
+        self.assertNotIn(bundle.CLEAN + "/fixed-inputs/extra-installations.tar.xz", names)
         self.assertIn(bundle.CLEAN + "/vm-provenance.json", names)
         (self.source / bundle.CLEAN / external.VM_RECORD).unlink()
         with self.assertRaisesRegex(RuntimeError, "lacks"):

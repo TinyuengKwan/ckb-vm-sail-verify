@@ -74,6 +74,23 @@ VM 报告时必须同时携带该记录，记录明确 `platform_signed_identity
 未随源码交付的证据引用；在去掉全部 `artifacts/` 的模拟 clone 中除 11 个由生成阶段产出的
 `proof/lean/generated/` 目标外全部可解析。这 344 个证据引用不因此变成已验证链接，仍须靠发布包与第三方复现补齐。
 
+**2026-09-19 候选 `422e584`：第一次完整的 clean-room 运行。** 16 个阶段在全新 KVM guest 内全部退出 0
+（00:43:48–04:44:00 UTC，约 4 小时，16 vCPU / 24 GB）；launcher 解出 14,819 个证据成员并写入
+`vm-provenance.json`，overlay、证据盘与 secrets 盘已销毁。宿主侧用候选自身的验证器复核：`check_clean_room`
+通过（provider `independent-ephemeral-vm`、16 阶段、源码快照 `08a478d8…` 与候选一致），`check_vm_provenance`
+通过（记录与报告哈希绑定，`operator_attested=true`、`platform_signed_identity=false`）。guest 内最终聚合：
+runtime、lean、rocq、rust_tests、mismatches、maintainer_demo、public_claims 七项 verified；clean_room 按设计
+incomplete（宿主记录在 guest 外生成）；ci_download、release_package、third_party 缺失；worktree_audit 待批准。
+实测：33 案例（13/10/10）、194 项 mutation、33 次重放、78 项 Rust 测试、Lean 28 阶段、Rocq 11 阶段 NO-GO、
+公开结论 112 份文档/831 个链接、正式 delta 45,879 项全部分类。运行记录 `…-run-20260919a`，证据根
+`/home/clair/week6/candidate-422e584`。**这份记录证明了链路，但不能作为最终 clean-room 证据**：12 槽要求所有槽
+共用同一源码快照，而 CI 下载槽要求 workflow 存在于该 commit，因此 workflow 必须先采纳进候选再重跑。
+同日采纳：`.github/workflows/week6-release.yml`（intake 模式，仅 `workflow_dispatch`，`candidate_ready` 默认 false）。
+bundle 哈希不能是 workflow 里的字面值（bundle 绑定含该文件的源码快照，循环），改为 dispatch 输入并由 intake
+任务对检出 commit 重新验证；release-audit 任务改用"归档聚合"模式核对 guest 记录的聚合并在宿主侧绑定
+VM provenance（runner 没有固定工具链，不能重探 runtime）。证据 bundle 排除 `week6-clean-room/fixed-inputs/`
+（2.2 GB 重新下载的固定输入，未排除时 bundle 2.7 GB、xz 后 2.4 GB，均超 2 GiB）。
+
 **2026-09-19 候选 `567fe9a` 的 VM 实跑：** 第 15 阶段 `worktree-audit` 首次在 guest 内完整通过（观察、三分区审查、
 精确重扫、未批准的 v3 worktree envelope）。第 16 阶段 `public-claims` 的预聚合把 runtime、rust_tests、mismatches
 判为 invalid，原因相同：验证器复核记录环境时探测 `rustc --version`，而该阶段用基础环境（PATH 仅
@@ -316,7 +333,7 @@ release/Rocq 检查器已接入新 profile；[v10 清单](release/local-readines
 | 同候选的新 Rocq 输入与连接 | 03:40:27–03:53:53 UTC 全链重跑及独立验收通过：新 Sail Rocq 输入、该候选新提取 LLBC、显式双 OPAM 根和受审支持库，原十阶段 NO-GO/最小复现均确认；14 项入口测试通过。首轮缺支持库失败和旧驱动保留；不编辑原 spike 或编译器源码，额外证明覆盖为 false |
 | Week6 发布证据 | 当前 runtime、Rust tests、Lean、Rocq、负测、演示已通过新聚合的独立重验。clean-room、最终 worktree 审计、CI 下载重放、release 包、独立第三方复现及发布结论审计仍未关闭 |
 | 固定安装包容器 | gzip 包 3.18 GB 超 GitHub release 2 GiB 上限；2026-09-15 同内容 xz 重封装 1.80 GB、独立验收暂存 56,702 项通过；清单哈希不变，控制器/launcher 固定新包哈希 |
-| 独立临时 VM 执行路径 | [复审](release/EPHEMERAL_VM_STAGED_PROVENANCE_REVIEW.md)完成：政策允许的 VM provider 已有 launcher、operator-attested 记录、聚合器绑定与 CI intake 候选；控制器新鲜检出缺陷已修正但未在新环境实跑；guest 未启动、候选未推送，`clean_room` 仍缺失 |
+| 独立临时 VM 执行路径 | 2026-09-19 首次完整 clean-room 运行通过（候选 `422e584`，16 阶段，宿主侧 `check_clean_room`/`check_vm_provenance` 通过）；该记录证明链路但不是最终证据，最终运行须在含已采纳 workflow 的候选上重做；`clean_room` 槽在最终运行前仍缺失 |
 | 实际远端 CI 来源 | [05:12 UTC 只读核验](release/CI_READINESS.md)：本地 HEAD 的运行数为 0，最近五次成功均为旧提交 `1ef21d…`，最新只有 Rust/差分两个 job；旧 artifact 仅查询元数据，未下载或重放，不能充当本轮 CI 证据 |
 | 安装输入分发准备 | [06:40–06:42 UTC 核验](release/INSTALL_DISTRIBUTION_REVIEW.md)完成六组 8.27 GB 安装哈希及额外 OPAM 控制文件观察；复制 Sail 前缀的四步 smoke 通过，五个生成文件与旧 smoke 相同。报告绝对路径绑定、完整 OPAM/宿主依赖及整套分发仍未关闭，不计为 clean-room |
 | 固定路径安装补充包 | [第三轮完整打包及独立验收](release/FIXED_INSTALL_BUNDLE.md)于 07:23/07:29 UTC 完成：56,702 项、约 3.18 GB 压缩包，含目录和独立 Sail Git 源码；23 项测试双模式通过，两轮失败保留。不扩大为工具可运行或 clean-room 完成 |
