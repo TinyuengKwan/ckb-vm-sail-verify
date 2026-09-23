@@ -23,7 +23,7 @@ import source_snapshot
 
 
 ROOT = Path(__file__).resolve().parents[1]
-POLICY_SHA = "b5bdc4017628cb065f273a278c7d7458bb6d93b4572eaca0e4788e519e6ab2c3"
+POLICY_SHA = "3b7cea548f0a4d61b34fef94fb1857e53430cccd13b9a6e140cee4c825d4a810"
 STABLE = "1.97.1-x86_64-unknown-linux-gnu"
 MARKER = "WEEK6_NATIVE_CHECK_JSON="
 FLAGS = ("clean_room_claimed", "kernel_acceptance_claimed", "release_claimed", "week6_closed")

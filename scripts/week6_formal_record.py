@@ -26,7 +26,7 @@ import release_evidence as common
 import release_formal_generation_review as formal_review
 import source_snapshot as source
 
-POLICY_SHA = 'b5bdc4017628cb065f273a278c7d7458bb6d93b4572eaca0e4788e519e6ab2c3'
+POLICY_SHA = '3b7cea548f0a4d61b34fef94fb1857e53430cccd13b9a6e140cee4c825d4a810'
 PARENT = 'artifacts/boundary-check'
 FLAGS = {'release_claimed', 'week6_closed', 'clean_room_claimed',
          'generated_outputs_audited', 'worktree_audit_closed', 'whole_workspace_coverage_claimed'}

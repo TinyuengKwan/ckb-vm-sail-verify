@@ -352,7 +352,7 @@
     "crates/core/src/program.rs": "4c6b958ae82961c743efa576f84fc62b11255ce7d5e680a119e293b5e9fe7c2e",
     "crates/diff-test/Cargo.toml": "12f8c9a2ab092f0b33cf5ae4ae3152351c85b1f3a3fb35c32fed48ae1b66d5a3",
     "crates/diff-test/src/artifact.rs": "13ccee0d49e87b7745f301a800d4920da2ecc4b413176493c5b251f02fade5c6",
-    "crates/diff-test/src/corpus.rs": "0a2f89d2a03e391201c0304594adf60397f6cc54c7e7e0fde599e529321c5551",
+    "crates/diff-test/src/corpus.rs": "92db53c1d9ec6dde58a704d5c7f3451e1fbbd7306782939c1ea5f8effe8774bc",
     "crates/diff-test/src/encode.rs": "a9d546a9b3079db6fc040675f6d9da51c36b4394552909d2661c7dc0c55072bc",
     "crates/diff-test/src/lib.rs": "a0e242eb1f3a980096cb1f5fe761f78ee14e8ae11503cde6e0886f78379250a0",
     "crates/diff-test/src/main.rs": "28eaab709dd90ffd80da6f1d078badedf121763ca508e8c66d52624d9e745539",
