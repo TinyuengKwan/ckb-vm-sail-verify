@@ -362,7 +362,10 @@ mod tests {
                 "Week 6 requires at least ten cases for each family: {family}"
             );
         }
-        assert!(corpus.len() >= 30, "Week 6 requires three families of ten cases");
+        assert!(
+            corpus.len() >= 30,
+            "Week 6 requires three families of ten cases"
+        );
     }
 
     #[test]
