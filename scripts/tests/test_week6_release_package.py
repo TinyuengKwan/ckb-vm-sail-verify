@@ -2,6 +2,7 @@
 import argparse
 import importlib.util
 import json
+import hashlib
 from pathlib import Path
 import tarfile
 import tempfile
@@ -15,9 +16,20 @@ MODULE = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(MODULE)
 CANDIDATE = "a" * 40
 VERSION = "v1.0.0-test"
+TOOL = b"fixture standalone tool archive\n"
+TOOL_MANIFEST = b"fixture installation manifest\n"
 
 
 class PackageTests(unittest.TestCase):
+    def setUp(self):
+        # These tests isolate archive/publication mechanics; the real offline
+        # Git and signed restoration chain is exercised in test_week6_restore_release.
+        for target in ("week6_restore_release.validate_sources", "week6_restore_release.check_archived_source",
+                       "week6_release_assets.restoration_members"):
+            mock = patch(target)
+            mock.start()
+            self.addCleanup(mock.stop)
+
     def policy(self):
         return {"repository": "fixture/repository", "release_package": {
             "approved_version": VERSION,
@@ -27,6 +39,9 @@ class PackageTests(unittest.TestCase):
             "signature_namespace": "fixture-release",
             "required_members": list(MODULE.PREFIXES) + ["SHA256SUMS", "MANIFEST.json"],
             "require_immutable_publication": True,
+            "external_assets": {MODULE.assets.ASSET_NAME: {
+                "size": len(TOOL), "sha256": hashlib.sha256(TOOL).hexdigest(),
+                "manifest": {"path": "install/manifest.json", "sha256": hashlib.sha256(TOOL_MANIFEST).hexdigest()}}},
         }}
 
     def prepare(self, root, suffix=""):
@@ -36,19 +51,21 @@ class PackageTests(unittest.TestCase):
         (inputs / "source-snapshot.json").write_text(json.dumps(snapshot) + "\n")
         members = []
         for i, name in enumerate([
-            "source/source-capsule.tar.gz", "install/tools.tar.gz",
+            "source/source-capsule.tar.gz", "install/manifest.json",
             "evidence/ci-evidence.tar.gz", "docs/coverage.md", "docs/non-goals.md"
         ]):
             source = inputs / ("payload-" + str(i))
-            source.write_bytes((name + "\n").encode())
+            source.write_bytes(TOOL_MANIFEST if name == "install/manifest.json" else (name + "\n").encode())
             members.append({"path": name, "source": source.name, "sha256": MODULE.sha(source)})
         descriptor = {
-            "schema_version": 1, "kind": "release-package-inputs-v1",
+            "schema_version": 2, "kind": "release-package-inputs-v2",
             "candidate": CANDIDATE, "version": VERSION, "delivery_profile": "A",
             "source_snapshot": {"path": "source-snapshot.json",
                                 "sha256": MODULE.sha(inputs / "source-snapshot.json")},
             "coverage": "docs/coverage.md", "non_goals": "docs/non-goals.md", "members": members,
+            "external_assets": {MODULE.assets.ASSET_NAME: {"source": "tool.xz", "sha256": hashlib.sha256(TOOL).hexdigest()}},
         }
+        (inputs / "tool.xz").write_bytes(TOOL)
         descriptor_path = inputs / "inputs.json"
         descriptor_path.write_text(json.dumps(descriptor) + "\n")
         args = argparse.Namespace(candidate=CANDIDATE, version=VERSION, delivery_profile="A",
@@ -72,6 +89,48 @@ class PackageTests(unittest.TestCase):
             self.assertIn("SHA256SUMS", names)
             self.assertEqual(archived_manifest, (a.out / "built/MANIFEST.json").read_bytes())
             self.assertFalse(ra["boundaries"]["published"])
+            self.assertNotIn("install/" + MODULE.assets.ASSET_NAME, names)
+            self.assertEqual(json.loads(archived_manifest)["external_assets"], self.policy()["release_package"]["external_assets"])
+            self.assertEqual((a.out / ra["external_assets"][MODULE.assets.ASSET_NAME]["path"]).read_bytes(), TOOL)
+
+    def test_rejects_changed_external_tool(self):
+        with tempfile.TemporaryDirectory() as name:
+            args, _ = self.prepare(Path(name))
+            (args.input_root / "tool.xz").write_bytes(b"x" * len(TOOL))
+            with self.assertRaisesRegex(RuntimeError, "external tool asset bytes differ"):
+                MODULE.build(args, self.policy(), verify_current=False)
+            self.assertFalse(args.out.exists())
+
+    def test_rejects_missing_extra_or_traversing_external_asset(self):
+        for mode in ("missing", "extra", "traversal"):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as name:
+                args, descriptor = self.prepare(Path(name))
+                if mode == "missing":
+                    descriptor["external_assets"] = {}
+                elif mode == "extra":
+                    descriptor["external_assets"]["other.xz"] = descriptor["external_assets"][MODULE.assets.ASSET_NAME]
+                else:
+                    descriptor["external_assets"][MODULE.assets.ASSET_NAME]["source"] = "../tool.xz"
+                args.inputs.write_text(json.dumps(descriptor))
+                with self.assertRaises(RuntimeError):
+                    MODULE.build(args, self.policy(), verify_current=False)
+                self.assertFalse(args.out.exists())
+
+    def test_rejects_unsigned_installation_manifest_substitution(self):
+        with tempfile.TemporaryDirectory() as name:
+            args, descriptor = self.prepare(Path(name))
+            row = next(row for row in descriptor["members"] if row["path"] == "install/manifest.json")
+            (args.input_root / row["source"]).write_bytes(b"another manifest")
+            row["sha256"] = MODULE.sha(args.input_root / row["source"])
+            args.inputs.write_text(json.dumps(descriptor))
+            with self.assertRaisesRegex(RuntimeError, "installation manifest binding differs"):
+                MODULE.build(args, self.policy(), verify_current=False)
+
+    def test_exclusive_asset_size_limit(self):
+        for size in (0, True, MODULE.assets.MAX_ASSET_BYTES, MODULE.assets.MAX_ASSET_BYTES + 1):
+            with self.subTest(size=size), self.assertRaises(RuntimeError):
+                MODULE.assets.size_ok(size)
+        MODULE.assets.size_ok(MODULE.assets.MAX_ASSET_BYTES - 1)
 
     def test_rejects_incomplete_policy_approval(self):
         with tempfile.TemporaryDirectory() as name:
@@ -129,6 +188,9 @@ class PackageTests(unittest.TestCase):
                     {"id": 2, "name": signature.name, "state": "uploaded",
                      "size": signature.stat().st_size, "digest": "sha256:" + MODULE.sha(signature),
                      "browser_download_url": "https://example.invalid/signature"},
+                    {"id": 3, "name": MODULE.assets.ASSET_NAME, "state": "uploaded",
+                     "size": len(TOOL), "digest": "sha256:" + hashlib.sha256(TOOL).hexdigest(),
+                     "browser_download_url": "https://example.invalid/tool"},
                 ],
             }
 
@@ -138,7 +200,7 @@ class PackageTests(unittest.TestCase):
                     stdout.write_text(json.dumps(remote))
                 else:
                     target = directory / argv[4]
-                    target.write_bytes(archive.read_bytes())
+                    target.write_bytes(TOOL if argv[-1] == "https://example.invalid/tool" else archive.read_bytes())
                     stdout.write_text("")
                 stderr.write_text("")
                 return {"argv": argv, "exit_code": 0,
@@ -163,6 +225,7 @@ class PackageTests(unittest.TestCase):
                 accepted = MODULE.record(record_args)
             self.assertTrue(accepted["publication_verified"])
             self.assertTrue(accepted["download_verified"])
+            self.assertTrue(accepted["external_assets_verified"])
             report = json.loads((args.out / "report.json").read_text())
             self.assertEqual(report["publication"]["remote_query"]["argv"], [
                 "gh", "api", "--hostname", "github.com", "repos/fixture/repository/releases/99"])

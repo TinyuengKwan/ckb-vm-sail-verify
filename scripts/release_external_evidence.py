@@ -16,6 +16,7 @@ import tarfile
 
 import release_evidence as common
 import source_snapshot as source
+import week6_release_assets as assets
 
 ROOT = common.ROOT
 POLICY = Path("docs/release/external-acceptance-policy-v1.json")
@@ -63,7 +64,7 @@ def load_policy(root=None):
            "CI policy")
     fields(value["release_package"], {"approved_version", "approved_delivery_profile",
                                       "approved_signer_identity", "allowed_signers_path", "signature_namespace",
-                                      "required_members", "require_immutable_publication"},
+                                      "required_members", "require_immutable_publication", "external_assets"},
            "package policy")
     fields(value["third_party"], {"allowed_signers_path", "require_signature_namespace",
                                   "required_stages"}, "third-party policy")
@@ -79,6 +80,7 @@ def load_policy(root=None):
             "CI policy weakened")
     require(value["release_package"]["require_immutable_publication"] is True,
             "package publication policy weakened")
+    assets.policy_assets(value["release_package"])
     return value
 
 
@@ -100,6 +102,8 @@ def tar_inventory(path):
     with tarfile.open(path, "r:gz") as archive:
         for member in archive:
             name = safe_archive_name(member.name)
+            assets.safe_name(name.rstrip('/') if member.isdir() else name)
+            require(not member.mode & ~0o777, "special archive permissions")
             require(name not in seen, "duplicate archive member")
             seen.add(name)
             if member.isdir():
@@ -159,7 +163,7 @@ def query_json(argv, label):
         raise RuntimeError(label + " query did not return JSON") from error
 
 
-def release_remote_facts(value, report, archive, signature):
+def release_remote_facts(value, report, archive, signature, external_paths=None):
     require(type(value) is dict, "release remote payload")
     require(value.get("id") == report["publication"]["release_id"] and
             value.get("tag_name") == report["publication"]["tag"] and
@@ -169,11 +173,15 @@ def release_remote_facts(value, report, archive, signature):
             "release remote metadata differs")
     assets = value.get("assets")
     require(type(assets) is list, "release remote asset payload")
-    def published_asset(url, path, label):
+    def published_asset(url, path, label, name=None):
         matches = [item for item in assets if type(item) is dict and
                    item.get("browser_download_url") == url]
         require(len(matches) == 1, label + " asset URL is absent or ambiguous")
         asset = matches[0]
+        if name is not None:
+            require(asset.get("name") == name and
+                    len([row for row in assets if type(row) is dict and row.get("name") == name]) == 1,
+                    label + " asset name is absent or ambiguous")
         require(type(asset.get("id")) is int and asset["id"] > 0 and
                 asset.get("state") == "uploaded" and asset.get("size") == path.stat().st_size and
                 asset.get("digest") == "sha256:" + common.sha(path),
@@ -183,6 +191,15 @@ def release_remote_facts(value, report, archive, signature):
     asset = published_asset(report["publication"]["asset_url"], archive, "release")
     signature_asset = published_asset(
         report["publication"]["signature_asset_url"], signature, "release signature")
+    extra = {}
+    used_ids = {asset["id"], signature_asset["id"]}
+    require(len(used_ids) == 2, "release archive and signature asset overlap")
+    for name, path in (external_paths or {}).items():
+        row = published_asset(report["external_assets"][name]["url"], path, "external tool", name)
+        require(row["id"] not in used_ids, "external tool asset overlaps another release asset")
+        used_ids.add(row["id"])
+        extra[name] = {"id": row["id"], "name": row["name"], "url": row["browser_download_url"],
+                       "size": row["size"], "digest": row["digest"]}
     return {"release_id": value["id"], "tag": value["tag_name"], "url": value["html_url"],
             "published_at": value["published_at"], "immutable": value["immutable"],
             "asset_id": asset["id"], "asset_url": asset["browser_download_url"],
@@ -190,7 +207,7 @@ def release_remote_facts(value, report, archive, signature):
             "signature_asset_id": signature_asset["id"],
             "signature_asset_url": signature_asset["browser_download_url"],
             "signature_asset_size": signature_asset["size"],
-            "signature_asset_digest": signature_asset["digest"]}
+            "signature_asset_digest": signature_asset["digest"], "external_assets": extra}
 
 
 def stages(directory, rows, expected):
@@ -528,14 +545,15 @@ def check_release_package(path, candidate, root=None):
             "release version/delivery profile/signer not approved in policy")
     fields(report, {"schema_version", "kind", "status", "candidate", "version", "delivery_profile",
                     "source_snapshot", "archive_format", "archive", "manifest", "coverage", "non_goals", "publication",
-                    "download", "signing_identity", "signature", "boundaries"}, "release package report")
-    require(common.same(report["schema_version"], 1) and report["kind"] == "release-package-evidence-v1" and
+                    "download", "signing_identity", "signature", "boundaries", "external_assets"}, "release package report")
+    require(common.same(report["schema_version"], 2) and report["kind"] == "release-package-evidence-v2" and
             report["status"] == "passed" and report["candidate"] == candidate and
             report["version"] == cfg["approved_version"] and
             report["delivery_profile"] == cfg["approved_delivery_profile"] and
             report["archive_format"] == "tar.gz", "package identity/status/format")
     snapshot = current_snapshot(directory, report["source_snapshot"], root)
     archive = reference(directory, report["archive"], "built release archive")
+    assets.size_ok(archive.stat().st_size)
     archive_files, archive_directories = tar_inventory(archive)
     manifest_path = reference(directory, report["manifest"], "release package manifest")
     require("MANIFEST.json" in archive_files and
@@ -543,10 +561,10 @@ def check_release_package(path, candidate, root=None):
             "release package manifest is not the archived manifest")
     package_manifest = common.read(manifest_path)
     fields(package_manifest, {"schema_version", "kind", "candidate", "version", "delivery_profile",
-                              "source_snapshot_sha256", "coverage", "non_goals", "members"},
+                              "source_snapshot_sha256", "coverage", "non_goals", "members", "external_assets"},
            "release package manifest")
-    require(common.same(package_manifest["schema_version"], 1) and
-            package_manifest["kind"] == "release-package-manifest-v1" and
+    require(common.same(package_manifest["schema_version"], 2) and
+            package_manifest["kind"] == "release-package-manifest-v2" and
             package_manifest["candidate"] == candidate and package_manifest["version"] == report["version"] and
             package_manifest["delivery_profile"] == report["delivery_profile"] and
             package_manifest["source_snapshot_sha256"] == snapshot["snapshot_sha256"],
@@ -555,6 +573,33 @@ def check_release_package(path, candidate, root=None):
     actual = {name: {"size": row["size"], "sha256": row["sha256"]}
               for name, row in archive_files.items() if name != "MANIFEST.json"}
     require(actual == members, "release package member inventory differs")
+    assets.bind_manifest(package_manifest, cfg, members)
+    required_assets = assets.policy_assets(cfg)
+    fields(report["external_assets"], set(required_assets), "external tool evidence inventory")
+    external_paths = {}
+    external_downloads = {}
+    for name, expected in required_assets.items():
+        row = report["external_assets"][name]
+        fields(row, {"asset", "url", "download"}, "external tool evidence")
+        local = reference(directory, row["asset"], "external tool asset")
+        assets.local_asset(local, expected)
+        text(row["url"], "external tool URL")
+        require(row["url"] not in (report["publication"]["asset_url"],
+                                   report["publication"]["signature_asset_url"]), "external asset URL overlap")
+        downloaded = row["download"]
+        fields(downloaded, {"url", "archive", "destination_initially_absent", "argv", "exit_code", "stdout", "stderr"},
+               "external tool download")
+        require(downloaded["url"] == row["url"] and downloaded["destination_initially_absent"] is True and
+                common.same(downloaded["exit_code"], 0) and downloaded["argv"] == [
+                    "curl", "--fail", "--location", "--output", downloaded["archive"]["path"], row["url"]],
+                "external tool download command/source differs")
+        for stream in ("stdout", "stderr"):
+            reference(directory, downloaded[stream], "external tool download " + stream)
+        copied = reference(directory, downloaded["archive"], "downloaded external tool asset")
+        require(copied != local and not copied.samefile(local),
+                "external tool download reuses built asset")
+        assets.local_asset(copied, expected)
+        external_paths[name], external_downloads[name] = local, copied
     names = set(archive_files) | archive_directories
     for required in cfg["required_members"]:
         require(required in names or (required.endswith("/") and any(name.startswith(required) for name in names)),
@@ -596,8 +641,8 @@ def check_release_package(path, candidate, root=None):
     remote_path = reference(directory, report["publication"]["remote_query"]["stdout"],
                             "release remote query stdout")
     reference(directory, report["publication"]["remote_query"]["stderr"], "release remote query stderr")
-    recorded_remote = release_remote_facts(common.read(remote_path), report, archive, signature)
-    live_remote = release_remote_facts(query_json(query_argv, "release remote"), report, archive, signature)
+    recorded_remote = release_remote_facts(common.read(remote_path), report, archive, signature, external_paths)
+    live_remote = release_remote_facts(query_json(query_argv, "release remote"), report, archive, signature, external_paths)
     require(recorded_remote == live_remote, "release remote state changed after recording")
     fields(report["download"], {"url", "archive", "destination_initially_absent", "argv",
                                 "exit_code", "stdout", "stderr"}, "release download")
@@ -619,13 +664,20 @@ def check_release_package(path, candidate, root=None):
                 if line.strip() and not line.lstrip().startswith("#")), "release signer is not approved")
     verify_ssh_signature(allowed, report["signing_identity"], cfg["signature_namespace"],
                          signature, archive, "release package")
+    assets.restoration_members(members)
+    from week6_restore_release import check_archived_source
+    check_archived_source(archive, candidate, snapshot)
+    for name, expected in required_assets.items():
+        assets.local_asset(external_paths[name], expected)
+        assets.local_asset(external_downloads[name], expected)
     boundaries(report["boundaries"], {"release_package_built", "publication_verified",
                                       "download_verified", "remote_state_queried"})
     require(common.sha(path) == initial, "release package report changed during validation")
-    return {"scope": "approved_versioned_package_with_immutable_publication_and_download",
+    return {"scope": "approved_two_asset_package_with_same_immutable_publication_and_download",
             "version": report["version"], "delivery_profile": report["delivery_profile"],
             "archive_sha256": common.sha(archive), "source_snapshot_sha256": snapshot["snapshot_sha256"],
             "release_package_built": True, "publication_verified": True, "download_verified": True,
+            "external_assets_verified": True, "external_asset_names": list(required_assets),
             "remote_state_queried": True, "release_claimed": False, "week6_closed": False}
 
 

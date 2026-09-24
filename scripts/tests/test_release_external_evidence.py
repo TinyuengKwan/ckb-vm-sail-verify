@@ -19,6 +19,12 @@ import release_external_evidence as external
 
 class ExternalEvidenceTests(unittest.TestCase):
     def setUp(self):
+        # Publication fixtures are not source capsules. Real signed capsules
+        # and fixed input bindings have separate restoration integration tests.
+        for target in ("week6_release_assets.restoration_members", "week6_restore_release.check_archived_source"):
+            mock = patch(target)
+            mock.start()
+            self.addCleanup(mock.stop)
         temporary = tempfile.TemporaryDirectory(prefix="external-evidence-test-")
         self.addCleanup(temporary.cleanup)
         self.root = Path(temporary.name)
@@ -98,6 +104,7 @@ class ExternalEvidenceTests(unittest.TestCase):
         class Member:
             name = "evidence/member.bin"
             size = len(data)
+            mode = 0o644
 
             @staticmethod
             def isdir():
@@ -126,6 +133,19 @@ class ExternalEvidenceTests(unittest.TestCase):
         self.assertEqual(directories, set())
         self.assertEqual(files, {"evidence/member.bin": {
             "size": len(data), "sha256": hashlib.sha256(data).hexdigest()}})
+
+    def test_tar_rejects_special_modes_paths_links_and_duplicates(self):
+        for case in ("mode", "backslash", "traversal", "link", "duplicate"):
+            path = self.out / (case + ".tar.gz")
+            with tarfile.open(path, "w:gz") as tar:
+                item = tarfile.TarInfo({"backslash": "evidence\\bad", "traversal": "../bad"}.get(case, "evidence/file"))
+                item.mode = 0o4755 if case == "mode" else 0o644
+                if case == "link":
+                    item.type, item.linkname = tarfile.SYMTYPE, "../outside"
+                tar.addfile(item)
+                if case == "duplicate": tar.addfile(item)
+            with self.subTest(case=case), self.assertRaises(RuntimeError):
+                external.tar_inventory(path)
 
     def write_report(self, name, value):
         path = self.out / name
@@ -431,9 +451,16 @@ class ExternalEvidenceTests(unittest.TestCase):
                 external.check_ci_download(path, self.candidate, root=self.root)
 
     def package_report(self):
+        tool = b"fixture external tool archive\n"
+        install_manifest = b"fixture install manifest\n"
+        tool_name = external.assets.ASSET_NAME
+        self.policy["release_package"]["external_assets"] = {tool_name: {
+            "size": len(tool), "sha256": hashlib.sha256(tool).hexdigest(),
+            "manifest": {"path": "install/manifest.json", "sha256": hashlib.sha256(install_manifest).hexdigest()}}}
+        self.write_policy()
         payload = {
             "source/file.txt": b"source\n",
-            "install/file.txt": b"install\n",
+            "install/manifest.json": install_manifest,
             "evidence/file.txt": b"evidence\n",
             "docs/coverage.md": b"coverage\n",
             "docs/non-goals.md": b"non-goals\n",
@@ -442,8 +469,8 @@ class ExternalEvidenceTests(unittest.TestCase):
         members = [{"path": name, "size": len(data), "sha256": hashlib.sha256(data).hexdigest()}
                    for name, data in payload.items()]
         package_manifest = {
-            "schema_version": 1,
-            "kind": "release-package-manifest-v1",
+            "schema_version": 2,
+            "kind": "release-package-manifest-v2",
             "candidate": self.candidate,
             "version": self.policy["release_package"]["approved_version"],
             "delivery_profile": self.policy["release_package"]["approved_delivery_profile"],
@@ -451,6 +478,7 @@ class ExternalEvidenceTests(unittest.TestCase):
             "coverage": "docs/coverage.md",
             "non_goals": "docs/non-goals.md",
             "members": members,
+            "external_assets": self.policy["release_package"]["external_assets"],
         }
         manifest_bytes = (json.dumps(package_manifest, sort_keys=True) + "\n").encode()
         archive = self.make_tar("release.tar.gz", {**payload, "MANIFEST.json": manifest_bytes})
@@ -461,6 +489,9 @@ class ExternalEvidenceTests(unittest.TestCase):
         asset_url = "https://example.invalid/releases/v1/download/release.tar.gz"
         signature = self.make_file("release.tar.gz.sig", b"fixture release signature")
         signature_url = "https://example.invalid/releases/v1/download/release.tar.gz.sig"
+        tool_url = "https://example.invalid/releases/v1/download/" + tool_name
+        tool_ref = self.make_file("built/external/" + tool_name, tool)
+        tool_download = self.make_file("download/" + tool_name, tool)
         remote = {
             "id": 88,
             "tag_name": self.policy["release_package"]["approved_version"],
@@ -473,14 +504,16 @@ class ExternalEvidenceTests(unittest.TestCase):
                         "digest": "sha256:" + archive["sha256"]},
                        {"id": 100, "browser_download_url": signature_url, "state": "uploaded",
                         "size": (self.out / signature["path"]).stat().st_size,
-                        "digest": "sha256:" + signature["sha256"]}],
+                        "digest": "sha256:" + signature["sha256"]},
+                       {"id": 101, "name": tool_name, "browser_download_url": tool_url, "state": "uploaded",
+                        "size": len(tool), "digest": "sha256:" + tool_ref["sha256"]}],
         }
         remote_ref = self.make_json("release-query.json", remote)
         query_argv = ["gh", "api", "--hostname", "github.com",
                       "repos/" + self.policy["repository"] + "/releases/88"]
         return {
-            "schema_version": 1,
-            "kind": "release-package-evidence-v1",
+            "schema_version": 2,
+            "kind": "release-package-evidence-v2",
             "status": "passed",
             "candidate": self.candidate,
             "version": self.policy["release_package"]["approved_version"],
@@ -503,6 +536,10 @@ class ExternalEvidenceTests(unittest.TestCase):
                          "exit_code": 0, "stdout": self.log, "stderr": self.log},
             "signing_identity": self.policy["release_package"]["approved_signer_identity"],
             "signature": signature,
+            "external_assets": {tool_name: {"asset": tool_ref, "url": tool_url, "download": {
+                "url": tool_url, "archive": tool_download, "destination_initially_absent": True,
+                "argv": ["curl", "--fail", "--location", "--output", tool_download["path"], tool_url],
+                "exit_code": 0, "stdout": self.log, "stderr": self.log}}},
             "boundaries": {"release_claimed": False, "week6_closed": False,
                            "release_package_built": True, "publication_verified": True,
                            "download_verified": True, "remote_state_queried": True},
@@ -510,10 +547,17 @@ class ExternalEvidenceTests(unittest.TestCase):
 
     def test_package_requires_policy_approval_then_accepts_publication_download(self):
         path = self.write_report("package.json", {"status": "PASS"})
-        with self.assertRaisesRegex(RuntimeError, "not approved"):
-            external.check_release_package(path, self.candidate, root=self.root)
         self.policy["release_package"].update(approved_version="v1.0.0", approved_delivery_profile="A",
                                               approved_signer_identity="release@example")
+        # The real repository may now be approved; negative cases must control
+        # their own fixture and reject each missing approval independently.
+        for field in ("approved_version", "approved_delivery_profile", "approved_signer_identity"):
+            approved = self.policy["release_package"][field]
+            self.policy["release_package"][field] = None
+            self.write_policy()
+            with self.subTest(missing=field), self.assertRaisesRegex(RuntimeError, "not approved"):
+                external.check_release_package(path, self.candidate, root=self.root)
+            self.policy["release_package"][field] = approved
         self.write_policy()
         allowed = self.root / self.policy["release_package"]["allowed_signers_path"]
         allowed.parent.mkdir(parents=True, exist_ok=True)
@@ -565,6 +609,50 @@ class ExternalEvidenceTests(unittest.TestCase):
         path = self.write_report("package.json", report)
         with self.check_snapshot(), self.assertRaisesRegex(RuntimeError, "asset state/size/digest"):
             external.check_release_package(path, self.candidate, root=self.root)
+
+    def test_two_asset_package_rejects_missing_swapped_cross_release_and_duplicate_assets(self):
+        for mutation in ("missing", "duplicate-name", "duplicate-url", "wrong-name", "wrong-hash", "cross-release",
+                         "reused-download", "changed-download", "missing-record", "mutable"):
+            with self.subTest(mutation=mutation):
+                self.policy["release_package"].update(approved_version="v1.0.0", approved_delivery_profile="A",
+                                                      approved_signer_identity="release@example")
+                report = self.package_report()
+                name = external.assets.ASSET_NAME
+                row = report["external_assets"][name]
+                query = self.out / report["publication"]["remote_query"]["stdout"]["path"]
+                remote = json.loads(query.read_text())
+                tool = remote["assets"][-1]
+                if mutation == "missing":
+                    remote["assets"].pop()
+                elif mutation == "duplicate-name":
+                    remote["assets"].append({**tool, "id": 102, "browser_download_url": tool["browser_download_url"] + "-other"})
+                elif mutation == "duplicate-url":
+                    remote["assets"].append({**tool, "id": 102})
+                elif mutation == "wrong-name":
+                    tool["name"] = "other.xz"
+                elif mutation == "wrong-hash":
+                    tool["digest"] = "sha256:" + "0" * 64
+                elif mutation == "cross-release":
+                    row["url"] = "https://example.invalid/another-release/tool.xz"
+                    row["download"]["url"] = row["url"]
+                    row["download"]["argv"][-1] = row["url"]
+                elif mutation == "reused-download":
+                    row["download"]["archive"] = row["asset"]
+                    row["download"]["argv"][4] = row["asset"]["path"]
+                elif mutation == "changed-download":
+                    path = self.out / row["download"]["archive"]["path"]
+                    path.write_bytes(b"changed tool")
+                    row["download"]["archive"]["sha256"] = external.common.sha(path)
+                elif mutation == "missing-record":
+                    report["external_assets"] = {}
+                else:
+                    remote["immutable"] = False
+                query.write_text(json.dumps(remote))
+                report["publication"]["remote_query"]["stdout"]["sha256"] = external.common.sha(query)
+                path = self.write_report("package.json", report)
+                with self.check_snapshot(), patch.object(external, "query_json", return_value=remote), \
+                        self.assertRaises(RuntimeError):
+                    external.check_release_package(path, self.candidate, root=self.root)
 
     def test_package_rejects_unpublished_signature(self):
         self.policy["release_package"].update(approved_version="v1.0.0", approved_delivery_profile="A",

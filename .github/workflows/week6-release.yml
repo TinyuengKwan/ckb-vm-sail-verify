@@ -73,6 +73,15 @@ jobs:
       - name: Fast source and Rust checks
         run: |
           python3 scripts/tests/test_ckb_source_baseline.py
+          python3 scripts/tests/test_week6_workflow_paths.py
+          python3 -m unittest discover -s scripts/tests -p 'test_week6_source_capsule.py'
+          python3 -O -m unittest discover -s scripts/tests -p 'test_week6_source_capsule.py'
+          python3 -m unittest discover -s scripts/tests -p 'test_week6_restore_release.py'
+          python3 -O -m unittest discover -s scripts/tests -p 'test_week6_restore_release.py'
+          python3 scripts/tests/test_week6_release_package.py
+          python3 -O scripts/tests/test_week6_release_package.py
+          python3 -m unittest discover -s scripts/tests -p 'test_release_external_evidence.py'
+          python3 -O -m unittest discover -s scripts/tests -p 'test_release_external_evidence.py'
           make check
           make test
 
@@ -151,14 +160,16 @@ jobs:
           printf '%s\n' "$VM_EVIDENCE_BUNDLE_SHA256" | grep -Eq '^[0-9a-f]{64}$'
       - name: Download the independent-ephemeral-vm evidence bundle (URL never recorded)
         run: |
-          mkdir intake
+          # Downloaded bytes must not become untracked checkout source.
+          mkdir "$RUNNER_TEMP/week6-intake"
           python3 - <<'PY'
           import hashlib, os, sys, urllib.request
           url = os.environ["WEEK6_VM_EVIDENCE_URL"]
           expected = os.environ["VM_EVIDENCE_BUNDLE_SHA256"]
           digest = hashlib.sha256()
           try:
-              with urllib.request.urlopen(url, timeout=120) as source, open("intake/vm-evidence.tar.gz", "xb") as target:
+              bundle = os.path.join(os.environ["RUNNER_TEMP"], "week6-intake", "vm-evidence.tar.gz")
+              with urllib.request.urlopen(url, timeout=120) as source, open(bundle, "xb") as target:
                   while block := source.read(1024 * 1024):
                       digest.update(block); target.write(block)
           except Exception:
@@ -170,7 +181,7 @@ jobs:
           EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
         run: |
           python3 scripts/week6_vm_evidence_bundle.py unpack \
-            --bundle intake/vm-evidence.tar.gz \
+            --bundle "$RUNNER_TEMP/week6-intake/vm-evidence.tar.gz" \
             --bundle-sha256 "$VM_EVIDENCE_BUNDLE_SHA256" \
             --root "$GITHUB_WORKSPACE" \
             --candidate "$EXPECTED_COMMIT"
@@ -179,6 +190,7 @@ jobs:
         env:
           EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
         run: |
+          mkdir "$RUNNER_TEMP/week6-package"
           python3 scripts/week6_ci_archive.py create \
             --root "$GITHUB_WORKSPACE" \
             --clean-room "$GITHUB_WORKSPACE/artifacts/boundary-check/week6-clean-room/report.json" \
@@ -188,9 +200,9 @@ jobs:
             --diff-binary "$GITHUB_WORKSPACE/artifacts/boundary-check/week6-native-clean-room/runtime/cargo-target/debug/ckb-vm-sail-diff" \
             --sail-binary "$GITHUB_WORKSPACE/artifacts/boundary-check/week6-clean-room/replay-inputs/sail_riscv_sim" \
             --sail-config "$GITHUB_WORKSPACE/artifacts/boundary-check/week6-clean-room/replay-inputs/ckb_vm_config.json" \
-            --out "$GITHUB_WORKSPACE/week6-evidence.tar.gz" \
-            --manifest-out "$GITHUB_WORKSPACE/MANIFEST.json"
-          archive_sha256="$(sha256sum "$GITHUB_WORKSPACE/week6-evidence.tar.gz" | cut -d' ' -f1)"
+            --out "$RUNNER_TEMP/week6-package/week6-evidence.tar.gz" \
+            --manifest-out "$RUNNER_TEMP/week6-package/MANIFEST.json"
+          archive_sha256="$(sha256sum "$RUNNER_TEMP/week6-package/week6-evidence.tar.gz" | cut -d' ' -f1)"
           artifact_name="week6-release-evidence-$EXPECTED_COMMIT"
           echo "archive_sha256=$archive_sha256" >> "$GITHUB_OUTPUT"
           echo "artifact_name=$artifact_name" >> "$GITHUB_OUTPUT"
@@ -198,14 +210,14 @@ jobs:
         id: attest
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
         with:
-          subject-path: ${{ github.workspace }}/week6-evidence.tar.gz
+          subject-path: ${{ runner.temp }}/week6-package/week6-evidence.tar.gz
       - name: Upload archive, manifest and attestation bundle
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ${{ steps.package.outputs.artifact_name }}
           path: |
-            ${{ github.workspace }}/week6-evidence.tar.gz
-            ${{ github.workspace }}/MANIFEST.json
+            ${{ runner.temp }}/week6-package/week6-evidence.tar.gz
+            ${{ runner.temp }}/week6-package/MANIFEST.json
             ${{ steps.attest.outputs.bundle-path }}
           if-no-files-found: error
           retention-days: 30
@@ -229,7 +241,7 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ${{ needs.clean-room.outputs.artifact_name }}
-          path: downloaded
+          path: ${{ runner.temp }}/week6-download
       - name: Validate fresh component and expected pre-publication audit boundary
         env:
           EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
@@ -242,7 +254,7 @@ jobs:
           python3 scripts/week6_release_ci_gate.py \
             --root "$GITHUB_WORKSPACE" \
             --candidate "$EXPECTED_COMMIT" \
-            --archive downloaded/week6-evidence.tar.gz \
+            --archive "$RUNNER_TEMP/week6-download/week6-evidence.tar.gz" \
             --archive-sha256 "$EXPECTED_SHA256" \
             --audit-manifest artifacts/boundary-check/week6-clean-room/audit/manifest.json \
             --archived-aggregate artifacts/boundary-check/week6-clean-room/audit/result/report.json \
@@ -258,16 +270,17 @@ jobs:
         uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: ${{ needs.clean-room.outputs.artifact_name }}
-          path: downloaded
+          path: ${{ runner.temp }}/week6-download
       - name: Verify archive bytes and replay only the downloaded case
         env:
           EXPECTED_SHA256: ${{ needs.clean-room.outputs.archive_sha256 }}
         run: |
-          test "$(sha256sum downloaded/week6-evidence.tar.gz | cut -d' ' -f1)" = "$EXPECTED_SHA256"
-          mkdir replay
-          tar -xzf downloaded/week6-evidence.tar.gz -C replay
-          replay/bin/ckb-vm-sail-diff \
-            --sail-bin replay/bin/sail_riscv_sim \
-            --sail-config replay/config/ckb_vm_config.json \
-            --replay replay/cases/add-signed-overflow.json \
-            --artifact-dir replay/result
+          test "$(sha256sum "$RUNNER_TEMP/week6-download/week6-evidence.tar.gz" | cut -d' ' -f1)" = "$EXPECTED_SHA256"
+          week6_replay_dir="$RUNNER_TEMP/week6-replay"
+          mkdir "$week6_replay_dir"
+          tar -xzf "$RUNNER_TEMP/week6-download/week6-evidence.tar.gz" -C "$week6_replay_dir"
+          "$week6_replay_dir/bin/ckb-vm-sail-diff" \
+            --sail-bin "$week6_replay_dir/bin/sail_riscv_sim" \
+            --sail-config "$week6_replay_dir/config/ckb_vm_config.json" \
+            --replay "$week6_replay_dir/cases/add-signed-overflow.json" \
+            --artifact-dir "$week6_replay_dir/result"

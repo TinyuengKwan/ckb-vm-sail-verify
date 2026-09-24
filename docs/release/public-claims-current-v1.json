@@ -129,8 +129,8 @@
       "sha256": "1a1c95089a8665685486db29c59b4ade7e039586c96b47afb7ab31518bacfbff"
     },
     "VERIFICATION.md": {
-      "claim_paragraphs": 63,
-      "claim_paragraphs_sha256": "f3675b461b868909aa57b78f1d56ce51a9a32d1c79d7da939e44a779bf5ba1d5",
+      "claim_paragraphs": 67,
+      "claim_paragraphs_sha256": "1a755f98aa3fb4f39e083e65e511769a6b55303673d5687ac9c84c9cbebf8e92",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -142,8 +142,8 @@
         "release_incomplete"
       ],
       "classification": "current_assurance",
-      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "9312bdaa5f2c2746a37dbcc5ffea18fc59b686d5748f467ab751b885463fccf4"
+      "review": "Reviewed 2026-09-24: owner-approved same-immutable-release two-data-asset layout plus detached signature; v2 signed byte bindings and exact current source restoration. Historical preview sizes and VM/CI results retain their identity. Local authentication/restoration does not establish publication, new VM/CI success, final output approval, independent third-party reproduction or Week6 closure.",
+      "sha256": "f23830fb8e3f7f37bbe5d14974e46babe636af70746b9ee7eb5300b28f35c9c1"
     },
     "artifacts/README.md": {
       "claim_paragraphs": 0,
@@ -154,8 +154,8 @@
       "sha256": "00b696caac4ad0d794e52b3a424c4920aa025cd46dcbc79572e4dc9bce4a530e"
     },
     "docs/WEEK6_STATUS.md": {
-      "claim_paragraphs": 111,
-      "claim_paragraphs_sha256": "6b816ba2f71dbb42663a9dfe38f43ec3f81a55308e17a4b90b6a732d442e3d3e",
+      "claim_paragraphs": 115,
+      "claim_paragraphs_sha256": "5157970b9745f6f578432ae761ad4763bc4b84502d547f61d1fa80195c77ee5f",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -167,8 +167,8 @@
         "release_incomplete"
       ],
       "classification": "current_assurance",
-      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "6330544db5f38048272f7dbcec2ef3e4c0beeb9397c25851752be9557451be59"
+      "review": "Reviewed 2026-09-24: owner-approved same-immutable-release two-data-asset layout plus detached signature; v2 signed byte bindings and exact current source restoration. Historical preview sizes and VM/CI results retain their identity. Local authentication/restoration does not establish publication, new VM/CI success, final output approval, independent third-party reproduction or Week6 closure.",
+      "sha256": "0a51ff8a01813c167a1fd75cfdb22a885e6e3c1e2e4560385ca59c5df0d90356"
     },
     "docs/architecture.md": {
       "claim_paragraphs": 17,
@@ -297,15 +297,15 @@
       "sha256": "d9cafcefea512e4d65a9b6c76dbe8648fcdc4be3df3df6d653622b4b8a51a15f"
     },
     "docs/release/AUDIT_RELEASE.md": {
-      "claim_paragraphs": 35,
-      "claim_paragraphs_sha256": "da6b50a658ad749ec21f0e01bbd5719bf43743d6a83f6033e7f1ad92acccb2c2",
+      "claim_paragraphs": 36,
+      "claim_paragraphs_sha256": "a9aa26e0346b1813cb4a96e377cac503eb49ecad94756b1054ae5d0f3ff8f24f",
       "claims": [
         "source_output_identity",
         "release_incomplete"
       ],
       "classification": "current_assurance",
-      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "644aa743f99738b9b047ca0693909b24a4df3dfa9a9552f5f8b1048bb9c18fba"
+      "review": "Reviewed 2026-09-24: owner-approved same-immutable-release two-data-asset layout plus detached signature; v2 signed byte bindings and exact current source restoration. Historical preview sizes and VM/CI results retain their identity. Local authentication/restoration does not establish publication, new VM/CI success, final output approval, independent third-party reproduction or Week6 closure.",
+      "sha256": "faa3629aee11ae035eca255e468c015d40117580630b8128f707cb15da16bc9d"
     },
     "docs/release/CI_READINESS.md": {
       "claim_paragraphs": 2,
@@ -339,14 +339,14 @@
       "sha256": "94cb089e68a9dd28be7b1a23e21b928a3338a4b2ec79160eeb4a540d9fee2762"
     },
     "docs/release/EPHEMERAL_VM_STAGED_PROVENANCE_REVIEW.md": {
-      "sha256": "bec70ba13879443215395c4e41da908782e84750e6f3d20e46b3886ef492fc27",
-      "classification": "historical_record",
+      "claim_paragraphs": 12,
+      "claim_paragraphs_sha256": "42bca83ae31c0586fc9ed43eb70bb14da4acfd5891d8fd3ea62b50d37b5d6318",
       "claims": [
         "historical_scope"
       ],
-      "claim_paragraphs": 12,
-      "claim_paragraphs_sha256": "42bca83ae31c0586fc9ed43eb70bb14da4acfd5891d8fd3ea62b50d37b5d6318",
-      "review": "Reviewed as the ephemeral-VM / staged-execution / provenance design review: it reports local regression results and a controller fix, admits that no guest was booted, nothing was pushed or dispatched, and keeps every external slot and Week6 open; provenance for the VM path is stated as operator-attested, not platform-signed."
+      "classification": "historical_record",
+      "review": "Reviewed as the ephemeral-VM / staged-execution / provenance design review: it reports local regression results and a controller fix, admits that no guest was booted, nothing was pushed or dispatched, and keeps every external slot and Week6 open; provenance for the VM path is stated as operator-attested, not platform-signed.",
+      "sha256": "bec70ba13879443215395c4e41da908782e84750e6f3d20e46b3886ef492fc27"
     },
     "docs/release/FINAL_SUPPORT_REFRESH.md": {
       "claim_paragraphs": 4,
@@ -951,6 +951,20 @@
       "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
       "sha256": "c391e949461d2d8ea10103f09cbff960808864c102b1f0682fdbae6a30511fe3"
     },
+    "docs/release/WEEK6_DUAL_ASSET_RESTORE.md": {
+      "claim_paragraphs": 7,
+      "claim_paragraphs_sha256": "9241456b552400ea632b27772b1b099062b6970adcaf658a98ac0fa9d62ed9da",
+      "claims": [
+        "source_output_identity",
+        "release_incomplete",
+        "historical_scope",
+        "lean_scope",
+        "rocq_no_go"
+      ],
+      "classification": "technical_boundary",
+      "review": "Reviewed 2026-09-24: owner-approved same-immutable-release two-data-asset layout plus detached signature; v2 signed byte bindings and exact current source restoration. Historical preview sizes and VM/CI results retain their identity. Local authentication/restoration does not establish publication, new VM/CI success, final output approval, independent third-party reproduction or Week6 closure.",
+      "sha256": "5b9bc390b7f96f5a0835f5a774af75794e9c41f2f9d52f05a1301cba708a1d9d"
+    },
     "docs/release/WEEK6_RUNTIME_FLOOR.md": {
       "claim_paragraphs": 8,
       "claim_paragraphs_sha256": "28d69a316d2de63e402324368b2d2f7aaf937828e0a9747419c2277147343409",
@@ -1334,9 +1348,9 @@
   },
   "forbidden_overclaims": [
     "CKB-VM is formally verified.",
-    "CKB-VM 已经完成形式化验证。",
+    "CKB-VM \u5df2\u7ecf\u5b8c\u6210\u5f62\u5f0f\u5316\u9a8c\u8bc1\u3002",
     "Week6 is closed.",
-    "Week6 已关闭。",
+    "Week6 \u5df2\u5173\u95ed\u3002",
     "Rocq adds verified instruction coverage."
   ],
   "kind": "public-claims-review-v1",

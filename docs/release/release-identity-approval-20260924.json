@@ -1,0 +1,29 @@
+{
+  "kind": "release-identity-approval-record",
+  "approved_version": "week6-0.1.0",
+  "approved_delivery_profile": "A",
+  "approved_signer_identity": "kwantinyueng@gmail.com",
+  "approved_by": {
+    "name": "kwantinyueng@gmail.com",
+    "role": "repository_owner",
+    "channel": "explicit_user_instruction"
+  },
+  "public_key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG0n3+7sf8i/qO0frFMqwZv6PbzzBiLTpEH0saF/N/xN ckb-vm-sail-release signer kwantinyueng@gmail.com",
+  "signature_namespace": "ckb-vm-sail-release",
+  "policy_path": "docs/release/external-acceptance-policy-v1.json",
+  "allowed_signers_path": "docs/release/release-allowed-signers",
+  "immutable_release_setting_change_authorized": true,
+  "delivery_layout": "same-immutable-release-two-data-assets-with-signed-primary-binding",
+  "delivery_layout_approved_by_explicit_user_instruction": true,
+  "delivery_layout_includes_detached_signature_asset": true,
+  "independent_reproducer": null,
+  "boundaries": {
+    "exact_package_members_approved": false,
+    "final_output_identity_approved": false,
+    "signature_created": false,
+    "third_party_reproduced": false,
+    "release_claimed": false,
+    "week6_closed": false
+  },
+  "note": "Records the user's release identity, repository-setting authorization and two-data-asset layout approval. Not a worktree-delivery-approval-v1 record, signature, publication or third-party reproduction. The final source/output five-tuple and exact generated package still need explicit approval after generation."
+}

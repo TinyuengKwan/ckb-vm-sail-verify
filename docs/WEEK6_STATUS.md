@@ -1,9 +1,54 @@
 # Week6 关闭清单与当前证据
 
-更新至 2026-09-14。任务以 [Week6 原始条款](plan/week6.md) 和
+更新至 2026-09-24。任务以 [Week6 原始条款](plan/week6.md) 和
 [总览 Definition of Done](plan/overview.md) 为准；不修改验收定义。
 **当前未关闭 Week6，也未完成发布。** 既有 ADD 解码/执行的条件性证明不替代
 全环境 clean-room、独立第三方复现、CI 下载重放或实际 release 证据。
+
+**2026-09-24：候选 `171f012` 的 VM 已通过，真实 CI intake 失败；路径修正在隔离分支验收。**
+`171f012d73933fb7ca3c1a7a41b7abd70451509f` 的 16 阶段于 09-23 17:00–22:39 UTC
+全部退出 0，环境 `4956cf30-d09e-47b4-804d-a7a965d44526`，源码快照
+`cb81ec385fc7efad516976cb3690fc7a436631571505aecab1911caa9069d9e1`。
+宿主 provenance 和独立解包复核均通过；这是 operator-attested 记录，不是平台签名身份。
+该候选的 [VM 证据预发布](https://github.com/TinyuengKwan/ckb-vm-sail-verify/releases/tag/week6-vm-evidence-171f012)
+已上传 `vm-evidence.tar.gz`（460,213,677 字节、10,069 个成员，SHA-256
+`bf3d2695d0f2f4c708572d3dcd2a6f56783f6d80d5d1272de6d81d91520f64fa`），并非正式 release 包。
+
+[真实 CI 运行 35972669258](https://github.com/TinyuengKwan/ckb-vm-sail-verify/actions/runs/35972669258)
+的 fast、differential 通过，clean-room 在导入阶段报
+`external evidence source snapshot is not current`，后两个任务跳过。原因是 workflow 把 bundle
+下载到 checkout 内未忽略的 `intake/`，被完整源码清单计入；后续 `downloaded/` 和根目录归档也有同类风险。
+本次修正将下载、归档、attestation 输入及重放暂存全部移到 `RUNNER_TEMP`，不修改忽略规则或放宽快照门禁。
+9 项新回归在普通和 `-O` 模式通过，直接执行 workflow 命令并核对真实 Git 清单；同一套测试拒绝旧 workflow。
+
+本机真实 bundle 演练另在两个全新、独立 Git 对象库的 `171f012` clone 及独立重放目录中，执行修正后的
+intake、release-audit、artifact-download-replay 命令，全部通过且源码快照首尾不变；真实下载后二进制
+重放 `add-signed-overflow` 为 13 步、零失败。记录目录为
+`/home/clair/week6/ci-layout-rehearsal-9nR4y8od`，`report.json` SHA-256
+`e33db7126fc6a225a09debf9c1e836078b3c8030f8016f562a293f726dde9def`。
+这只是新路径布局的本地演练：不包含真实 GitHub artifact 传输/attestation，不是修正后候选的 VM 运行，
+也不关闭 `ci_download`。旧 bundle 只能证明旧候选，不能重新绑定到修改后的源码。
+
+09-24 仓库所有者已[明确批准版本与发布身份](release/release-identity-approval-20260924.json)：
+`week6-0.1.0`、profile `A`、发布签名者 `kwantinyueng@gmail.com`，政策与发布公钥已落实；公钥指纹为
+`SHA256:fhxGdS6E9GW7qqXlnIsFOWlqZTKYVqe+echXbA3/Tl0`，只受信于 `ckb-vm-sail-release` namespace。
+所有者已授权并开启不可变发布，远端只读查询确认为 `enabled=true`。这不意味着已有包签名或正式发布。
+独立复现者暂无，第三方信任清单保留为空；最终生成包及输出五件套仍待审核批准。
+09-24 已明确采用[同一不可变 release 双数据资产方案](release/WEEK6_DUAL_ASSET_RESTORE.md)，另附主包签名。
+v2 包/记录合同绑定独立工具包名称、大小、哈希和安装清单，要求同一不可变发布及两个真实下载副本。
+新 source capsule/认证恢复入口面向当前候选，强制源码、decoder、CMake 输入和恢复指南完整性；
+历史 handoff 的身份不修改。该实现、单元集成测试和冻结前材料演练不等于新 VM/CI 已通过。
+18:46–18:59 UTC 完整真实材料演练已通过：新生产打包/认证恢复入口实际恢复当前源码、五个工具根、
+准入 decoder 及 CMake 输入；演练主包 1,045,159,388 字节，独立工具资产 1,801,059,088 字节，
+均低于单资产限制。记录在 `/home/clair/week6/dual-asset-rehearsal-SqZPThwG/report.json`。
+该轮绑定 `171f012` 加明确清点的源码覆盖层，快照 `1397f696…`，使用临时 fixture 签名者；
+包内旧 VM/本机 CI 演练均明确标为历史，不是所有者签名、正式包或新候选运行。
+后续冻结提交包含测试/CI 接线及本段文档收尾，不把该材料演练报告改绑为冻结提交的执行证据。
+冻结后须重新执行新候选 VM、发布对应证据、完成五任务 CI 及外部双份下载重放，
+再完成精确输出身份审批、不可变正式发布和独立第三方签名复现。旧候选 guest 的七项 verified 及五项 outstanding
+保留原身份；Lean 仍为条件性 ADD 证明，Rocq 仍是 NO-GO，Week6 未关闭。
+
+以下按各段标注的日期和候选保留历史记录；其中“当前”“尚未运行/推送”等词只指该段原始时点。
 
 **验收缺口修正：** 旧 runtime 的 13 / 10 / 9 分布不满足 Week6 每族至少 10 项。
 已[补入 BEQ 零位移案例并加强逐族计数门禁](release/WEEK6_RUNTIME_FLOOR.md)，20:13:19 UTC

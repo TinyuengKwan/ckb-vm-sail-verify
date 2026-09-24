@@ -2,6 +2,43 @@
 
 本文区分“当前可运行基线”和“六周 MVP 将交付的验收接口”。不存在的命令不会被描述成已经完成。
 
+**2026-09-24 当前进度：** 候选 `171f012` 的独立临时 VM 16 阶段及宿主验收已通过，证据 bundle
+已预发布；真实 GitHub CI 的 clean-room intake 因下载文件污染源码快照而失败。隔离分支的
+暂存路径修正已完成真实 bundle 本地三任务演练，不代表修正后候选的 VM/CI 已通过。
+精确候选、哈希和运行链接见 [Week6 状态](docs/WEEK6_STATUS.md)。下段及其后引用的
+09-13/09-14 报告保留原来源；其中“尚未实跑”不再表示当前 VM 状态。Week6 仍未关闭。
+
+### Week6 正式交付顺序（尚未完成）
+
+1. 冻结前由维护者确定版本号、profile A 的具体交付成员、发布签名身份/SSH 公钥，以及独立复现者的
+   身份/SSH 公钥；写入 [外部验收政策](docs/release/external-acceptance-policy-v1.json)与两份
+   [发布](docs/release/release-allowed-signers) / [第三方](docs/release/third-party-allowed-signers)
+   信任清单。09-24 仓库所有者已[明确批准](docs/release/release-identity-approval-20260924.json)
+   `week6-0.1.0` / `A` 及发布者 `kwantinyueng@gmail.com` 的 Ed25519 公钥，已写入政策与发布信任清单。
+   独立复现者暂缺，其信任清单仍为空；具体交付成员和最终输出差异仍待审核，不以身份批准替代。
+2. 在冻结前验证完整交付成员的安装与恢复方式、归档大小、覆盖和非目标。生产打包器
+   `scripts/week6_release_package.py build` 要求批准的身份及 `release-package-inputs-v2` 精确成员清单，
+   只产出未签名/未发布包。按 GitHub 的[单资产限制](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases)，
+   每个资产必须小于 2 GiB；不能以已有 VM bundle 小于限制推断完整正式包也满足。09-24 已明确采用
+   [同一不可变 release 双数据资产方案](docs/release/WEEK6_DUAL_ASSET_RESTORE.md)，另附主包签名。
+   主包签名绑定独立工具包，当前源码由新 capsule/恢复入口精确还原；最终生成物仍待审查。
+3. 冻结新候选并重新执行 VM 全链、宿主验收及对应 bundle；旧 bundle 不得改绑。完成
+   `.github/workflows/week6-release.yml` 五个任务后，使用 `scripts/week6_collect_ci.py` 收集外部下载、
+   双份重放和 attestation 证据。本地模拟不替代真实 CI 或外部收集。
+4. 对该候选实际生成的源码/输出身份及完整差异由仓库所有者或发布维护者明确批准；批准必须绑定
+   current-output 五件套，再用 `scripts/week6_review_materialize.py` 组合 v4 worktree envelope。
+   第 1 步的交付计划不能预先批准尚未产生的输出，Codex 的字节审查也不等于维护者批准。
+5. 仓库所有者已授权并启用
+   [release immutability](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/prevent-release-changes)。
+   09-24 授权后的只读 API `GET /repos/TinyuengKwan/ckb-vm-sail-verify/immutable-releases` 返回
+   `enabled=true`、`enforced_by_owner=false`。正式发布仍须先创建 draft，上传两个数据资产及批准身份生成的 SSH 签名，
+   核对资产后发布；不可变资产不能发布后再补签名。`scripts/week6_release_package.py record` 只读查询
+   实际 immutable release、独立下载并验签，不创建 release 或签名。现有证据预发布不是这一正式包。
+6. 受信且独立的第三方仅依据交付文档完成政策规定的十个阶段，保存实际日志/结果并签名复现声明；
+   维护者或 Codex 重跑不能冒充第三方。最后以同一候选/源码快照聚合全部十二槽，只有完整验收通过才关闭 Week6。
+
+以下为按日期保留的实现及执行历史，不是上述剩余步骤的完成声明。
+
 2026-09-13 22:21 UTC 状态：[当前 `b5bdc401…` 政策的完整正式链](docs/release/FORMAL_FINAL_EXECUTION.md)
 已完成实跑及独立验收：主门禁 28 阶段/287 测试、公开子链 48 阶段/68 定理，
 Rocq 含新 Sail 生成的 11 阶段 NO-GO（无额外证明）。[配套负测/演示及新六项聚合](docs/release/FINAL_SUPPORT_REFRESH.md)

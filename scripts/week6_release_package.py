@@ -34,6 +34,7 @@ sys.path.insert(0, str(ROOT / "scripts"))
 import release_external_evidence as external
 import release_evidence as common
 import source_snapshot
+import week6_release_assets as assets
 
 
 OID = re.compile(r"[0-9a-f]{40}|[0-9a-f]{64}")
@@ -107,14 +108,14 @@ def json_bytes(value):
     return (json.dumps(value, indent=2, sort_keys=True) + "\n").encode()
 
 
-def descriptor(path, input_root, candidate, version, profile):
+def descriptor(path, input_root, candidate, version, profile, cfg):
     value = read(path)
     require(type(value) is dict and set(value) == {
         "schema_version", "kind", "candidate", "version", "delivery_profile",
-        "source_snapshot", "coverage", "non_goals", "members"
+        "source_snapshot", "coverage", "non_goals", "members", "external_assets"
     }, "package input descriptor fields")
-    require(type(value["schema_version"]) is int and value["schema_version"] == 1 and
-            value["kind"] == "release-package-inputs-v1" and value["candidate"] == candidate and
+    require(type(value["schema_version"]) is int and value["schema_version"] == 2 and
+            value["kind"] == "release-package-inputs-v2" and value["candidate"] == candidate and
             value["version"] == version and value["delivery_profile"] == profile,
             "package input descriptor identity")
     snapshot = value["source_snapshot"]
@@ -142,7 +143,17 @@ def descriptor(path, input_root, candidate, version, profile):
             non_goals.startswith("docs/"), "coverage/non-goals package members")
     require(all(any(name.startswith(prefix) for name in files) for prefix in PREFIXES),
             "required package prefix absent")
-    return value, snapshot_value, snapshot_path, files
+    expected = assets.policy_assets(cfg)
+    require(type(value["external_assets"]) is dict and set(value["external_assets"]) == set(expected),
+            "external asset input inventory differs")
+    external_files = {}
+    for name, row in value["external_assets"].items():
+        require(type(row) is dict and set(row) == {"source", "sha256"} and
+                row["sha256"] == expected[name]["sha256"], "external asset input identity differs")
+        external_files[name] = assets.local_asset(input_root / safe_name(row["source"]), expected[name])
+    members = {name: {"size": p.stat().st_size, "sha256": sha(p)} for name, p in files.items()}
+    assets.bind_manifest({"external_assets": expected}, cfg, members)
+    return value, snapshot_value, snapshot_path, files, external_files
 
 
 def copy_payload(built, files):
@@ -211,27 +222,34 @@ def build(args, policy=None, verify_current=True):
             cfg["approved_signer_identity"] is not None, "release policy approvals incomplete")
     require(args.version == cfg["approved_version"] and args.delivery_profile == "A",
             "requested package identity is not approved")
+    require(re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]{0,127}", args.version), "unsafe release version")
     out = Path(args.out).absolute()
     require(not out.exists() and not out.is_symlink() and out.parent.is_dir(), "new package output required")
-    value, snapshot, snapshot_path, sources = descriptor(
-        args.inputs, args.input_root, args.candidate, args.version, args.delivery_profile)
+    value, snapshot, snapshot_path, sources, external_sources = descriptor(
+        args.inputs, args.input_root, args.candidate, args.version, args.delivery_profile, cfg)
     if verify_current:
         require(source_snapshot.capture(ROOT) == snapshot, "package source snapshot is not current")
+    from week6_restore_release import validate_sources
+    validate_sources(sources, args.candidate, snapshot)
     out.mkdir()
     built = out / "built"
     built.mkdir()
     shutil.copyfile(snapshot_path, built / "source-snapshot.json")
     require(sha(built / "source-snapshot.json") == sha(snapshot_path), "source snapshot copy changed")
     files = copy_payload(built, sources)
+    external_files = copy_payload(built, {"external/" + name: path for name, path in external_sources.items()})
+    for name, row in cfg["external_assets"].items():
+        assets.local_asset(external_files["external/" + name], row)
     sums = checksum_bytes(files)
     write(built / "SHA256SUMS", sums)
     files["SHA256SUMS"] = built / "SHA256SUMS"
     manifest = {
-        "schema_version": 1, "kind": "release-package-manifest-v1",
+        "schema_version": 2, "kind": "release-package-manifest-v2",
         "candidate": args.candidate, "version": args.version,
         "delivery_profile": args.delivery_profile,
         "source_snapshot_sha256": snapshot["snapshot_sha256"],
         "coverage": value["coverage"], "non_goals": value["non_goals"],
+        "external_assets": cfg["external_assets"],
         "members": [{"path": name, "size": path.stat().st_size, "sha256": sha(path)}
                     for name, path in sorted(files.items())],
     }
@@ -240,17 +258,19 @@ def build(args, policy=None, verify_current=True):
     name = f"ckb-vm-sail-verify-{args.version}.tar.gz"
     archive_path = built / name
     archive_sha = archive(archive_path, files, manifest_data)
+    assets.size_ok(archive_path.stat().st_size)
     inventory, directories = external.tar_inventory(archive_path)
     expected = {name: {"size": path.stat().st_size, "sha256": sha(path)} for name, path in files.items()}
     require({name: row for name, row in inventory.items() if name != "MANIFEST.json"} == expected and
             inventory["MANIFEST.json"]["sha256"] == sha(built / "MANIFEST.json") and
             set(PREFIXES) <= directories, "built package independent stream verification failed")
-    result = {"schema_version": 1, "kind": "release-package-build-result-v1",
+    result = {"schema_version": 2, "kind": "release-package-build-result-v2",
               "status": "approved_identity_package_built_not_signed_or_published",
               "candidate": args.candidate, "version": args.version, "delivery_profile": "A",
               "source_snapshot": ref(out, built / "source-snapshot.json"),
               "archive": {"path": "built/" + name, "sha256": archive_sha},
               "manifest": {"path": "built/MANIFEST.json", "sha256": sha(built / "MANIFEST.json")},
+              "external_assets": {name: ref(out, built / "external" / name) for name in cfg["external_assets"]},
               "members": len(files),
               "boundaries": {"signed": False, "published": False, "download_verified": False,
                              "release_claimed": False, "week6_closed": False}}
@@ -265,8 +285,8 @@ def record(args):
     require(not (directory / "report.json").exists() and not (directory / "report.candidate.json").exists(),
             "release report already exists")
     build_result = read(directory / "build-result.json")
-    require(build_result.get("schema_version") == 1 and
-            build_result.get("kind") == "release-package-build-result-v1" and
+    require(build_result.get("schema_version") == 2 and
+            build_result.get("kind") == "release-package-build-result-v2" and
             build_result.get("status") == "approved_identity_package_built_not_signed_or_published",
             "release build result incomplete")
     candidate, version = build_result["candidate"], build_result["version"]
@@ -279,10 +299,23 @@ def record(args):
             "release build no longer matches approved policy")
     archive_path = regular(directory / build_result["archive"]["path"])
     require(sha(archive_path) == build_result["archive"]["sha256"], "built archive changed")
+    assets.size_ok(archive_path.stat().st_size)
     signature = regular(Path(str(archive_path) + ".sig"))
     manifest_path = regular(directory / build_result["manifest"]["path"])
     source_path = regular(directory / build_result["source_snapshot"]["path"])
     manifest = read(manifest_path)
+    required_assets = assets.policy_assets(cfg)
+    require(type(build_result.get("external_assets")) is dict and
+            set(build_result["external_assets"]) == set(required_assets), "built external asset inventory differs")
+    external_paths = {}
+    for name, row in required_assets.items():
+        reference = build_result["external_assets"][name]
+        require(reference == {"path": "built/external/" + name, "sha256": row["sha256"]},
+                "built external asset reference differs")
+        external_paths[name] = assets.local_asset(directory / reference["path"], row)
+    assets.bind_manifest(manifest, cfg, external.manifest_members(manifest["members"], "release package"))
+    external.verify_ssh_signature(ROOT / cfg["allowed_signers_path"], cfg["approved_signer_identity"],
+                                  cfg["signature_namespace"], signature, archive_path, "release package")
     coverage = regular(directory / "built" / safe_name(manifest["coverage"]))
     non_goals = regular(directory / "built" / safe_name(manifest["non_goals"]))
 
@@ -295,13 +328,19 @@ def record(args):
             remote.get("draft") is False and remote.get("immutable") is True and
             type(remote.get("html_url")) is str and type(remote.get("published_at")) is str,
             "release is not the approved immutable publication")
-    assets = remote.get("assets")
-    require(type(assets) is list, "release asset list absent")
-    archive_assets = [row for row in assets if type(row) is dict and row.get("name") == archive_path.name]
-    signature_assets = [row for row in assets if type(row) is dict and row.get("name") == signature.name]
+    remote_assets = remote.get("assets")
+    require(type(remote_assets) is list, "release asset list absent")
+    archive_assets = [row for row in remote_assets if type(row) is dict and row.get("name") == archive_path.name]
+    signature_assets = [row for row in remote_assets if type(row) is dict and row.get("name") == signature.name]
     require(len(archive_assets) == len(signature_assets) == 1, "release archive/signature asset ambiguity")
     asset, signature_asset = archive_assets[0], signature_assets[0]
-    for row, path in [(asset, archive_path), (signature_asset, signature)]:
+    external_remote = {}
+    for name in required_assets:
+        matches = [row for row in remote_assets if type(row) is dict and row.get("name") == name]
+        require(len(matches) == 1, "release external asset absent or ambiguous")
+        external_remote[name] = matches[0]
+    for row, path in [(asset, archive_path), (signature_asset, signature)] + [
+            (external_remote[name], path) for name, path in external_paths.items()]:
         require(type(row.get("id")) is int and row["id"] > 0 and row.get("state") == "uploaded" and
                 row.get("size") == path.stat().st_size and row.get("digest") == "sha256:" + sha(path) and
                 type(row.get("browser_download_url")) is str and row["browser_download_url"],
@@ -318,12 +357,26 @@ def record(args):
     require(download_record["exit_code"] == 0 and regular(downloaded_archive) and
             sha(downloaded_archive) == sha(archive_path), "published release download differs")
 
+    external_records = {}
+    for name, path in external_paths.items():
+        remote_asset = external_remote[name]
+        target = downloaded / name
+        argv = ["curl", "--fail", "--location", "--output", target.relative_to(directory).as_posix(),
+                remote_asset["browser_download_url"]]
+        recorded = run_command(directory, "release-download-" + name, argv)
+        require(recorded["exit_code"] == 0, "external tool asset download failed")
+        assets.local_asset(target, required_assets[name])
+        external_records[name] = {"asset": ref(directory, path), "url": remote_asset["browser_download_url"],
+            "download": {"url": remote_asset["browser_download_url"], "archive": ref(directory, target),
+                         "destination_initially_absent": True, **recorded}}
+
     report = {
-        "schema_version": 1, "kind": "release-package-evidence-v1", "status": "passed",
+        "schema_version": 2, "kind": "release-package-evidence-v2", "status": "passed",
         "candidate": candidate, "version": version, "delivery_profile": "A",
         "source_snapshot": ref(directory, source_path), "archive_format": "tar.gz",
         "archive": ref(directory, archive_path), "manifest": ref(directory, manifest_path),
         "coverage": ref(directory, coverage), "non_goals": ref(directory, non_goals),
+        "external_assets": external_records,
         "publication": {"provider": "github-releases", "repository": policy["repository"],
                         "release_id": args.release_id, "tag": version, "url": remote["html_url"],
                         "asset_url": asset["browser_download_url"],

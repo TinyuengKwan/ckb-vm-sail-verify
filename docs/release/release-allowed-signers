@@ -1,1 +1,2 @@
-# Intentionally empty until the release signer identity and SSH public key are explicitly approved.
+# Explicitly approved by the repository owner on 2026-09-24 for release signing only.
+kwantinyueng@gmail.com namespaces="ckb-vm-sail-release" ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG0n3+7sf8i/qO0frFMqwZv6PbzzBiLTpEH0saF/N/xN ckb-vm-sail-release signer kwantinyueng@gmail.com

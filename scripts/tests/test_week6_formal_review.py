@@ -4,6 +4,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 HERE = Path(__file__).resolve().parent
@@ -46,12 +47,16 @@ class DriverTests(unittest.TestCase):
                 MODULE.copy_regular(root / 'link', root / 'target')
 
     def test_prepare_rejects_hash_before_creating_output(self):
-        formal = MODULE.ROOT / 'artifacts/boundary-check/formal-final-kfncD8ln/report.json'
-        out = MODULE.ROOT / 'artifacts/boundary-check/week6-formal-review-unit-never-created'
-        self.assertFalse(out.exists())
-        with self.assertRaisesRegex(RuntimeError, 'input differs'):
-            MODULE.prepare(formal, '0' * 64, out)
-        self.assertFalse(out.exists())
+        # A clean checkout has no historical host report. Supply real fixture
+        # bytes so this still tests hash rejection, not accidental file absence.
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            formal = root / 'report.json'
+            formal.write_bytes(b'{"fixture_only":true}\n')
+            out = root / 'artifacts/boundary-check/week6-formal-review-unit-never-created'
+            with patch.object(MODULE, 'ROOT', root), self.assertRaisesRegex(RuntimeError, 'input differs'):
+                MODULE.prepare(formal, '0' * 64, out)
+            self.assertFalse(out.exists())
 
 
 if __name__ == '__main__':

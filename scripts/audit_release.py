@@ -82,6 +82,13 @@ CHECKER_FILES += ['scripts/release_current_output_review.py',
 CHECKER_FILES += ['scripts/release_public_claims.py',
                   'scripts/tests/test_release_public_claims.py']
 CHECKER_FILES += ['scripts/release_external_evidence.py',
+                  'scripts/week6_release_assets.py',
+                  'scripts/week6_source_capsule.py', 'scripts/tests/test_week6_source_capsule.py',
+                  'scripts/week6_restore_release.py', 'scripts/tests/test_week6_restore_release.py',
+                  'scripts/fixed_install_bundle.py', 'scripts/tests/test_fixed_install_bundle.py',
+                  'scripts/restore_fixed_inputs.py', 'scripts/tests/test_restore_fixed_inputs.py',
+                  'scripts/stage_fixed_cmake_inputs.py', 'scripts/tests/test_stage_fixed_cmake_inputs.py',
+                  'scripts/tests/test_week6_workflow_paths.py',
                   'scripts/tests/test_release_external_evidence.py',
                   'scripts/week6_ci_archive.py', 'scripts/tests/test_week6_ci_archive.py',
                   'scripts/week6_release_ci_gate.py', 'scripts/tests/test_week6_release_ci_gate.py',
@@ -243,6 +250,7 @@ def aggregate(manifest):
                          release_package.get('release_package_built') is True and
                          release_package.get('publication_verified') is True and
                          release_package.get('download_verified') is True and
+                         release_package.get('external_assets_verified') is True and
                          release_package.get('remote_state_queried') is True and
                          release_package.get('delivery_profile') == approved_profile == 'A' and
                          third_party.get('third_party_reproduced') is True and

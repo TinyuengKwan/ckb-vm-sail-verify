@@ -185,6 +185,7 @@ class AggregationTests(unittest.TestCase):
                             'source_snapshot_sha256': source_snapshot},
             'release_package': {'release_package_built': True, 'publication_verified': True,
                                 'download_verified': True, 'remote_state_queried': True,
+                                'external_assets_verified': True,
                                 'delivery_profile': 'A', 'source_snapshot_sha256': source_snapshot},
             'third_party': {'third_party_reproduced': True, 'independent_third_party': True,
                             'source_snapshot_sha256': source_snapshot},
@@ -226,6 +227,10 @@ class AggregationTests(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'completion fact'):
             gate.aggregate(self.manifest)
         external_results['release_package']['delivery_profile'] = 'A'
+        external_results['release_package']['external_assets_verified'] = False
+        with self.assertRaisesRegex(RuntimeError, 'completion fact'):
+            gate.aggregate(self.manifest)
+        external_results['release_package']['external_assets_verified'] = True
         # An independent ephemeral VM clean-room closes only through its operator-attested record.
         external_results['clean_room']['provider'] = gate.external.VM_PROVIDER
         with patch.object(gate.external, 'check_vm_provenance',
