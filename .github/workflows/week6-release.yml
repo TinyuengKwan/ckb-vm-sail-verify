@@ -211,6 +211,21 @@ jobs:
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
         with:
           subject-path: ${{ runner.temp }}/week6-package/week6-evidence.tar.gz
+      - name: Stage attestation beside the archive for a flat artifact
+        env:
+          ATTESTATION_BUNDLE_PATH: ${{ steps.attest.outputs.bundle-path }}
+        run: |
+          # upload-artifact preserves paths below their common ancestor. Keep
+          # all three inputs together, not in separate runner.temp directories.
+          test -f "$RUNNER_TEMP/week6-package/week6-evidence.tar.gz"
+          test -f "$RUNNER_TEMP/week6-package/MANIFEST.json"
+          test -n "$ATTESTATION_BUNDLE_PATH"
+          test -f "$ATTESTATION_BUNDLE_PATH"
+          test ! -L "$ATTESTATION_BUNDLE_PATH"
+          test ! -e "$RUNNER_TEMP/week6-package/attestation.json"
+          test ! -L "$RUNNER_TEMP/week6-package/attestation.json"
+          cp -- "$ATTESTATION_BUNDLE_PATH" "$RUNNER_TEMP/week6-package/attestation.json"
+          cmp -- "$ATTESTATION_BUNDLE_PATH" "$RUNNER_TEMP/week6-package/attestation.json"
       - name: Upload archive, manifest and attestation bundle
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -218,7 +233,7 @@ jobs:
           path: |
             ${{ runner.temp }}/week6-package/week6-evidence.tar.gz
             ${{ runner.temp }}/week6-package/MANIFEST.json
-            ${{ steps.attest.outputs.bundle-path }}
+            ${{ runner.temp }}/week6-package/attestation.json
           if-no-files-found: error
           retention-days: 30
 

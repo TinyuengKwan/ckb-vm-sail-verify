@@ -17,6 +17,7 @@ import tarfile
 import tempfile
 import textwrap
 import unittest
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "scripts"))
@@ -26,6 +27,8 @@ WORKFLOW = (ROOT / ".github/workflows/week6-release.yml").read_text()
 DOWNLOAD = "Download the independent-ephemeral-vm evidence bundle (URL never recorded)"
 UNPACK = "Unpack into the candidate checkout and validate clean-room + VM provenance"
 PACKAGE = "Package the evidence archive for the distinct download/replay job"
+STAGE = "Stage attestation beside the archive for a flat artifact"
+UPLOAD = "Upload archive, manifest and attestation bundle"
 AUDIT = "Validate fresh component and expected pre-publication audit boundary"
 REPLAY = "Verify archive bytes and replay only the downloaded case"
 
@@ -63,13 +66,17 @@ def field(name, key, indent):
     return "\n".join(body) + "\n"
 
 
-RECORDER = '''import json, os, pathlib, sys
+RECORDER = '''import hashlib, json, os, pathlib, sys
 args = sys.argv[1:]
 pathlib.Path(os.environ["RECORDED_ARGS"]).write_text(json.dumps(args))
 if pathlib.Path(__file__).name == "week6_ci_archive.py":
     for flag, data in (("--out", b"fixture archive"), ("--manifest-out", b"{}\\n")):
         with pathlib.Path(args[args.index(flag) + 1]).open("xb") as stream:
             stream.write(data)
+if pathlib.Path(__file__).name == "week6_release_ci_gate.py":
+    archive = pathlib.Path(args[args.index("--archive") + 1])
+    if hashlib.sha256(archive.read_bytes()).hexdigest() != args[args.index("--archive-sha256") + 1]:
+        raise SystemExit("fixture gate archive digest mismatch")
 '''
 
 
@@ -189,9 +196,9 @@ class WorkflowPathTests(unittest.TestCase):
         self.assertEqual(archive, self.input_path(
             "Attest the exact tar archive (attests packaging on GitHub, not VM execution)",
             "subject-path"))
-        uploaded = field("Upload archive, manifest and attestation bundle", "path", 10)
+        uploaded = field(UPLOAD, "path", 10)
         paths = uploaded.replace("${{ runner.temp }}", str(self.temp)).splitlines()
-        self.assertEqual(paths, [str(archive), str(manifest), "${{ steps.attest.outputs.bundle-path }}"])
+        self.assertEqual(paths, [str(archive), str(manifest), str(archive.parent / "attestation.json")])
         self.assertTrue(archive.is_relative_to(self.temp))
         self.assertTrue(manifest.is_relative_to(self.temp))
         output = Path(self.env["GITHUB_OUTPUT"]).read_text()
@@ -209,10 +216,11 @@ class WorkflowPathTests(unittest.TestCase):
         self.assertEqual(args[args.index("--archive-sha256") + 1], self.env["EXPECTED_SHA256"])
         self.assertEqual(args[args.index("--root") + 1], str(self.root))
 
-    def replay_archive(self):
-        directory = self.input_path("Download in a distinct job and new destination")
-        directory.mkdir()
-        archive = directory / "week6-evidence.tar.gz"
+    def replay_archive(self, archive=None):
+        if archive is None:
+            directory = self.input_path("Download in a distinct job and new destination")
+            directory.mkdir()
+            archive = directory / "week6-evidence.tar.gz"
         executable = textwrap.dedent('''\
             #!/usr/bin/env python3
             import json, pathlib, sys
@@ -234,6 +242,104 @@ class WorkflowPathTests(unittest.TestCase):
                 tar.addfile(member, io.BytesIO(content))
         self.env["EXPECTED_SHA256"] = hashlib.sha256(archive.read_bytes()).hexdigest()
         return archive
+
+    def prepare_attestation(self):
+        self.passed(PACKAGE)
+        # The real attestation action emits into a separate random directory.
+        source = self.temp / "random attestation directory" / "attestation.json"
+        source.parent.mkdir()
+        source.write_bytes(b'{"fixture": "attestation bytes, not verified evidence"}\n')
+        self.env["ATTESTATION_BUNDLE_PATH"] = str(source)
+        self.assertEqual(field(STAGE, "ATTESTATION_BUNDLE_PATH", 10),
+                         "${{ steps.attest.outputs.bundle-path }}")
+        return source
+
+    def artifact_roundtrip(self, paths, destination):
+        """Model explicit-file upload paths using the action's common ancestor.
+
+        This covers ZIP layout, not GitHub transport or attestation verification.
+        The failing real run used runner.temp as root, preserving subdirectories.
+        """
+        common = Path(os.path.commonpath([str(p.parent) for p in paths]))
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as archive:
+            for path in paths:
+                archive.write(path, path.relative_to(common).as_posix())
+        with zipfile.ZipFile(buffer) as archive:
+            names = archive.namelist()
+            archive.extractall(destination)  # Only this test's own fixture files.
+        return names
+
+    def test_uploaded_layout_roundtrips_to_audit_replay_and_collector_paths(self):
+        source = self.prepare_attestation()
+        package = self.temp / "week6-package"
+        self.replay_archive(package / "week6-evidence.tar.gz")
+        before = {p.name: p.read_bytes() for p in package.iterdir()}
+        self.passed(STAGE)
+        self.assertEqual((package / "attestation.json").read_bytes(), source.read_bytes())
+        for name, content in before.items():
+            self.assertEqual((package / name).read_bytes(), content)
+        paths = [Path(p) for p in field(UPLOAD, "path", 10).replace(
+            "${{ runner.temp }}", str(self.temp)).splitlines()]
+        audit_dir = self.input_path("Download the clean-room artifact")
+        names = self.artifact_roundtrip(paths, audit_dir)
+        self.assertEqual(set(names), {"week6-evidence.tar.gz", "MANIFEST.json", "attestation.json"})
+        self.assertEqual(len(names), 3)
+        self.assertEqual(audit_dir, self.input_path("Download in a distinct job and new destination"))
+        self.passed(AUDIT)
+        self.passed(REPLAY)
+        # The external collector expects these same flat names on both downloads.
+        for label in ("first-download", "downloaded"):
+            dest = self.base / label
+            self.artifact_roundtrip(paths, dest)
+            self.assertEqual((dest / "week6-evidence.tar.gz").read_bytes(), before["week6-evidence.tar.gz"])
+            self.assertEqual((dest / "MANIFEST.json").read_bytes(), before["MANIFEST.json"])
+
+    def test_old_split_upload_layout_reproduces_missing_archive(self):
+        source = self.prepare_attestation()
+        package = self.temp / "week6-package"
+        self.replay_archive(package / "week6-evidence.tar.gz")
+        names = self.artifact_roundtrip(
+            [package / "week6-evidence.tar.gz", package / "MANIFEST.json", source],
+            self.input_path("Download the clean-room artifact"))
+        self.assertIn("week6-package/week6-evidence.tar.gz", names)
+        self.assertNotIn("week6-evidence.tar.gz", names)
+        self.assertNotEqual(self.run_step(AUDIT).returncode, 0)
+        self.assertNotEqual(self.run_step(REPLAY).returncode, 0)
+
+    def test_stage_rejects_missing_or_symlink_attestation(self):
+        source = self.prepare_attestation()
+        link = source.parent / "link.json"
+        link.symlink_to(source)
+        for path in ("", str(source.parent / "missing.json"), str(source.parent), str(link)):
+            with self.subTest(path=path):
+                self.env["ATTESTATION_BUNDLE_PATH"] = path
+                self.assertNotEqual(self.run_step(STAGE).returncode, 0)
+                self.assertFalse((self.temp / "week6-package/attestation.json").exists())
+        self.assertEqual(source_snapshot.inventory(self.root), self.before)
+
+    def test_stage_does_not_overwrite_existing_attestation(self):
+        source = self.prepare_attestation()
+        self.passed(STAGE)
+        target = self.temp / "week6-package/attestation.json"
+        self.assertNotEqual(self.run_step(STAGE).returncode, 0)
+        self.assertEqual(target.read_bytes(), source.read_bytes())
+        target.unlink()
+        target.symlink_to(self.temp / "absent-target")
+        self.assertNotEqual(self.run_step(STAGE).returncode, 0)
+        self.assertTrue(target.is_symlink())
+        self.assertFalse((self.temp / "absent-target").exists())
+
+    def test_stage_requires_both_archive_and_manifest(self):
+        self.prepare_attestation()
+        for name in ("week6-evidence.tar.gz", "MANIFEST.json"):
+            with self.subTest(name=name):
+                path = self.temp / "week6-package" / name
+                content = path.read_bytes()
+                path.unlink()
+                self.assertNotEqual(self.run_step(STAGE).returncode, 0)
+                self.assertFalse((path.parent / "attestation.json").exists())
+                path.write_bytes(content)
 
     def test_actual_replay_shell_keeps_all_inputs_and_outputs_outside_checkout(self):
         self.replay_archive()
