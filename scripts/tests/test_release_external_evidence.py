@@ -15,6 +15,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import release_external_evidence as external
+from week6_release_ci_gate import member_target
 
 
 class ExternalEvidenceTests(unittest.TestCase):
@@ -334,7 +335,7 @@ class ExternalEvidenceTests(unittest.TestCase):
     def ci_report(self, extra_payload=None):
         cfg = self.policy["ci_download"]
         clean_name = "clean-room/report.json"
-        replay_name = "corpus/add-signed-overflow.json"
+        replay_name = "cases/add-signed-overflow.json"
         payload = {
             clean_name: b'{"fixture":"clean-room"}\n',
             replay_name: b'{"fixture":"replay"}\n',
@@ -357,7 +358,8 @@ class ExternalEvidenceTests(unittest.TestCase):
         downloaded = self.make_file("downloaded.tar.gz", (self.out / uploaded["path"]).read_bytes())
         manifest_ref = self.make_file("downloaded/MANIFEST.json", manifest_bytes)
         clean_room = self.make_file("downloaded/" + clean_name, payload[clean_name])
-        self.make_file("downloaded/" + replay_name, payload[replay_name])
+        replay_source = member_target(Path("downloaded"), replay_name).as_posix()
+        self.make_file(replay_source, payload[replay_name])
         for name, data in payload.items():
             if name not in (clean_name, replay_name):
                 self.make_file("downloaded/" + name, data)
@@ -404,8 +406,8 @@ class ExternalEvidenceTests(unittest.TestCase):
                                   "exit_code": 0,
                                   "stdout": self.log, "stderr": self.log,
                                   "destination_initially_absent": True},
-            "replay": {"case": "add-signed-overflow", "source": "downloaded/" + replay_name,
-                       "argv": ["ckb-vm-sail-diff", "--replay", "downloaded/" + replay_name],
+            "replay": {"case": "add-signed-overflow", "source": replay_source,
+                       "argv": ["ckb-vm-sail-diff", "--replay", replay_source],
                        "exit_code": 0, "stdout": self.log, "stderr": self.log},
             "remote_query": {"argv": ["gh", "api", "repos/" + self.policy["repository"] +
                                        "/actions/runs/123"], "exit_code": 0,
@@ -438,6 +440,27 @@ class ExternalEvidenceTests(unittest.TestCase):
             with self.subTest(pattern=pattern), self.check_snapshot(), \
                     self.assertRaisesRegex(RuntimeError, pattern):
                 external.check_ci_download(path, self.candidate, root=self.root)
+
+    def test_ci_rejects_legacy_flat_replay_source_even_if_bytes_match(self):
+        report = self.ci_report()
+        old = self.out / report["replay"]["source"]
+        flat = "downloaded/cases/add-signed-overflow.json"
+        self.make_file(flat, old.read_bytes())
+        report["replay"]["source"] = flat
+        path = self.write_report("ci-flat-replay.json", report)
+        verified = SimpleNamespace(returncode=0, stdout=b'[{"verificationResult": {}}]', stderr=b"")
+        with self.check_snapshot(), patch.object(external.subprocess, "run", return_value=verified), \
+                self.assertRaisesRegex(RuntimeError, "downloaded replay differs"):
+            external.check_ci_download(path, self.candidate, root=self.root)
+
+    def test_ci_rejects_modified_extracted_replay(self):
+        report = self.ci_report()
+        (self.out / report["replay"]["source"]).write_bytes(b"modified replay")
+        path = self.write_report("ci-modified-replay.json", report)
+        verified = SimpleNamespace(returncode=0, stdout=b'[{"verificationResult": {}}]', stderr=b"")
+        with self.check_snapshot(), patch.object(external.subprocess, "run", return_value=verified), \
+                self.assertRaisesRegex(RuntimeError, "replay file differs"):
+            external.check_ci_download(path, self.candidate, root=self.root)
 
     def test_ci_rejects_failed_or_non_json_provenance_verification(self):
         for verifier, pattern in [

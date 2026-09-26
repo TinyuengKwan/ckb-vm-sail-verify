@@ -490,8 +490,12 @@ def check_ci_download(path, candidate, root=None):
                         "stdout": report["external_download"]["stdout"],
                         "stderr": report["external_download"]["stderr"]}], ["external-download"])
     fields(report["replay"], {"case", "source", "argv", "exit_code", "stdout", "stderr"}, "CI replay")
+    # Import here to avoid the gate/validator module initialization cycle.
+    # The collector uses this same mapping after strict archive extraction.
+    from week6_release_ci_gate import member_target
+    expected_replay_source = member_target(Path("downloaded"), replay_name).as_posix()
     require(report["replay"]["case"] == "add-signed-overflow" and
-            report["replay"]["source"] == "downloaded/" + replay_name and
+            report["replay"]["source"] == expected_replay_source and
             common.same(report["replay"]["exit_code"], 0), "CI downloaded replay differs")
     replay_source = common.member(directory, report["replay"]["source"])
     require(common.sha(replay_source) == members[replay_name]["sha256"], "CI replay file differs from archive")

@@ -129,6 +129,15 @@ def unique_bundle(directory):
     return rows[0]
 
 
+def replay_command(downloaded, manifest, artifact_dir):
+    """Use the gate's extraction layout, never assume flat replay members."""
+    source = gate.member_target(downloaded, manifest["replay_case"])
+    return source, [str(gate.member_target(downloaded, "bin/ckb-vm-sail-diff")),
+                    "--sail-bin", str(gate.member_target(downloaded, "bin/sail_riscv_sim")),
+                    "--sail-config", str(gate.member_target(downloaded, "config/ckb_vm_config.json")),
+                    "--replay", str(source), "--artifact-dir", str(artifact_dir)]
+
+
 def collect(args):
     out = Path(args.out).resolve()
     require(not out.exists() and not out.is_symlink(), "collector output already exists")
@@ -191,13 +200,7 @@ def collect(args):
         require(attest_record["exit_code"] == 0, "attestation download failed")
         attestation = unique_bundle(attest_dir)
 
-        replay_name = inner_manifest["replay_case"]
-        replay_source = downloaded / replay_name
-        replay_argv = [str(downloaded / "bin/ckb-vm-sail-diff"),
-                       "--sail-bin", str(downloaded / "bin/sail_riscv_sim"),
-                       "--sail-config", str(downloaded / "config/ckb_vm_config.json"),
-                       "--replay", str(replay_source),
-                       "--artifact-dir", str(out / "replay-result")]
+        replay_source, replay_argv = replay_command(downloaded, inner_manifest, out / "replay-result")
         replay_record = run_command(out, "replay", replay_argv, out)
         require(replay_record["exit_code"] == 0, "downloaded replay failed")
 
@@ -230,7 +233,7 @@ def collect(args):
                       "download_archive": ref(out, download_archive), "manifest": ref(out, top_manifest),
                       "attestation": ref(out, attestation), "expired": False},
             external_download={**download_record, "destination_initially_absent": initially_absent},
-            replay={"case": "add-signed-overflow", "source": "downloaded/" + replay_name,
+            replay={"case": "add-signed-overflow", "source": ref(out, replay_source)["path"],
                     "argv": replay_argv, "exit_code": replay_record["exit_code"],
                     "stdout": replay_record["stdout"], "stderr": replay_record["stderr"]},
             remote_query=remote, jobs_query=jobs_record,
