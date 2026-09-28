@@ -7,7 +7,7 @@ the exact evidence behind the release-level claim classes. Runtime evidence
 references live in an ignored execution manifest so a tracked review manifest
 does not hash a worktree report that recursively includes itself. It does not query
 remote services, rerun kernels, approve a release, or replace the independent
-third-party requirement.
+post-delivery CKB reproduction.
 """
 
 from __future__ import annotations
@@ -26,6 +26,7 @@ import release_evidence as common
 import release_mismatch_evidence as mismatches
 import release_rust_tests as rust_tests
 import release_worktree_evidence as worktree
+import release_delivery_scope as delivery
 import source_snapshot as source
 
 
@@ -238,6 +239,9 @@ def validate_components(root, references, candidate):
     aggregate = common.read(paths["aggregate"])
     require(aggregate.get("status") == "incomplete" and aggregate.get("release_claimed") is False and
             aggregate.get("week6_closed") is False, "public review linked a successful/invalid aggregate")
+    delivery.validate_boundary(aggregate)
+    require(aggregate['checks'].get('third_party') == delivery.third_party_deferred(),
+            'public review third-party deferral differs')
     worktree_row = aggregate["checks"]["worktree_audit"]
     expected_outstanding = {"clean_room", "ci_download", "release_package", "third_party", "public_claims"}
     if worktree_row["status"] == "incomplete":
@@ -277,6 +281,7 @@ def validate_components(root, references, candidate):
     results["aggregate"] = {
         "status": aggregate["status"],
         "outstanding": aggregate["outstanding"],
+        **delivery.boundary(aggregate['checks']),
         "release_claimed": False,
         "week6_closed": False,
     }

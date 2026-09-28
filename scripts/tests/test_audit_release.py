@@ -155,7 +155,7 @@ class AggregationTests(unittest.TestCase):
         self.assertEqual(report['outstanding'], [name for name in gate.SLOTS if name not in gate.CHECKERS])
         self.assertEqual(report['checks']['runtime']['status'], 'verified_existing_evidence')
 
-    def test_all_twelve_verified_components_are_the_only_success_path(self):
+    def complete_delivery_fixture(self):
         source_snapshot = 'f' * 64
         local_results = {name: {'fixture_only': True} for name in gate.CHECKERS}
         local_results['public_claims'] = {'public_claims_slot_closed': True,
@@ -212,6 +212,11 @@ class AggregationTests(unittest.TestCase):
         self.patch(patch.dict(gate.PARTIAL_CHECKERS,
                               {'worktree_audit': lambda *a, **k: copy.deepcopy(worktree_details)}))
         self.manifest['evidence']['worktree_audit'] = self.ref
+        return external_results, worktree_details
+
+    def test_all_twelve_verified_components_still_pass_strict_checks(self):
+        external_results, _ = self.complete_delivery_fixture()
+        source_snapshot = 'f' * 64
         report, code = gate.aggregate(self.manifest)
         self.assertEqual(code, 0)
         self.assertEqual(report['status'], 'passed')
@@ -219,6 +224,8 @@ class AggregationTests(unittest.TestCase):
         self.assertTrue(report['release_claimed'])
         self.assertTrue(report['week6_closed'])
         self.assertTrue(report['fresh_execution_claimed'])
+        self.assertTrue(report['third_party_reproduced'])
+        self.assertEqual(report['post_delivery'], [])
         external_results['third_party']['source_snapshot_sha256'] = 'e' * 64
         with self.assertRaisesRegex(RuntimeError, 'completion fact'):
             gate.aggregate(self.manifest)
@@ -244,6 +251,74 @@ class AggregationTests(unittest.TestCase):
         with patch.object(gate.external, 'check_vm_provenance', return_value={'operator_attested': False}), \
                 self.assertRaisesRegex(RuntimeError, 'completion fact'):
             gate.aggregate(self.manifest)
+
+    def test_delivery_passes_with_third_party_explicitly_deferred_not_verified(self):
+        self.complete_delivery_fixture()
+        self.manifest['evidence']['third_party'] = None
+        report, code = gate.aggregate(self.manifest)
+        self.assertEqual((code, report['status']), (0, 'passed'))
+        self.assertEqual(report['acceptance_scope'], 'ckb-spark-delivery-v1')
+        self.assertTrue(report['week6_closed'])
+        self.assertEqual(report['delivery_outstanding'], [])
+        self.assertEqual(report['outstanding'], ['third_party'])
+        self.assertEqual(report['post_delivery'], ['third_party'])
+        self.assertFalse(report['third_party_reproduced'])
+        self.assertEqual(report['checks']['third_party'], gate.delivery.third_party_deferred())
+
+    def test_every_other_slot_remains_a_delivery_requirement(self):
+        self.complete_delivery_fixture()
+        self.manifest['evidence']['third_party'] = None
+        for name in gate.SLOTS:
+            if name == 'third_party':
+                continue
+            with self.subTest(slot=name):
+                original = self.manifest['evidence'][name]
+                self.manifest['evidence'][name] = None
+                report, code = gate.aggregate(self.manifest)
+                self.assertNotEqual(code, 0)
+                self.assertIn(name, report['delivery_outstanding'])
+                self.assertFalse(report['week6_closed'])
+                self.manifest['evidence'][name] = original
+
+    def test_deferred_delivery_does_not_waive_completion_facts(self):
+        external_results, worktree = self.complete_delivery_fixture()
+        self.manifest['evidence']['third_party'] = None
+        for slot, field, wrong in [
+                ('clean_room', 'fresh_execution_claimed', False),
+                ('ci_download', 'remote_state_queried', False),
+                ('release_package', 'external_assets_verified', False),
+                ('release_package', 'publication_verified', False),
+                ('release_package', 'download_verified', False),
+                ('release_package', 'delivery_profile', 'B'),
+                ('release_package', 'source_snapshot_sha256', 'e' * 64)]:
+            with self.subTest(slot=slot, field=field):
+                previous = external_results[slot][field]
+                external_results[slot][field] = wrong
+                with self.assertRaisesRegex(RuntimeError, 'completion fact'):
+                    gate.aggregate(self.manifest)
+                external_results[slot][field] = previous
+        worktree['delivery_approval_verified'] = False
+        report, code = gate.aggregate(self.manifest)
+        self.assertNotEqual(code, 0)
+        self.assertIn('worktree_audit', report['delivery_outstanding'])
+
+    def test_supplied_invalid_third_party_is_not_silently_deferred(self):
+        self.complete_delivery_fixture()
+        def reject(*args, **kwargs):
+            raise RuntimeError('bad third-party signature fixture')
+        self.patch(patch.dict(gate.EXTERNAL_CHECKERS, {'third_party': reject}))
+        report, code = gate.aggregate(self.manifest)
+        self.assertEqual(code, 1)
+        self.assertIn('third_party', report['delivery_outstanding'])
+        self.assertEqual(report['post_delivery'], [])
+        self.assertFalse(report['week6_closed'])
+
+    def test_no_manifest_switch_can_defer_another_slot(self):
+        self.manifest['deferred_slots'] = ['clean_room']
+        with self.assertRaisesRegex(RuntimeError, 'manifest fields'):
+            gate.aggregate(self.manifest)
+        with self.assertRaisesRegex(RuntimeError, 'unauthorized delivery deferral'):
+            gate.delivery.boundary({'clean_room': gate.delivery.third_party_deferred()})
 
     def test_vm_clean_room_stays_incomplete_until_the_host_record_binds_it(self):
         self.manifest['evidence']['clean_room'] = self.ref
@@ -327,7 +402,7 @@ class AggregationTests(unittest.TestCase):
         report, code = gate.aggregate(self.manifest)
         self.assertEqual(code, 1)
         self.assertEqual(report['checks']['ci_download']['status'], 'invalid')
-        self.assertIn('different clean-room', report['checks']['ci_download']['reason'])
+        self.assertIn('different report', report['checks']['ci_download']['reason'])
 
     def test_third_party_must_bind_same_release_package(self):
         other = self.root / 'other-package.json'
@@ -342,7 +417,7 @@ class AggregationTests(unittest.TestCase):
         report, code = gate.aggregate(self.manifest)
         self.assertEqual(code, 1)
         self.assertEqual(report['checks']['third_party']['status'], 'invalid')
-        self.assertIn('different release package', report['checks']['third_party']['reason'])
+        self.assertIn('different report', report['checks']['third_party']['reason'])
 
     def test_source_review_component_cannot_close_whole_worktree_slot(self):
         self.patch(patch.dict(gate.PARTIAL_CHECKERS,
@@ -496,7 +571,7 @@ class AggregationTests(unittest.TestCase):
         report, code = gate.aggregate(self.manifest)
         self.assertEqual(code, 1)
         self.assertEqual(report['checks']['runtime']['reason'], 'bad trace')
-        self.assertEqual(report['checks']['third_party']['status'], 'missing')
+        self.assertEqual(report['checks']['third_party'], gate.delivery.third_party_deferred())
 
     def test_changed_report_during_validation(self):
         def changed(path):
@@ -543,6 +618,22 @@ class AggregationTests(unittest.TestCase):
              patch.object(gate.subprocess, 'check_output', return_value='fixture'), patch('builtins.print'):
             self.assertEqual(gate.main(), 1)
         self.assertEqual(evidence.read(out / 'report.json')['status'], 'invalid')
+
+    def test_cli_source_change_revokes_tentative_delivery_success(self):
+        self.complete_delivery_fixture()
+        self.manifest['evidence']['third_party'] = None
+        manifest = self.root / 'manifest.json'
+        manifest.write_text(json.dumps(self.manifest))
+        out = self.root / 'changed'
+        with patch.object(sys, 'argv', ['audit_release.py', '--manifest', str(manifest), '--out', str(out)]), \
+             patch.object(gate, 'snapshot', side_effect=[{'fixture': 'before'}, {'fixture': 'after'}]), \
+             patch.object(gate.subprocess, 'check_output', return_value='fixture'), patch('builtins.print'):
+            self.assertEqual(gate.main(), 1)
+        report = evidence.read(out / 'report.json')
+        self.assertEqual(report['status'], 'invalid')
+        self.assertIn('audit inputs changed', report['error'])
+        for flag in ('release_claimed', 'week6_closed', 'fresh_execution_claimed', 'third_party_reproduced'):
+            self.assertIs(report[flag], False)
 
 
 class ComponentBoundaryTests(unittest.TestCase):
@@ -721,6 +812,102 @@ class ComponentBoundaryTests(unittest.TestCase):
              patch.object(evidence.producer, 'observed_environment', return_value={}), \
              self.assertRaisesRegex(RuntimeError, 'third_party'):
             evidence.check_runtime(self.path)
+
+
+class RelativeJoinTests(unittest.TestCase):
+    def setUp(self):
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        self.root = Path(tmp.name)
+        p = patch.object(gate, 'ROOT', self.root)
+        p.start(); self.addCleanup(p.stop)
+        self.directory = self.root / 'ci'
+        self.directory.mkdir()
+        self.accepted = self.root / 'clean.json'
+        self.accepted.write_bytes(b'{"actual":"same bytes"}')
+        self.copy = self.directory / 'clean.json'
+        self.copy.write_bytes(self.accepted.read_bytes())
+        self.aggregate = {'path': 'clean.json', 'sha256': gate.evidence.sha(self.accepted)}
+        self.local = {'path': 'clean.json', 'sha256': gate.evidence.sha(self.copy)}
+
+    def test_different_bases_same_bytes(self):
+        gate.linked_report_matches(self.directory, self.local, self.aggregate, 'CI')
+
+    def test_same_file_different_relative_strings(self):
+        row = {'path': 'ci/clean.json', 'sha256': self.local['sha256']}
+        gate.linked_report_matches(self.directory, self.local, row, 'CI')
+
+    def test_identical_strings_do_not_accept_different_files(self):
+        self.copy.write_bytes(b'{}')
+        with self.assertRaises(RuntimeError):
+            gate.linked_report_matches(self.directory, self.local, self.aggregate, 'CI')
+
+    def test_valid_but_different_hashes_rejected(self):
+        self.copy.write_bytes(b'{}')
+        self.local['sha256'] = gate.evidence.sha(self.copy)
+        with self.assertRaisesRegex(RuntimeError, 'different report'):
+            gate.linked_report_matches(self.directory, self.local, self.aggregate, 'CI')
+
+    def test_missing_local_reference_rejected(self):
+        self.copy.unlink()
+        with self.assertRaises(RuntimeError):
+            gate.linked_report_matches(self.directory, self.local, self.aggregate, 'CI')
+
+    def test_symlink_rejected(self):
+        self.copy.unlink(); self.copy.symlink_to(self.accepted)
+        with self.assertRaisesRegex(RuntimeError, 'symlink'):
+            gate.linked_report_matches(self.directory, self.local, self.aggregate, 'CI')
+
+    def test_extra_fields_and_traversal_rejected(self):
+        for row in ({**self.local, 'ignored': True}, {**self.local, 'path': '../clean.json'}):
+            with self.subTest(row=row), self.assertRaises(RuntimeError):
+                gate.linked_report_matches(self.directory, row, self.aggregate, 'CI')
+
+    def aggregate_external_fixture(self, slot, dependency, *, differing=False, reject=False):
+        # Isolate the join only; stubbed component checks are never acceptance evidence.
+        for name in gate.PINS.values():
+            path = self.root / name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('fixture only')
+        if differing:
+            self.copy.write_bytes(b'{"different":"fixture"}')
+        local = {'path': 'clean.json', 'sha256': gate.evidence.sha(self.copy)}
+        report = self.directory / 'report.json'
+        report.write_text(json.dumps({dependency: local}))
+        manifest = {'schema_version': 1, 'candidate': 'fixture-only',
+                    'pins': {k: gate.evidence.sha(self.root / v) for k, v in gate.PINS.items()},
+                    'evidence': dict.fromkeys(gate.SLOTS)}
+        manifest['evidence'][slot] = {'path': 'ci/report.json', 'sha256': gate.evidence.sha(report)}
+        manifest['evidence'][dependency] = self.aggregate
+        def checker(*args, **kwargs):
+            if reject:
+                raise RuntimeError('fixture component rejected')
+            return {'fixture_only': True}
+        with patch.dict(gate.EXTERNAL_CHECKERS, {slot: checker, dependency: lambda *a, **k: {}}):
+            result, code = gate.aggregate(manifest)
+        return result, code
+
+    def test_both_external_joins_resolve_report_local_references(self):
+        for slot, dependency in [('ci_download', 'clean_room'), ('third_party', 'release_package')]:
+            with self.subTest(slot=slot):
+                result, code = self.aggregate_external_fixture(slot, dependency)
+                self.assertEqual(code, 2)
+                self.assertEqual(result['checks'][slot]['status'], 'verified_existing_evidence')
+                self.assertFalse(result['week6_closed'])
+
+    def test_both_external_joins_reject_valid_but_different_reports(self):
+        for slot, dependency in [('ci_download', 'clean_room'), ('third_party', 'release_package')]:
+            with self.subTest(slot=slot):
+                result, code = self.aggregate_external_fixture(slot, dependency, differing=True)
+                self.assertEqual(code, 1)
+                self.assertIn('different report', result['checks'][slot]['reason'])
+
+    def test_join_match_does_not_bypass_component_validator(self):
+        for slot, dependency in [('ci_download', 'clean_room'), ('third_party', 'release_package')]:
+            with self.subTest(slot=slot):
+                result, code = self.aggregate_external_fixture(slot, dependency, reject=True)
+                self.assertEqual(code, 1)
+                self.assertIn('fixture component rejected', result['checks'][slot]['reason'])
 
 
 if __name__ == '__main__':

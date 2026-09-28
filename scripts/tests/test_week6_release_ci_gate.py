@@ -130,10 +130,12 @@ class GateArchiveTests(unittest.TestCase):
             checks["clean_room"] = {"status": "incomplete",
                                     "reason": "independent ephemeral VM host provenance record absent"}
             checks["worktree_audit"] = {"status": "incomplete", "reason": "partial"}
+            checks["third_party"] = GATE.audit_release.delivery.third_party_deferred()
             expected = ["clean_room", "ci_download", "release_package", "third_party", "worktree_audit"]
             aggregate = {"status": "incomplete", "manifest_sha256": ARCHIVE.sha(audit_manifest),
                          "release_claimed": False, "week6_closed": False, "fresh_execution_claimed": False,
                          "outstanding": expected, "checks": checks}
+            aggregate.update(GATE.audit_release.delivery.boundary(checks))
             archived = clean_dir / "audit-result.json"
             archived.write_text(json.dumps(aggregate) + "\n")
             with patch.object(GATE.external, "check_vm_provenance", return_value={"operator_attested": True}) as prov, \
@@ -145,10 +147,14 @@ class GateArchiveTests(unittest.TestCase):
             for mutate, pattern in [
                 (lambda a: a.update(outstanding=expected[1:]), "boundary differs"),
                 (lambda a: a.update(manifest_sha256="0" * 64), "identity"),
-                (lambda a: a["checks"]["runtime"].update(status="invalid"), "not verified"),
+                (lambda a: a["checks"]["runtime"].update(status="invalid"), "delivery boundary"),
                 (lambda a: a["checks"]["clean_room"].update(reason="clean-room report invalid"), "deferred host record"),
                 (lambda a: a["checks"]["runtime"]["reference"].update(sha256="1" * 64), "differs from manifest"),
                 (lambda a: a.update(release_claimed=True), "boundary"),
+                (lambda a: a.update(third_party_reproduced=True), "delivery boundary"),
+                (lambda a: a.update(delivery_outstanding=[]), "delivery boundary"),
+                (lambda a: a["checks"]["third_party"].update(recipient="someone else"), "unauthorized delivery deferral"),
+                (lambda a: a["checks"]["runtime"].update(status="deferred_to_recipient"), "unauthorized delivery deferral"),
             ]:
                 broken = json.loads(json.dumps(aggregate)); mutate(broken)
                 archived.write_text(json.dumps(broken) + "\n")

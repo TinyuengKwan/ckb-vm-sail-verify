@@ -189,10 +189,16 @@ def validate_archived_aggregate(root, audit_manifest, archived_report, expected,
     require(report.get("outstanding") == expected, "archived aggregate boundary differs")
     checks = report.get("checks")
     require(type(checks) is dict and set(checks) == set(audit_release.SLOTS), "archived aggregate slots")
+    delivery_boundary = audit_release.delivery.validate_boundary(report)
     verified = 0
     for name, row in checks.items():
         status = row.get("status")
         if name in expected:
+            if name == "third_party":
+                require(row == audit_release.delivery.third_party_deferred() and
+                        manifest["evidence"].get(name) is None,
+                        "archived third-party deferral differs")
+                continue
             require(status in ("missing", "incomplete"), "outstanding slot is not merely open: " + name)
             if name == "clean_room":
                 require(status == "incomplete" and "provenance record absent" in str(row.get("reason")),
@@ -214,6 +220,7 @@ def validate_archived_aggregate(root, audit_manifest, archived_report, expected,
         verified += 1
     provenance = external.check_vm_provenance(clean_report)
     return {"archived_aggregate_sha256": sha(archived_report), "verified_slots": verified,
+            **delivery_boundary,
             "outstanding": expected, "vm_provenance": provenance}
 
 

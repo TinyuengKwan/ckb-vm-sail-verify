@@ -55,7 +55,7 @@
       "evidence_components": [],
       "limitations": [
         "imperative and target wording is not completion evidence",
-        "acceptance definitions are not weakened by missing evidence"
+        "owner-directed scope changes are explicit; missing evidence alone does not waive requirements"
       ],
       "summary": "Plan text defines requirements and gates rather than proving they ran."
     },
@@ -64,7 +64,7 @@
         "aggregate"
       ],
       "limitations": [
-        "clean-room, worktree approval, CI download, package and third party remain",
+        "current-candidate clean-room, worktree approval, CI download and package remain delivery requirements; third-party reproduction is deferred to recipient CKB",
         "this review alone closes only public_claims"
       ],
       "summary": "The authoritative aggregate remains incomplete and does not claim Week6 or release completion."
@@ -130,7 +130,7 @@
     },
     "VERIFICATION.md": {
       "claim_paragraphs": 67,
-      "claim_paragraphs_sha256": "1a755f98aa3fb4f39e083e65e511769a6b55303673d5687ac9c84c9cbebf8e92",
+      "claim_paragraphs_sha256": "a3c535bcf2a7f74977f9d8cf1e67967bd767678a356ad194220e95037378c5ea",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -142,8 +142,8 @@
         "release_incomplete"
       ],
       "classification": "current_assurance",
-      "review": "Reviewed 2026-09-24: owner-approved same-immutable-release two-data-asset layout plus detached signature; v2 signed byte bindings and exact current source restoration. Historical preview sizes and VM/CI results retain their identity. Local authentication/restoration does not establish publication, new VM/CI success, final output approval, independent third-party reproduction or Week6 closure.",
-      "sha256": "f23830fb8e3f7f37bbe5d14974e46babe636af70746b9ee7eb5300b28f35c9c1"
+      "review": "Reviewed 2026-09-28: delivery order now separates eleven mandatory gates from post-delivery CKB reproduction. Owner signature, exact output approval, current VM/CI and immutable asset validation remain required. 3294cfb evidence is historical for the modified candidate, not a new-candidate pass.",
+      "sha256": "ad9f40b49e0db302714f69ab73b653bcd164255722790269670b1d54b8fb42b9"
     },
     "artifacts/README.md": {
       "claim_paragraphs": 0,
@@ -154,8 +154,8 @@
       "sha256": "00b696caac4ad0d794e52b3a424c4920aa025cd46dcbc79572e4dc9bce4a530e"
     },
     "docs/WEEK6_STATUS.md": {
-      "claim_paragraphs": 115,
-      "claim_paragraphs_sha256": "5157970b9745f6f578432ae761ad4763bc4b84502d547f61d1fa80195c77ee5f",
+      "claim_paragraphs": 119,
+      "claim_paragraphs_sha256": "b0bee4189df36ac86fa766f5e2e42b8e6dc41708816ffa3e8a7951afc2780d7a",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -167,8 +167,8 @@
         "release_incomplete"
       ],
       "classification": "current_assurance",
-      "review": "Reviewed 2026-09-24: owner-approved same-immutable-release two-data-asset layout plus detached signature; v2 signed byte bindings and exact current source restoration. Historical preview sizes and VM/CI results retain their identity. Local authentication/restoration does not establish publication, new VM/CI success, final output approval, independent third-party reproduction or Week6 closure.",
-      "sha256": "0a51ff8a01813c167a1fd75cfdb22a885e6e3c1e2e4560385ca59c5df0d90356"
+      "review": "Reviewed 2026-09-28: records the owner-directed CKB Spark delivery scope, exact prior 3294cfb evidence identities, relative-reference fix and corrected prototype test coverage. Third-party execution is explicitly not verified. New freeze, execution, exact output approval and formal publication remain outstanding; older paragraphs retain dated provenance.",
+      "sha256": "2d90f753f065c02b53b6d9d053f22f69216c9ba444a0cf76738bd0b9027613ec"
     },
     "docs/architecture.md": {
       "claim_paragraphs": 17,
@@ -267,14 +267,14 @@
       "sha256": "0116b1cc0b3ededec4c4d2be4d8dd265edd3ed71bb0194a5b9d9ac52a64fcd4b"
     },
     "docs/plan/week6.md": {
-      "claim_paragraphs": 5,
-      "claim_paragraphs_sha256": "7073e3b71586a3bd72f4b5ceb85fb200d861ee9849050582837e42bde4754df1",
+      "claim_paragraphs": 7,
+      "claim_paragraphs_sha256": "27dfecf4b9d3c7977ba4c1b6296d5bafef161c45a164ae48a1ea44e61ee1a2be",
       "claims": [
         "normative_only"
       ],
       "classification": "normative_plan",
-      "review": "Reviewed as a requirement/specification only; imperative or target wording is not execution evidence.",
-      "sha256": "354ee1e4401ef29339695c71219e42be799d1c8563d4a256b7d197138a77cb6c"
+      "review": "Reviewed 2026-09-28: explicit owner scope amendment moves third-party reproduction to CKB after delivery without claiming recipient acceptance or execution. Eleven delivery requirements remain mandatory, with separate evidence gaps and post-delivery reporting. Normative requirements are not execution evidence.",
+      "sha256": "909f161abd933e53b2896e7adc3a1990e0edad72f3a5c4e736b46bb48981687a"
     },
     "docs/release/AENEAS_OPAM_DEPENDENCIES.md": {
       "claim_paragraphs": 10,
@@ -297,15 +297,15 @@
       "sha256": "d9cafcefea512e4d65a9b6c76dbe8648fcdc4be3df3df6d653622b4b8a51a15f"
     },
     "docs/release/AUDIT_RELEASE.md": {
-      "claim_paragraphs": 36,
-      "claim_paragraphs_sha256": "a9aa26e0346b1813cb4a96e377cac503eb49ecad94756b1054ae5d0f3ff8f24f",
+      "claim_paragraphs": 38,
+      "claim_paragraphs_sha256": "41c179cce2533c1007f51192d9c5b8d66d06b9c9b37c831142d32838c64f568b",
       "claims": [
         "source_output_identity",
         "release_incomplete"
       ],
       "classification": "current_assurance",
-      "review": "Reviewed 2026-09-24: owner-approved same-immutable-release two-data-asset layout plus detached signature; v2 signed byte bindings and exact current source restoration. Historical preview sizes and VM/CI results retain their identity. Local authentication/restoration does not establish publication, new VM/CI success, final output approval, independent third-party reproduction or Week6 closure.",
-      "sha256": "faa3629aee11ae035eca255e468c015d40117580630b8128f707cb15da16bc9d"
+      "review": "Reviewed 2026-09-28: v9 checker has eleven mandatory delivery slots and a transparently deferred third-party slot; supplied evidence is still strict. Report-local versus checkout-relative joins compare validated bytes. Updated current policy/workflow status, while old v8/v9/v10 manifests and execution records remain historical.",
+      "sha256": "27b2bc639c99b3ee0622a34f8aec80251944e81b59dd1bff6268464b675ae224"
     },
     "docs/release/CI_READINESS.md": {
       "claim_paragraphs": 2,
@@ -656,7 +656,7 @@
     },
     "docs/release/PUBLIC_CLAIMS_FINAL.md": {
       "claim_paragraphs": 7,
-      "claim_paragraphs_sha256": "b4113bcb2db3549b6200a7332e9e1c6c238d8dc08b63a0feeaf544bf9532650f",
+      "claim_paragraphs_sha256": "d73dd628685a09baf2ea1656f7ad18969cadbc3bd149f1e1b37e8a948655f136",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -668,8 +668,8 @@
         "release_incomplete"
       ],
       "classification": "current_assurance",
-      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "91fd274f895b788a8c6788105f384ffae7b956c937d42a82a9f2f141a152d86d"
+      "review": "Reviewed 2026-09-28: public-claim review does not replace delivery evidence or CKB post-delivery reproduction. Current delivery gaps and deferred third-party status are separate; dated component counts and reports retain their original evidence identities.",
+      "sha256": "a1c18a8204714a51b6b557a6950c08d3194acd3133dbadd81b914593cdb64539"
     },
     "docs/release/PUBLIC_CLAIMS_REVIEW.md": {
       "claim_paragraphs": 6,
@@ -953,7 +953,7 @@
     },
     "docs/release/WEEK6_DUAL_ASSET_RESTORE.md": {
       "claim_paragraphs": 7,
-      "claim_paragraphs_sha256": "9241456b552400ea632b27772b1b099062b6970adcaf658a98ac0fa9d62ed9da",
+      "claim_paragraphs_sha256": "bdadda91d7646b461f1c68047b6f111c4f6479c8b78e41422305595ed521f66e",
       "claims": [
         "source_output_identity",
         "release_incomplete",
@@ -962,8 +962,8 @@
         "rocq_no_go"
       ],
       "classification": "technical_boundary",
-      "review": "Reviewed 2026-09-24: owner-approved same-immutable-release two-data-asset layout plus detached signature; v2 signed byte bindings and exact current source restoration. Historical preview sizes and VM/CI results retain their identity. Local authentication/restoration does not establish publication, new VM/CI success, final output approval, independent third-party reproduction or Week6 closure.",
-      "sha256": "5b9bc390b7f96f5a0835f5a774af75794e9c41f2f9d52f05a1301cba708a1d9d"
+      "review": "Reviewed 2026-09-28: same immutable release two-data-asset layout and owner signature remain mandatory; third-party reproduction is deferred to recipient CKB and no pre-delivery reproducer key is needed. Restoration or local tests do not establish official reproduction, new candidate execution or delivery completion.",
+      "sha256": "1e78aa8b78fb8f0a75c5d449825b6e988ce6050528510b233a7e2bfa5bf92e40"
     },
     "docs/release/WEEK6_RUNTIME_FLOOR.md": {
       "claim_paragraphs": 8,
@@ -1348,9 +1348,9 @@
   },
   "forbidden_overclaims": [
     "CKB-VM is formally verified.",
-    "CKB-VM \u5df2\u7ecf\u5b8c\u6210\u5f62\u5f0f\u5316\u9a8c\u8bc1\u3002",
+    "CKB-VM 已经完成形式化验证。",
     "Week6 is closed.",
-    "Week6 \u5df2\u5173\u95ed\u3002",
+    "Week6 已关闭。",
     "Rocq adds verified instruction coverage."
   ],
   "kind": "public-claims-review-v1",

@@ -5,9 +5,21 @@
 Rocq、完整 Rust 默认测试、mismatch、维护者演示及公开结论；并已为
 clean-room、CI 下载、发布包和签名第三方记录接入 fail-closed 验收器。
 完整外部证据链及最终输出差异批准仍缺失，不因“有了验收器”变成通过。
-当前版本已有严格的 release 成功路径，但只有十二个槽全部由真实验收器确认，且完成事实
-齐全时才可退出 0；缺少任一外部记录、信任根或明确批准均保持非零，不能作为允许发布的
-CI 绿灯。
+2026-09-28 按所有者的星火计划交付定位调整为 v9：第三方复现由 CKB 官方接收后开展，
+缺省第三方槽显示 `deferred_to_recipient`，不是通过或官方认可。其余十一项全部经真实验收器确认、
+完成事实和来源连接齐全后才可退出 0，关闭 `acceptance_scope=ckb-spark-delivery-v1` 的本次交付。
+提供的第三方报告仍严格验收，不能跳过坏报告；原签名验收入口保留供后续接入。
+
+`outstanding` 继续列出全部尚未验证的证据，`delivery_outstanding` 列交付阻塞项，`post_delivery`
+列交付后事项；因此交付 `passed` 时可以有 `outstanding=[third_party]`，但 `delivery_outstanding`
+必须为空且 `third_party_reproduced=false`。不得将这类结果写成十二项都通过。
+新的 CI 归档及公开结论消费者检查这套明确边界，旧候选记录不重写。
+
+同次修复 CI→clean-room / 第三方→包的相对路径连接：报告内引用按报告目录解析，聚合引用按 checkout
+解析，两端严格检查文件、SHA-256、路径安全后比较实际内容哈希。不同目录的同内容副本可连接，
+不同报告、坏哈希、缺文件、symlink 或路径逃逸不可连接；匹配也不跳过实际组件验收。
+
+以下有日期的段落保留原候选和旧交付规则下的历史状态；最新进度见 [Week6 状态](../WEEK6_STATUS.md)。
 
 **2026-09-24 状态校正：** workflow 已纳入源码；候选 `171f012` 已完成独立临时 VM 的
 16 阶段、宿主验收及证据预发布。真实 CI 的 fast/differential 通过，但 clean-room intake
@@ -128,7 +140,7 @@ v10 必须保留全部十二个 slot；没有证据的项写 `null`，不能删�
 | --- | --- | --- |
 | `invalid` | 1 | 清单或证据无效、身份过期、文件变化、检查失败 |
 | `incomplete` | 2 | 已提供的受支持证据有效，但必需报告、批准或条款仍缺失 |
-| `passed` | 0 | 十二个槽全部验证，且 clean-room、CI、包发布、第三方、公开结论和工作树完成事实齐全 |
+| `passed` | 0 | 十一项交付要求及来源连接全部验证；第三方已验证或明确列入交付后事项，不冒充第三方通过 |
 
 GNU make 对子命令非零退出也会报错；应读取 JSON 中的状态，不能把 Error 2 当作
 可以忽略的成功。不要加 `|| true` 或据此放行发布。
@@ -166,7 +178,7 @@ symlink；未知字段、遗漏必需 slot、裸 PASS/布尔值和旧哈希都�
   预期 mismatch、完整字幕与时间字节对应；要求引用同一清单的 runtime 和 trap 报告。
   演示不替代 Lean、clean-room 或第三方复现。
 
-六类发布义务仍是必需项。`worktree_audit` 的
+除已移至交付后的第三方复现，其他发布义务仍是必需项。`worktree_audit` 的
 [源码部分](WORKTREE_SOURCE_VALIDATOR.md)和
 [历史生成记录组合](WORKTREE_GENERATION_VALIDATOR.md)在 v3 及以前实际校验后最多为
 `incomplete`；只有 v4 携带仓库所有者/发布维护者对 profile A 精确范围的显式批准，且与
@@ -176,9 +188,9 @@ symlink；未知字段、遗漏必需 slot、裸 PASS/布尔值和旧哈希都�
 接入真实验收器：分别检查递归 checkout/安装/重生成/全链阶段，GitHub 临时 runner
 与外部下载重放及离线 Sigstore bundle，已批准版本/profile 的不可变发布与下载，
 以及仓库固定 allowed-signers 下的 SSH 签名第三方复现。CI 必须引用同一 clean-room
-报告，第三方必须引用同一 release package。当前固定政策中版本/profile/签名者为空，
-对应报告也未产生，且政策固定的 `.github/workflows/week6-release.yml` 尚不存在，因此仍为
-`missing`；现有 `ci.yml` 不能冒充五作业 clean-room 流程。裸 PASS、自带信任键或只有哈希
+报告，第三方报告若提供则必须引用同一 release package。版本/profile/发布签名者和
+`.github/workflows/week6-release.yml` 已落实；`3294cfb` 的五作业运行保留其原候选身份，
+不替代本次修改后候选的新证据。裸 PASS、自带信任键或只有哈希
 均不能通过。发布包检查还会执行固定只读 GitHub API 查询，要求 immutable release 的唯一
 uploaded 归档资产大小和 `sha256:` 摘要一致，再核对独立下载字节；签名文件必须是同一
 immutable release 上另一个唯一 uploaded asset，大小与摘要也须与本地实际验签文件一致。
@@ -188,9 +200,8 @@ policy/materializer 已落实并要求最终候选根仓库干净、只保留两
 它也可将独立给出的 source/generation/output/approval 记录组成 v4 envelope，但强制保留
 正式 Lean/Rocq 聚合连接义务。approval 现还必须绑定同一 envelope 的完整 output-identity
 五件套，不能只凭源码身份批准可替换输出；因此 profile-A 批准必须在输出观察/审核/重扫后产生。
-profile-A 批准和 workflow 本体尚未落地；固定 16 阶段 clean-room 编排器已实现并双模式测试，
-但尚未在经批准的临时 runner/container 上实跑，
-政策中的版本/profile/签名者也仍为空。
+profile-A 版本/发布身份批准已落实，但最终源码/输出五件套批准仍待完成。
+固定 16 阶段 clean-room 已有旧候选真实 VM 记录；新源码必须重新冻结、执行和收集证据。
 `public_claims` 的运行期 evidence manifest 现必须与 release manifest 的真实 candidate 相同；
 跟踪的文档审查标签不再被误当成可自引用的 Git commit 身份。
 正式 Lean/Rocq 执行及前后输出清单的 one-off recorder 已生产化为受限新目录入口；配套
@@ -206,7 +217,7 @@ GitHub larger runner 不可直接配置；标准 Linux runner 的官方 14 GB SS
 缺项不表示仓库从未做过相关测试，
 而是本轮发布候选的完整、来源一致的验收证据尚未接入。
 
-## v9 当前实跑
+## v9 历史清单实跑（2026-09-13，不是当前检查器 v9）
 
 2026-09-13 05:57:05–05:59:00 UTC，实际聚合退出 2、`incomplete`；
 runtime、Rocq、Rust tests、mismatches、maintainer_demo 五项为 `verified_existing_evidence`，

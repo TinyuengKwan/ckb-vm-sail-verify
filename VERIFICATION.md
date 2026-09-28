@@ -2,20 +2,21 @@
 
 本文区分“当前可运行基线”和“六周 MVP 将交付的验收接口”。不存在的命令不会被描述成已经完成。
 
-**2026-09-24 当前进度：** 候选 `171f012` 的独立临时 VM 16 阶段及宿主验收已通过，证据 bundle
-已预发布；真实 GitHub CI 的 clean-room intake 因下载文件污染源码快照而失败。隔离分支的
-暂存路径修正已完成真实 bundle 本地三任务演练，不代表修正后候选的 VM/CI 已通过。
-精确候选、哈希和运行链接见 [Week6 状态](docs/WEEK6_STATUS.md)。下段及其后引用的
-09-13/09-14 报告保留原来源；其中“尚未实跑”不再表示当前 VM 状态。Week6 仍未关闭。
+**2026-09-28 当前进度：** 候选 `3294cfb` 的独立临时 VM、宿主验收、真实 CI 五任务和外部下载重放
+已有通过证据；证据 bundle 已预发布，不是正式交付包。本次修改聚合引用连接，并按所有者要求
+将第三方复现移至 CKB 官方接收后，不再阻塞星火计划交付。修改后必须另行冻结、重跑，不能将
+旧候选证据改绑。精确候选、哈希和运行链接见 [Week6 状态](docs/WEEK6_STATUS.md)。
+下文历史报告保留原来源；Week6 本次交付仍未关闭。
 
 ### Week6 正式交付顺序（尚未完成）
 
-1. 冻结前由维护者确定版本号、profile A 的具体交付成员、发布签名身份/SSH 公钥，以及独立复现者的
-   身份/SSH 公钥；写入 [外部验收政策](docs/release/external-acceptance-policy-v1.json)与两份
-   [发布](docs/release/release-allowed-signers) / [第三方](docs/release/third-party-allowed-signers)
-   信任清单。09-24 仓库所有者已[明确批准](docs/release/release-identity-approval-20260924.json)
+1. 冻结前由维护者确定版本号、profile A 的具体交付成员和发布签名身份/SSH 公钥；
+   写入 [外部验收政策](docs/release/external-acceptance-policy-v1.json)与
+   [发布信任清单](docs/release/release-allowed-signers)。
+   09-24 仓库所有者已[明确批准](docs/release/release-identity-approval-20260924.json)
    `week6-0.1.0` / `A` 及发布者 `kwantinyueng@gmail.com` 的 Ed25519 公钥，已写入政策与发布信任清单。
-   独立复现者暂缺，其信任清单仍为空；具体交付成员和最终输出差异仍待审核，不以身份批准替代。
+   第三方复现交由 CKB 官方接收后开展，交付前不要求复现者身份或公钥；
+   具体交付成员和最终输出差异仍待审核，不以身份批准替代。
 2. 在冻结前验证完整交付成员的安装与恢复方式、归档大小、覆盖和非目标。生产打包器
    `scripts/week6_release_package.py build` 要求批准的身份及 `release-package-inputs-v2` 精确成员清单，
    只产出未签名/未发布包。按 GitHub 的[单资产限制](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases)，
@@ -34,8 +35,12 @@
    `enabled=true`、`enforced_by_owner=false`。正式发布仍须先创建 draft，上传两个数据资产及批准身份生成的 SSH 签名，
    核对资产后发布；不可变资产不能发布后再补签名。`scripts/week6_release_package.py record` 只读查询
    实际 immutable release、独立下载并验签，不创建 release 或签名。现有证据预发布不是这一正式包。
-6. 受信且独立的第三方仅依据交付文档完成政策规定的十个阶段，保存实际日志/结果并签名复现声明；
-   维护者或 Codex 重跑不能冒充第三方。最后以同一候选/源码快照聚合全部十二槽，只有完整验收通过才关闭 Week6。
+6. 以同一候选/源码快照聚合全部十二槽：十一项交付要求全部通过，第三方明确记为
+   `deferred_to_recipient`，才可在 `ckb-spark-delivery-v1` 范围关闭本次 Week6 交付。
+   `outstanding` 保留第三方未验证项，`delivery_outstanding` 必须为空；不得把交付完成写成第三方复现通过。
+7. 交付后由 CKB 官方按文档开展复现；这是所有者指定的后续安排，不是官方接收或执行的证明。
+   如将来接入现有签名报告验收入口，另行审批第三方身份/公钥并保留原候选、原发布身份；
+   本次不要求预登记，也不为等待第三方而阻塞交付。
 
 以下为按日期保留的实现及执行历史，不是上述剩余步骤的完成声明。
 

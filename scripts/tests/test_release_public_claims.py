@@ -242,7 +242,7 @@ class PublicClaimsTests(unittest.TestCase):
             claims.validate(self.path, execution_path, root=self.root,
                             candidate="expected-candidate")
 
-    def component_validation_fixture(self, connected_worktree, worktree_status, outstanding):
+    def component_validation_fixture(self, connected_worktree, worktree_status, outstanding, mutate=None):
         paths = {}
         references = {}
         for name in claims.COMPONENTS:
@@ -267,7 +267,13 @@ class PublicClaimsTests(unittest.TestCase):
             worktree_audit={"status": worktree_status, "reference": references["worktree_audit"],
                             "details": connected_worktree},
             public_claims={"status": "missing"},
+            third_party=claims.delivery.third_party_deferred(),
+            clean_room={"status": "missing"}, ci_download={"status": "missing"},
+            release_package={"status": "missing"},
         )
+        aggregate.update(claims.delivery.boundary(aggregate['checks']))
+        if mutate:
+            mutate(aggregate)
         paths["aggregate"].write_text(json.dumps(aggregate))
         references["aggregate"]["sha256"] = claims.sha(paths["aggregate"])
         runtime = {"cases": 33, "mutations": {"applied": 194}, "replays": 33}
@@ -302,6 +308,19 @@ class PublicClaimsTests(unittest.TestCase):
             connected, "verified_existing_evidence",
             ["public_claims", "clean_room", "ci_download", "release_package", "third_party"])
         self.assertTrue(result["worktree_audit"]["worktree_audit_closed"])
+        self.assertEqual(result['aggregate']['post_delivery'], ['third_party'])
+        self.assertFalse(result['aggregate']['third_party_reproduced'])
+
+    def test_public_review_rejects_hidden_or_upgraded_deferral(self):
+        connected = {'remaining': [], 'worktree_audit_closed': True, 'delivery_approval_verified': True}
+        for mutate in [lambda a: a.update(third_party_reproduced=True),
+                       lambda a: a.update(post_delivery=[]),
+                       lambda a: a.update(delivery_outstanding=[]),
+                       lambda a: a.pop('acceptance_scope'),
+                       lambda a: a['checks']['third_party'].update(recipient='not CKB')]:
+            with self.subTest(mutate=mutate), self.assertRaisesRegex(RuntimeError, 'delivery boundary|unauthorized delivery'):
+                self.component_validation_fixture(connected, 'verified_existing_evidence',
+                    ['public_claims', 'clean_room', 'ci_download', 'release_package', 'third_party'], mutate)
 
     def test_report_checker_recomputes_manifest_and_rejects_upgrade(self):
         result = {"public_claims_slot_closed": True, "release_claimed": False}

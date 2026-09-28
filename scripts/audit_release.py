@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Week6 evidence aggregation v8 with a fail-closed all-slot success path.
+"""Week6 evidence aggregation v9 with a fail-closed CKB delivery success path.
 
 Revalidates local components plus strict clean-room, CI-download, release-package and signed
 third-party schemas. Missing reports and unapproved policy fields remain fail-closed. Recorded
@@ -7,7 +7,9 @@ build/replay commands are never executed; provenance and SSH signature checks ar
 Source and historical generation review components leave their full slot incomplete unless
 v4 carries explicit profile-A approval and its formal execution join closes. Exit 1 means
 invalid evidence/input; exit 2 means incomplete acceptance; exit 0 is reachable only when
-all twelve slots are verified. The aggregator does not publish, refresh policy or rerun proofs.
+all eleven delivery slots are verified. Absent third-party evidence is explicitly
+deferred to CKB after delivery, never marked verified; supplied evidence stays strict.
+The aggregator does not publish, refresh policy or rerun proofs.
 """
 import argparse
 import datetime
@@ -25,6 +27,7 @@ import release_worktree_source as worktree_source
 import release_worktree_evidence as worktree_evidence
 import release_public_claims as public_claims
 import release_external_evidence as external
+import release_delivery_scope as delivery
 
 ROOT = evidence.ROOT
 CHECKERS = {'runtime': evidence.check_runtime, 'lean': evidence.check_lean, 'rocq': evidence.check_rocq,
@@ -56,6 +59,7 @@ PINS = {'main_policy': 'proof/lean/audit/step-policy.json',
         'week5_plan': 'docs/plan/week5.md', 'week6_plan': 'docs/plan/week6.md',
         'overview_plan': 'docs/plan/overview.md'}
 CHECKER_FILES = ['scripts/audit_release.py', 'scripts/release_evidence.py',
+                 'scripts/release_delivery_scope.py',
                  'scripts/tests/test_audit_release.py', 'scripts/release.mk',
                  'scripts/release_runtime_evidence.py', 'scripts/probes/probe_release_runtime.py',
                  'scripts/rocq_spike.py', 'scripts/ckb_source_baseline.py']
@@ -128,6 +132,16 @@ def reference(row):
     return evidence.linked(ROOT, row['path'], row['sha256'])
 
 
+def linked_report_matches(directory, row, aggregate_row, label):
+    """Resolve each reference at its own base, then bind validated file bytes."""
+    evidence.require(type(row) is dict and set(row) == {'path', 'sha256'},
+                     label + ' reference fields')
+    recorded = evidence.linked(directory, row['path'], row['sha256'])
+    accepted = reference(aggregate_row)
+    evidence.require(evidence.sha(recorded) == evidence.sha(accepted),
+                     label + ' linked to a different report')
+
+
 def validate_manifest(manifest):
     evidence.require(type(manifest) is dict and set(manifest) ==
                      {'schema_version', 'candidate', 'pins', 'evidence'}, 'unknown/missing manifest fields')
@@ -146,7 +160,8 @@ def aggregate(manifest):
     for name in SLOTS:
         row = manifest['evidence'][name]
         if row is None:
-            checks[name] = {'status': 'missing', 'reason': PENDING.get(name, 'required report absent')}
+            checks[name] = (delivery.third_party_deferred() if name == 'third_party' else
+                            {'status': 'missing', 'reason': PENDING.get(name, 'required report absent')})
             continue
         try:
             path = reference(row)
@@ -172,12 +187,12 @@ def aggregate(manifest):
             elif name in EXTERNAL_CHECKERS:
                 if name == 'ci_download':
                     recorded = evidence.read(path)
-                    evidence.require(recorded['clean_room'] == manifest['evidence']['clean_room'],
-                                     'CI report linked to a different clean-room report')
+                    linked_report_matches(path.parent, recorded['clean_room'],
+                                          manifest['evidence']['clean_room'], 'CI report')
                 if name == 'third_party':
                     recorded = evidence.read(path)
-                    evidence.require(recorded['release_package'] == manifest['evidence']['release_package'],
-                                     'third-party report linked to a different release package report')
+                    linked_report_matches(path.parent, recorded['release_package'],
+                                          manifest['evidence']['release_package'], 'third-party report')
                 result = EXTERNAL_CHECKERS[name](path, manifest['candidate'], root=ROOT)
                 if name == 'clean_room' and result.get('provider') == external.VM_PROVIDER:
                     # An independent ephemeral VM report is self-described; the slot stays
@@ -222,9 +237,10 @@ def aggregate(manifest):
             checks['worktree_audit'] = {'status': 'invalid', 'reason': str(error), 'error_type': type(error).__name__}
     invalid = [name for name, row in checks.items() if row['status'] == 'invalid']
     outstanding = [name for name, row in checks.items() if row['status'] != 'verified_existing_evidence']
+    delivery_boundary = delivery.boundary(checks)
     if invalid:
         status, code, closed = 'invalid', 1, False
-    elif outstanding:
+    elif delivery_boundary['delivery_outstanding']:
         status, code, closed = 'incomplete', 2, False
     else:
         clean_room = checks['clean_room'].get('details', {})
@@ -238,9 +254,10 @@ def aggregate(manifest):
         source_snapshots = [clean_room.get('source_snapshot_sha256'),
                             ci_download.get('source_snapshot_sha256'),
                             release_package.get('source_snapshot_sha256'),
-                            third_party.get('source_snapshot_sha256'),
                             public_claims.get('source_snapshot_sha256'),
                             worktree_components.get('source', {}).get('source_snapshot_sha256')]
+        if delivery_boundary['third_party_reproduced']:
+            source_snapshots.append(third_party.get('source_snapshot_sha256'))
         evidence.require(clean_room.get('clean_room_verified') is True and
                          clean_room.get('fresh_execution_claimed') is True and
                          (clean_room.get('provider') != external.VM_PROVIDER or
@@ -253,8 +270,9 @@ def aggregate(manifest):
                          release_package.get('external_assets_verified') is True and
                          release_package.get('remote_state_queried') is True and
                          release_package.get('delivery_profile') == approved_profile == 'A' and
-                         third_party.get('third_party_reproduced') is True and
-                         third_party.get('independent_third_party') is True and
+                         (not delivery_boundary['third_party_reproduced'] or
+                          (third_party.get('third_party_reproduced') is True and
+                           third_party.get('independent_third_party') is True)) and
                          public_claims.get('public_claims_slot_closed') is True and
                          worktree.get('delivery_approval_verified') is True and
                          worktree.get('candidate_identity_approved') is True and
@@ -263,9 +281,10 @@ def aggregate(manifest):
                          worktree.get('worktree_audit_closed') is True and
                          worktree.get('remaining') == [] and
                          None not in source_snapshots and len(set(source_snapshots)) == 1,
-                         'all-slot inventory lacks a required Week6 completion fact')
+                         'delivery inventory lacks a required Week6 completion fact')
         status, code, closed = 'passed', 0, True
     return {'status': status, 'candidate': manifest['candidate'], 'checks': checks,
+            **delivery_boundary,
             'outstanding': outstanding, 'release_claimed': closed, 'week6_closed': closed,
             'fresh_execution_claimed': closed}, code
 
@@ -298,7 +317,9 @@ def main():
         evidence.require(report['inputs_before'] == report['inputs_after'] and
                          report['manifest_sha256'] == evidence.sha(args.manifest), 'audit inputs changed')
     except (Exception, KeyboardInterrupt) as error:
-        report.update(status='invalid', error=str(error), error_type=type(error).__name__)
+        report.update(status='invalid', error=str(error), error_type=type(error).__name__,
+                      release_claimed=False, week6_closed=False, fresh_execution_claimed=False,
+                      third_party_reproduced=False)
         code = 1
     finally:
         report['finished_at'] = stamp()

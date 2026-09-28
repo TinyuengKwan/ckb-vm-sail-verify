@@ -35,8 +35,10 @@ kernel/runtime，不代替 clean-room、CI 下载、版本包、最终交付范�
    `extra_proof_coverage=false`。
 5. 三类语义负测和维护者演示均绑定当前 runtime/Rust 证据；有限最小化不证明一般根因。
 6. 当前来源和 24 根输出身份已有完整记录；工作树仍等待最终交付范围及语义批准。
-7. 当前聚合仍为 `incomplete`。在本项接入之前，缺少 clean-room、worktree、CI 下载、
-   release package、第三方和 public claims；本项通过后也只能移除最后一项。
+7. 本次交付仍未关闭；本项通过只关闭 public claims，不替代其它交付门禁。
+   2026-09-28 所有者将第三方复现移至 CKB 官方接收后，聚合器明确区分
+   `delivery_outstanding` 与 `post_delivery`，不把第三方延期计为执行通过。
+   原始报告中的六项缺口保留当时身份，最新进度见 Week6 状态。
 
 所有上述结论必须与 [coverage](../coverage.md)、[semantic gaps](../semantic-gaps.md)、
 [当前 Week6 清单](../WEEK6_STATUS.md)和机器证据共同阅读，不能缩写为“CKB-VM 已形式化验证”。
@@ -75,4 +77,5 @@ kernel/runtime，不代替 clean-room、CI 下载、版本包、最终交付范�
 目标存在，会让 clean-room 内的公开结论阶段必然失败。现在 `local_links` 按源码快照分类：快照内的目标必须存在；
 指向 `artifacts/` 且不在快照内的链接只检查语法与不逃逸，计为 `evidence_links_not_shipped_with_source`；
 其它本地链接仍必须存在。结果字段在宿主与 guest 中一致，因此聚合器对同一报告的复核不会因环境不同而失败。
-这不是把证据引用当作已验证链接：未随源码交付的记录仍要靠发布包和独立第三方复现提供。
+这不是把证据引用当作已验证链接：记录仍需在正式发布包中交付并验收；
+交付后的 CKB 官方复现可以另行验证，不能在尚未执行时声称已通过。
