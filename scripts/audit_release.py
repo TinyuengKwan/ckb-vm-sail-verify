@@ -87,6 +87,7 @@ CHECKER_FILES += ['scripts/release_source_increment_review.py',
 CHECKER_FILES += ['scripts/release_current_output_review.py',
                   'scripts/tests/test_release_current_output_review.py']
 CHECKER_FILES += ['scripts/release_public_claims.py',
+                  'scripts/check_public_claims_source.py',
                   'scripts/tests/test_release_public_claims.py']
 CHECKER_FILES += ['scripts/release_external_evidence.py',
                   'scripts/release_archived_evidence.py', 'scripts/tests/test_release_archived_evidence.py',

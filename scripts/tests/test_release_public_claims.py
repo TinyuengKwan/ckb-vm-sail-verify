@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import release_public_claims as claims
+import check_public_claims_source as preflight
 
 
 class PublicClaimsTests(unittest.TestCase):
@@ -64,6 +65,73 @@ class PublicClaimsTests(unittest.TestCase):
     def validate(self):
         with patch.object(claims.source, "capture", return_value=copy.deepcopy(self.snapshot)):
             return claims.validate_manifest(self.path, root=self.root)
+
+    def preflight(self):
+        with patch.object(preflight, 'MANIFEST', self.path.name), \
+             patch.object(claims.source, 'capture', return_value=copy.deepcopy(self.snapshot)):
+            return preflight.check(self.root)
+
+    def test_source_preflight_passes_without_claiming_full_acceptance(self):
+        self.target.unlink()
+        result = self.preflight()
+        self.assertEqual(result['status'], 'source_review_freshness_verified')
+        for flag in ('generated_links_checked', 'execution_evidence_checked',
+                     'public_claims_slot_closed', 'release_claimed', 'week6_closed'):
+            self.assertFalse(result[flag])
+        with self.assertRaisesRegex(RuntimeError, 'missing public link'):
+            self.validate()
+
+    def test_source_preflight_rejects_stale_document_before_tools(self):
+        self.doc.write_text(self.doc.read_text() + '\nNew verification passed.\n')
+        with self.assertRaisesRegex(RuntimeError, 'public document changed'):
+            self.preflight()
+
+    def test_source_preflight_rejects_hash_only_refresh(self):
+        self.doc.write_text(self.doc.read_text() + '\nNew verification passed.\n')
+        self.manifest['documents']['README.md']['sha256'] = claims.sha(self.doc)
+        self.write_manifest()
+        with self.assertRaisesRegex(RuntimeError, 'paragraph inventory'):
+            self.preflight()
+
+    def test_source_preflight_rejects_missing_and_extra_documents(self):
+        for rows in ({}, {**self.manifest['documents'], 'extra.md': {}}):
+            self.manifest['documents'] = rows
+            self.write_manifest()
+            with self.assertRaisesRegex(RuntimeError, 'inventory'):
+                self.preflight()
+
+    def test_source_preflight_rejects_unreviewed_and_unknown_claims(self):
+        row = self.manifest['documents']['README.md']
+        row['review'] = ''
+        self.write_manifest()
+        with self.assertRaisesRegex(RuntimeError, 'review rationale'):
+            self.preflight()
+        row['review'] = 'fixture only'
+        row['claims'] = ['unsupported_claim']
+        self.write_manifest()
+        with self.assertRaisesRegex(RuntimeError, 'claim classes'):
+            self.preflight()
+
+    def test_source_preflight_rejects_forbidden_claims(self):
+        self.rewrite('The bounded check passed. fixture forbidden assurance\n')
+        with self.assertRaisesRegex(RuntimeError, 'forbidden/stale'):
+            self.preflight()
+
+    def test_source_preflight_rejects_concurrent_source_change(self):
+        changed = copy.deepcopy(self.snapshot)
+        changed['snapshot_sha256'] = 'changed'
+        with patch.object(preflight, 'MANIFEST', self.path.name), \
+             patch.object(claims.source, 'capture', side_effect=[self.snapshot, changed]), \
+             self.assertRaisesRegex(RuntimeError, 'inputs changed'):
+            preflight.check(self.root)
+
+    def test_source_preflight_runs_in_early_guest_stage_and_ci_fast(self):
+        root = Path(__file__).resolve().parents[2]
+        controller = (root / 'scripts/week6_clean_room.py').read_text()
+        early = controller.split('if name == "verify-source-snapshot":', 1)[1].split('elif name == "install-rust":', 1)[0]
+        self.assertIn('scripts/check_public_claims_source.py', early)
+        workflow = (root / '.github/workflows/week6-release.yml').read_text()
+        self.assertIn('python3 scripts/check_public_claims_source.py', workflow)
 
     def test_complete_fixture_passes_without_release_upgrade(self):
         result = self.validate()

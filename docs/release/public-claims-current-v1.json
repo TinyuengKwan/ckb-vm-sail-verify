@@ -154,8 +154,8 @@
       "sha256": "00b696caac4ad0d794e52b3a424c4920aa025cd46dcbc79572e4dc9bce4a530e"
     },
     "docs/WEEK6_STATUS.md": {
-      "claim_paragraphs": 119,
-      "claim_paragraphs_sha256": "b0bee4189df36ac86fa766f5e2e42b8e6dc41708816ffa3e8a7951afc2780d7a",
+      "claim_paragraphs": 122,
+      "claim_paragraphs_sha256": "d1b2fe6a7e0862ef468a663b73eb006f114f5c7b1b4534849dc61c95a7d3e5cc",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -167,8 +167,8 @@
         "release_incomplete"
       ],
       "classification": "current_assurance",
-      "review": "Reviewed 2026-09-28: records the owner-directed CKB Spark delivery scope, exact prior 3294cfb evidence identities, relative-reference fix and corrected prototype test coverage. Third-party execution is explicitly not verified. New freeze, execution, exact output approval and formal publication remain outstanding; older paragraphs retain dated provenance.",
-      "sha256": "2d90f753f065c02b53b6d9d053f22f69216c9ba444a0cf76738bd0b9027613ec"
+      "review": "Reviewed 2026-09-28 after the d89c768 failure: cecd82e VM/CI success stays attributed to that candidate; d89c768 failed public-claims because two review records were stale. Explicit archived acceptance is bounded by candidate/VM/CI identity and does not re-probe host toolchains. Source-only freshness preflight is not full public-claims acceptance. New execution, exact source/output approval and signed publication remain outstanding. Historical paragraphs retain their dated provenance; CKB reproduction remains unverified and post-delivery.",
+      "sha256": "2df75aab8a6a96b16f45f83e9ca7f2594c15a488683ea300a9c45e36fda2a6af"
     },
     "docs/architecture.md": {
       "claim_paragraphs": 17,
@@ -297,15 +297,15 @@
       "sha256": "d9cafcefea512e4d65a9b6c76dbe8648fcdc4be3df3df6d653622b4b8a51a15f"
     },
     "docs/release/AUDIT_RELEASE.md": {
-      "claim_paragraphs": 38,
-      "claim_paragraphs_sha256": "41c179cce2533c1007f51192d9c5b8d66d06b9c9b37c831142d32838c64f568b",
+      "claim_paragraphs": 43,
+      "claim_paragraphs_sha256": "2675491b6603a666d8e753873ad0442137e741774b08107910f0cdd44296d997",
       "claims": [
         "source_output_identity",
         "release_incomplete"
       ],
       "classification": "current_assurance",
-      "review": "Reviewed 2026-09-28: v9 checker has eleven mandatory delivery slots and a transparently deferred third-party slot; supplied evidence is still strict. Report-local versus checkout-relative joins compare validated bytes. Updated current policy/workflow status, while old v8/v9/v10 manifests and execution records remain historical.",
-      "sha256": "27b2bc639c99b3ee0622a34f8aec80251944e81b59dd1bff6268464b675ae224"
+      "review": "Reviewed 2026-09-28: v10 adds explicit current-candidate CI-attested guest validation, never fallback after local failure; VM provenance remains operator-attested and GitHub attests packaging rather than VM execution. Approval binds exact source/output records; publication remains separately validated. Source-only freshness checks detect stale review inventories before expensive execution without closing any slot or relaxing the full gate. Eleven delivery requirements remain mandatory and third-party reproduction remains explicitly deferred. Older dated execution records are historical, not rebound.",
+      "sha256": "0bc8381d8acae991fde85605fa6d4c8bdf02f172fecc9886002b6712894752b6"
     },
     "docs/release/CI_READINESS.md": {
       "claim_paragraphs": 2,

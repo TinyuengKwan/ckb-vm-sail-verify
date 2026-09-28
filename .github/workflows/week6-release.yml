@@ -72,6 +72,7 @@ jobs:
           make ckb-baseline-apply
       - name: Fast source and Rust checks
         run: |
+          python3 scripts/check_public_claims_source.py
           python3 scripts/tests/test_ckb_source_baseline.py
           python3 scripts/tests/test_week6_workflow_paths.py
           python3 scripts/tests/test_audit_release.py

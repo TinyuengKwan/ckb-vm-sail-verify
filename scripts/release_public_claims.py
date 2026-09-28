@@ -169,6 +169,29 @@ def local_links(root, name, body, source_files):
     return checked, external, evidence
 
 
+def validate_document_record(root, name, row):
+    """Shared byte/paragraph review check, independent of generated link targets."""
+    fields(row, {"sha256", "classification", "claims", "claim_paragraphs",
+                 "claim_paragraphs_sha256", "review"}, "invalid public document review: " + name)
+    path = common.member(root, name)
+    require(sha(path) == row["sha256"], "public document changed: " + name)
+    require(row["classification"] in CLASSES, "unknown public document class: " + name)
+    require(type(row["claims"]) is list and len(row["claims"]) == len(set(row["claims"])) and
+            set(row["claims"]) <= CLAIMS, "invalid document claim classes: " + name)
+    if row["classification"] == "current_assurance":
+        require(row["claims"] and set(row["claims"]) != {"historical_scope"},
+                "current assurance document lacks current claim mapping: " + name)
+    if row["classification"] == "normative_plan":
+        require(row["claims"] == ["normative_only"], "plan must not be accepted as execution evidence: " + name)
+    text(row["review"], "missing document review rationale: " + name)
+    body = path.read_text()
+    paragraphs = claim_paragraphs(body)
+    require(same(row["claim_paragraphs"], len(paragraphs)) and
+            row["claim_paragraphs_sha256"] == paragraph_digest(paragraphs),
+            "claim paragraph inventory changed: " + name)
+    return body, paragraphs
+
+
 def validate_documents(root, manifest, snapshot):
     documents = manifest["documents"]
     expected = markdown_files(snapshot)
@@ -181,24 +204,7 @@ def validate_documents(root, manifest, snapshot):
     source_files = set(snapshot["repositories"]["."]["files"])
     for name in expected:
         row = documents[name]
-        fields(row, {"sha256", "classification", "claims", "claim_paragraphs",
-                     "claim_paragraphs_sha256", "review"}, "invalid public document review: " + name)
-        path = root / name
-        require(sha(path) == row["sha256"], "public document changed: " + name)
-        require(row["classification"] in CLASSES, "unknown public document class: " + name)
-        require(type(row["claims"]) is list and len(row["claims"]) == len(set(row["claims"])) and
-                set(row["claims"]) <= CLAIMS, "invalid document claim classes: " + name)
-        if row["classification"] == "current_assurance":
-            require(row["claims"] and set(row["claims"]) != {"historical_scope"},
-                    "current assurance document lacks current claim mapping: " + name)
-        if row["classification"] == "normative_plan":
-            require(row["claims"] == ["normative_only"], "plan must not be accepted as execution evidence: " + name)
-        text(row["review"], "missing document review rationale: " + name)
-        body = path.read_text()
-        paragraphs = claim_paragraphs(body)
-        require(same(row["claim_paragraphs"], len(paragraphs)) and
-                row["claim_paragraphs_sha256"] == paragraph_digest(paragraphs),
-                "claim paragraph inventory changed: " + name)
+        body, paragraphs = validate_document_record(root, name, row)
         checked, external, evidence = local_links(root, name, body, source_files)
         links += len(checked)
         external_links += len(external)

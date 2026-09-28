@@ -361,6 +361,7 @@ def stage_action(name, state_path):
     sys.path.insert(0, str(root / "scripts"))
 
     if name == "verify-source-snapshot":
+        command(["/usr/bin/python3", "-B", "-O", "scripts/check_public_claims_source.py"], root)
         import source_snapshot
         snapshot = source_snapshot.capture(root)
         require(snapshot["repositories"]["."]["head"] == candidate, "checkout head differs")
