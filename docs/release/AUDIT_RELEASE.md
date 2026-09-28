@@ -15,6 +15,40 @@ clean-room、CI 下载、发布包和签名第三方记录接入 fail-closed 验
 必须为空且 `third_party_reproduced=false`。不得将这类结果写成十二项都通过。
 新的 CI 归档及公开结论消费者检查这套明确边界，旧候选记录不重写。
 
+## 2026-09-28：v10 显式归档验收入口
+
+`cecd82e` 的独立 VM、五个 CI 任务及外部双份下载/重放均通过；但在只恢复源码和证据的
+宿主目录直接运行本地聚合会退出 1：运行时构建缓存、Lean/Rocq 工具与生成物、原 guest
+绝对路径未恢复。这是最终聚合的环境依赖，不是该候选的 VM/CI 执行失败。
+
+新入口保留 manifest v1 的本地重验行为；只有显式选择 manifest v2 才接入 guest 验收结果，
+不在本地检查失败时自动降级。v2 要求当前干净候选的完整来源快照匹配、独立 VM 宿主记录、
+外部 CI 双份下载与重放、GitHub artifact attestation 全部验收。guest 的 v1 清单、最终聚合报告、
+clean-room 报告和宿主 provenance 必须逐字节包含于该 attestation 覆盖的 CI archive；
+guest 检查器首尾身份须等于当前检查器，七项报告引用和源码/输出审查记录也须匹配。
+guest 不得递归使用归档验收，不得夹带发布或第三方报告，不得遗留技术审查义务。
+
+该模式标记 `validation_basis=current_candidate_ci_attested_guest_validation`：接受的是 guest
+已执行的验收，不声称宿主重新运行工具链或再次扫描全部生成物。VM 执行仍为 operator-attested，
+GitHub attestation 证明打包来源，不将其升级为平台签署的 VM 执行证明。
+
+在完整证据 bundle 和外部收集器输出已放入同一候选 checkout 后，可执行：
+
+```sh
+python3 scripts/audit_release.py \
+  --manifest artifacts/boundary-check/week6-clean-room/audit/manifest.json \
+  --guest-report artifacts/boundary-check/week6-clean-room/audit/result/report.json \
+  --ci-report artifacts/boundary-check/week6-ci-download-CURRENT/report.json \
+  --out artifacts/boundary-check/week6-post-ci-CURRENT
+```
+
+`CURRENT` 须替换为本轮目录，输出目录必须新建。命令另存 v2 清单，保留原 guest 清单不变。
+`--approval` 仅接受所有者对同一候选、源码审查和输出身份五件套的明确批准，不从早先的版本/profile
+批准推断；缺批准时 worktree 槽仍 incomplete。正式包签名、同一不可变 release 的双数据资产及实际
+下载验收仍走原严格检查器。缺失第三方记录仍仅列为交付后事项，坏的已提供记录仍阻塞。
+
+本次检查器变更需要新候选的 VM/CI；不得用 `cecd82e` 的成功记录为新源码背书。
+
 同次修复 CI→clean-room / 第三方→包的相对路径连接：报告内引用按报告目录解析，聚合引用按 checkout
 解析，两端严格检查文件、SHA-256、路径安全后比较实际内容哈希。不同目录的同内容副本可连接，
 不同报告、坏哈希、缺文件、symlink 或路径逃逸不可连接；匹配也不跳过实际组件验收。

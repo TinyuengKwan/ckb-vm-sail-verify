@@ -76,6 +76,8 @@ jobs:
           python3 scripts/tests/test_week6_workflow_paths.py
           python3 scripts/tests/test_audit_release.py
           python3 -O scripts/tests/test_audit_release.py
+          python3 scripts/tests/test_release_archived_evidence.py
+          python3 -O scripts/tests/test_release_archived_evidence.py
           python3 scripts/tests/test_week6_release_ci_gate.py
           python3 -O scripts/tests/test_week6_release_ci_gate.py
           python3 scripts/tests/test_release_public_claims.py

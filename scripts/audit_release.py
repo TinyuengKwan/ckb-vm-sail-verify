@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Week6 evidence aggregation v9 with a fail-closed CKB delivery success path.
+"""Week6 evidence aggregation v10 with explicit CI-attested guest acceptance.
 
 Revalidates local components plus strict clean-room, CI-download, release-package and signed
 third-party schemas. Missing reports and unapproved policy fields remain fail-closed. Recorded
@@ -10,6 +10,8 @@ invalid evidence/input; exit 2 means incomplete acceptance; exit 0 is reachable 
 all eleven delivery slots are verified. Absent third-party evidence is explicitly
 deferred to CKB after delivery, never marked verified; supplied evidence stays strict.
 The aggregator does not publish, refresh policy or rerun proofs.
+Manifest v1 revalidates local installations; v2 requires current-candidate
+CI-attested guest results plus revalidated VM/CI provenance, never a fallback.
 """
 import argparse
 import datetime
@@ -28,6 +30,7 @@ import release_worktree_evidence as worktree_evidence
 import release_public_claims as public_claims
 import release_external_evidence as external
 import release_delivery_scope as delivery
+import release_archived_evidence as archived
 
 ROOT = evidence.ROOT
 CHECKERS = {'runtime': evidence.check_runtime, 'lean': evidence.check_lean, 'rocq': evidence.check_rocq,
@@ -86,6 +89,7 @@ CHECKER_FILES += ['scripts/release_current_output_review.py',
 CHECKER_FILES += ['scripts/release_public_claims.py',
                   'scripts/tests/test_release_public_claims.py']
 CHECKER_FILES += ['scripts/release_external_evidence.py',
+                  'scripts/release_archived_evidence.py', 'scripts/tests/test_release_archived_evidence.py',
                   'scripts/week6_release_assets.py',
                   'scripts/week6_source_capsule.py', 'scripts/tests/test_week6_source_capsule.py',
                   'scripts/week6_restore_release.py', 'scripts/tests/test_week6_restore_release.py',
@@ -143,9 +147,11 @@ def linked_report_matches(directory, row, aggregate_row, label):
 
 
 def validate_manifest(manifest):
+    version = manifest.get('schema_version') if type(manifest) is dict else None
+    extra = {'archived_guest'} if evidence.same(version, 2) else set()
     evidence.require(type(manifest) is dict and set(manifest) ==
-                     {'schema_version', 'candidate', 'pins', 'evidence'}, 'unknown/missing manifest fields')
-    evidence.require(evidence.same(manifest['schema_version'], 1), 'unknown manifest schema')
+                     {'schema_version', 'candidate', 'pins', 'evidence'} | extra, 'unknown/missing manifest fields')
+    evidence.require(evidence.same(version, 1) or evidence.same(version, 2), 'unknown manifest schema')
     evidence.require(isinstance(manifest['candidate'], str) and manifest['candidate'].strip(), 'candidate absent')
     evidence.require(type(manifest['pins']) is dict and set(manifest['pins']) == set(PINS), 'pin inventory')
     for key, path in PINS.items():
@@ -156,8 +162,13 @@ def validate_manifest(manifest):
 
 def aggregate(manifest):
     validate_manifest(manifest)
-    checks = {}
+    archived_source = (archived.source_snapshot.capture(ROOT)
+                       if evidence.same(manifest['schema_version'], 2) else None)
+    checks = (archived.check(manifest, ROOT, snapshot())
+              if evidence.same(manifest['schema_version'], 2) else {})
     for name in SLOTS:
+        if name in checks:
+            continue
         row = manifest['evidence'][name]
         if row is None:
             checks[name] = (delivery.third_party_deferred() if name == 'third_party' else
@@ -219,8 +230,10 @@ def aggregate(manifest):
             checks[name] = {'status': 'incomplete', 'reason': str(error), 'details': error.details, 'reference': row}
         except Exception as error:
             checks[name] = {'status': 'invalid', 'reason': str(error), 'error_type': type(error).__name__}
+    checks = {name: checks[name] for name in SLOTS}
     worktree = checks.get('worktree_audit', {})
-    if worktree.get('status') == 'incomplete' and 'details' in worktree:
+    if (worktree.get('status') == 'incomplete' and 'details' in worktree and
+            worktree.get('validation_basis') != archived.BASIS):
         try:
             worktree['details'] = worktree_evidence.connect_formal_execution(worktree['details'], checks, root=ROOT)
             # Do not let a report changed after partial validation acquire a
@@ -283,6 +296,15 @@ def aggregate(manifest):
                          None not in source_snapshots and len(set(source_snapshots)) == 1,
                          'delivery inventory lacks a required Week6 completion fact')
         status, code, closed = 'passed', 0, True
+    if archived_source is not None:
+        for row in manifest['evidence'].values():
+            if row is not None:
+                reference(row)
+        for row in manifest['archived_guest'].values():
+            if row is not None:
+                reference(row)
+        evidence.require(archived.source_snapshot.capture(ROOT) == archived_source,
+                         'source changed during archived aggregation')
     return {'status': status, 'candidate': manifest['candidate'], 'checks': checks,
             **delivery_boundary,
             'outstanding': outstanding, 'release_claimed': closed, 'week6_closed': closed,
@@ -293,7 +315,12 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', required=True, type=Path)
     parser.add_argument('--out', type=Path, help='new report directory only')
+    parser.add_argument('--guest-report', type=Path, help='compose v2 from --manifest (guest v1) and this report')
+    parser.add_argument('--ci-report', type=Path, help='externally collected current-candidate CI report (requires --guest-report)')
+    parser.add_argument('--approval', type=Path, help='explicit exact source/output approval when composing v2')
     args = parser.parse_args()
+    if bool(args.guest_report) != bool(args.ci_report) or (args.approval and not args.guest_report):
+        parser.error('--guest-report and --ci-report are required together; --approval requires both')
     if args.out:
         out = args.out.resolve()
         out.mkdir(parents=True, exist_ok=False)
@@ -305,6 +332,14 @@ def main():
               'release_claimed': False, 'week6_closed': False, 'fresh_execution_claimed': False}
     code = 1
     try:
+        if args.guest_report:
+            original_sha = evidence.sha(args.manifest)
+            value = archived.compose(ROOT, args.manifest, args.guest_report, args.ci_report, args.approval)
+            evidence.require(evidence.sha(args.manifest) == original_sha, 'guest manifest changed while composing')
+            report['guest_manifest_sha256'] = original_sha
+            args.manifest = out / 'manifest.json'
+            with args.manifest.open('x') as stream:
+                json.dump(value, stream, indent=2)
         report['manifest_sha256'] = evidence.sha(args.manifest)
         report['inputs_before'] = snapshot()
         report['project_head'] = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT,
