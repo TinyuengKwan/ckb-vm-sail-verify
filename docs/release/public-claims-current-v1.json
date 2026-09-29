@@ -154,8 +154,8 @@
       "sha256": "00b696caac4ad0d794e52b3a424c4920aa025cd46dcbc79572e4dc9bce4a530e"
     },
     "docs/WEEK6_STATUS.md": {
-      "claim_paragraphs": 122,
-      "claim_paragraphs_sha256": "d1b2fe6a7e0862ef468a663b73eb006f114f5c7b1b4534849dc61c95a7d3e5cc",
+      "claim_paragraphs": 124,
+      "claim_paragraphs_sha256": "ede6cd6eb9393fbed72af2b1c6520a6967266c5aaaffaa2fb809190f374a91f0",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -167,8 +167,8 @@
         "release_incomplete"
       ],
       "classification": "current_assurance",
-      "review": "Reviewed 2026-09-28 after the d89c768 failure: cecd82e VM/CI success stays attributed to that candidate; d89c768 failed public-claims because two review records were stale. Explicit archived acceptance is bounded by candidate/VM/CI identity and does not re-probe host toolchains. Source-only freshness preflight is not full public-claims acceptance. New execution, exact source/output approval and signed publication remain outstanding. Historical paragraphs retain their dated provenance; CKB reproduction remains unverified and post-delivery.",
-      "sha256": "2df75aab8a6a96b16f45f83e9ca7f2594c15a488683ea300a9c45e36fda2a6af"
+      "review": "Reviewed 2026-09-29: b1be2fc passed its sixteen-stage VM and host validation and published only an evidence prerelease; CI 36495126442 failed fast because Sail was not initialized before source preflight. The revised workflow initializes both submodules, with a real nonrecursive Git clone regression for the prior failure and new setup. New-source VM/CI remains required, with no historical evidence rebinding. Prior cecd82e/d89c768 records remain historical; source-only preflight is not full public-claims acceptance. Exact source/output approval and formal signed publication are still outstanding, and CKB reproduction is unverified/post-delivery.",
+      "sha256": "c331f4cd6c0aeca6a57e7a5965a6f0983f31e09ac057478bb771c69d67c687f3"
     },
     "docs/architecture.md": {
       "claim_paragraphs": 17,

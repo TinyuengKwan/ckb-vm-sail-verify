@@ -66,9 +66,9 @@ jobs:
         env:
           EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
         run: test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
-      - name: Checkout CKB and apply the reviewed source baseline
+      - name: Checkout all source submodules and apply the reviewed source baseline
         run: |
-          git submodule update --init deps/ckb-vm
+          git submodule update --init --recursive deps/ckb-vm deps/sail-riscv
           make ckb-baseline-apply
       - name: Fast source and Rust checks
         run: |

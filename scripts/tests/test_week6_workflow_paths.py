@@ -110,6 +110,41 @@ class WorkflowPathTests(unittest.TestCase):
         return subprocess.check_output(["git", *args], cwd=self.root, env=self.env,
                                        stderr=subprocess.PIPE, text=True)
 
+    def test_fast_initializes_both_real_git_submodules_before_source_preflight(self):
+        # Tiny local Git repositories model checkout semantics, not production
+        # semantics. Execute the actual workflow setup block without rewriting it.
+        self.env['GIT_ALLOW_PROTOCOL'] = 'file'
+        for name in ('ckb-vm', 'sail-riscv'):
+            upstream = self.base / ('upstream-' + name)
+            upstream.mkdir()
+            subprocess.run(['git', 'init', '-q', str(upstream)], check=True, env=self.env)
+            (upstream / 'source.txt').write_text('fixture-only ' + name)
+            subprocess.run(['git', '-C', str(upstream), 'add', '.'], check=True, env=self.env)
+            subprocess.run(['git', '-C', str(upstream), '-c', 'user.name=Fixture',
+                '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture'], check=True, env=self.env)
+            self.git('submodule', 'add', str(upstream), 'deps/' + name)
+        (self.root / 'Makefile').write_text('ckb-baseline-apply:\n\t@test -f deps/ckb-vm/source.txt\n')
+        self.git('add', '.')
+        self.git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'submodule fixture')
+        clone = self.base / 'fast nonrecursive checkout'
+        subprocess.run(['git', 'clone', '--no-local', '--no-recurse-submodules', str(self.root), str(clone)],
+                       check=True, capture_output=True, env=self.env)
+        subprocess.run(['git', 'submodule', 'update', '--init', 'deps/ckb-vm'], cwd=clone,
+                       check=True, capture_output=True, env=self.env)
+        self.assertFalse((clone / 'deps/sail-riscv/source.txt').exists())
+        with self.assertRaises(RuntimeError):
+            source_snapshot.inventory(clone / 'deps/sail-riscv')
+        command = field('Checkout all source submodules and apply the reviewed source baseline', 'run', 8)
+        result = subprocess.run(['bash', '-e', '-o', 'pipefail', '-c', command], cwd=clone,
+                                capture_output=True, text=True, env=self.env, timeout=30)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for name in ('ckb-vm', 'sail-riscv'):
+            observed = source_snapshot.inventory(clone / 'deps' / name)
+            self.assertEqual(list(observed['files']), ['source.txt'])
+            self.assertEqual(observed['changes_from_head'], {})
+        fast = WORKFLOW.split('  fast:', 1)[1].split('  differential:', 1)[0]
+        self.assertLess(fast.index('git submodule update'), fast.index('python3 scripts/check_public_claims_source.py'))
+
     def run_step(self, name):
         return subprocess.run(["bash", "--noprofile", "--norc", "-e", "-o", "pipefail", "-c",
                                field(name, "run", 8)], cwd=self.root, env=self.env,
