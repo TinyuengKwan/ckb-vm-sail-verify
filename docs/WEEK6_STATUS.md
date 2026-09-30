@@ -1,5 +1,55 @@
 # Week6 关闭清单与当前证据
 
+## 2026-09-30：在 ckb-spark-delivery-v1 范围下完成交付
+
+交付对象是冻结候选 `efd68db8b44077c4afa52cb12d13ff0814da9134`，源码快照
+`a94acebfd812481740d7a787304d21353587d78245e5be1765157083b3f552fe`。
+本节是该候选之后的交付记录，不将原候选的执行、签名或 attestation 证据重新归到本次文档提交。
+完整源码胶囊保留已审批的 CKB 生产源码 overlay，不冒充未经修改的上游 commit。
+
+[正式 release 399743221](https://github.com/TinyuengKwan/ckb-vm-sail-verify/releases/tag/week6-0.1.0)
+于 `2026-09-30T05:39:06Z` 发布，版本 `week6-0.1.0`、delivery profile `A`，
+`immutable=true`、`draft=false`、`prerelease=false`。tag `week6-0.1.0` 直接指向上述冻结候选；
+`release/week6-0.1.0` 从该候选创建，后续文档提交不移动 tag 或替换发布资产。
+三个资产在 draft 阶段逐项核对名称、字节数和 SHA-256 后才 publish，发布后再次核对。
+
+| 资产 | 字节数 | SHA-256 |
+| --- | ---: | --- |
+| `ckb-vm-sail-verify-week6-0.1.0.tar.gz` | 1,140,831,340 | `fd581d4b795029b689532a5792743989129f1e780febfcf908f580a07ba19ea7` |
+| `ckb-vm-sail-verify-week6-0.1.0.tar.gz.sig` | 314 | `8cfd738ea720fbcdc99e0b580bce1b38873f8a79f541f223b811bc30a3d9674c` |
+| `extra-installations.tar.xz` | 1,801,059,088 | `c8e8ca2797aeabcbee3935949f6ad6b622a40468d77a7f5d79a50b1854a67ff4` |
+
+发布者签名身份为 `kwantinyueng@gmail.com`，使用 ED25519 公钥，指纹
+`SHA256:fhxGdS6E9GW7qqXlnIsFOWlqZTKYVqe+echXbA3/Tl0`，namespace 为 `ckb-vm-sail-release`。
+主包签名绑定其 manifest，manifest 再绑定同一不可变 release 中的工具资产；不是只有签名文件存在就视为通过。
+签名及两个数据资产的实际下载副本已通过候选自带验收器核验。
+
+[CI run 36553429859](https://github.com/TinyuengKwan/ckb-vm-sail-verify/actions/runs/36553429859)
+的五个任务全部成功，外部下载、attestation 与重放验证通过。全新 VM 环境 id 为
+`d2798510-c161-4650-8d4c-7b07eee9b33b`，十六阶段及宿主来源验收通过；这是
+operator-attested VM 记录，不是平台签名执行，也不是第三方独立复现。
+
+以下路径相对冻结候选 checkout；报告属于 `efd68db`，不是本次文档提交的新执行证据。
+
+| 记录 | SHA-256 |
+| --- | --- |
+| [正式包发布与下载 record](../artifacts/boundary-check/week6-release-package-efd68db/report.json) | `be85452c602b1a3b7187f57fd2197e1c7ee626ed0cd4427863c2913cb08ace66` |
+| [最终聚合（普通模式）](../artifacts/boundary-check/week6-final-delivery-efd68db-20260930/normal/report.json) | `bad2abf9c6543bd6e6a1cada16b2480fc95e0b3f4af48ea256a0cf3ccf41d427` |
+| [最终聚合（python -O）](../artifacts/boundary-check/week6-final-delivery-efd68db-20260930/optimized/report.json) | `9a21a6f6dcf61dd6cc7df4dcf0d77954bbd042de947f45e209b81e84fd413f95` |
+
+`record` 与两种模式的最终聚合均为 `passed`。聚合报告字段 `week6_closed=true` 是在
+`acceptance_scope=ckb-spark-delivery-v1` 范围下的机器判定：十一项交付必需检查通过，
+`delivery_outstanding=[]`；它不是不带范围的全面验证声明。
+`outstanding=["third_party"]`、`post_delivery=["third_party"]`，第三方槽位仍为
+`deferred_to_recipient`，所有报告中的 `third_party_reproduced=false` 保持不变。
+第三方复现待 CKB 官方接收后开展；此处不声称 CKB 已接收、承诺复现或完成复现。
+
+Lean 的条件性 ADD 证明、明确的前提与 TCB 边界保持不变；Rocq 仍为 NO-GO，
+其证据槽通过不代表新增已证明指令。交付状态不扩大到整个虚拟机或所有指令的等价性。
+下方均为各日期、各候选的历史记录；其中“当前”“仍未完成”等仅指记录当时，不覆盖本节交付状态。
+
+## 截至 2026-09-29 的历史记录
+
 ## 2026-09-29：b1be2fc 的 VM 通过、CI 初始化修复
 
 `b1be2fc` 的独立 VM 十六阶段和宿主验收通过，证据 bundle 已作为不可变预发布保存；
@@ -27,7 +77,7 @@
 本次新增[显式归档验收模式](release/AUDIT_RELEASE.md#2026-09-28v10-显式归档验收入口)，
 严格连接当前候选的 VM 来源、CI attestation、guest 原聚合与源码/输出身份；不跳过本地失败，
 也不将历史证据改归新提交。新候选仍须冻结和重跑。精确源码/输出批准及正式签名发布包尚未完成，
-不能声明 Week6 已关闭；第三方复现按所有者决定交给 CKB 接收后开展。
+不能作无范围限定的完成声明；第三方复现按所有者决定交给 CKB 接收后开展。
 
 更新至 2026-09-28。任务以 [Week6 条款及所有者明确调整](plan/week6.md) 和
 [总览 Definition of Done](plan/overview.md) 为准。
@@ -544,7 +594,7 @@ runtime-container 补丁。开始时主证明政策 SHA-256 为
 | Rocq GO/NO-GO 有最小复现 | [本轮 11 阶段实跑及独立验收](release/FORMAL_FINAL_EXECUTION.md)完成，实际新生成 Sail 输入，并从同一政策绑定的 LLBC 翻译 Rust；仍为 NO-GO、无额外证明，不能替代完整 clean-room |
 | 零未说明占位 / 上游假设受审 | 现有 Lean 政策记录支持库四处 sorry 及最终根的精确依赖；release 检查不能只做 grep 计数 |
 | release 含版本、哈希、覆盖、非目标、重放 artifact | 尚未制作或发布本轮完整包 |
-| 不夸大为整个 CKB-VM 已形式化验证 | 保持 conditional、runtime-only 及 post-MVP 排除范围；仍需最终公开文档审计 |
+| 不夸大为整个虚拟机的完整形式化验证 | 保持 conditional、runtime-only 及 post-MVP 排除范围；仍需最终公开文档审计 |
 
 ## 本轮推进顺序
 

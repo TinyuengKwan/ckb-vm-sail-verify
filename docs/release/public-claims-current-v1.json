@@ -9,7 +9,7 @@
     "third_party_reproduced": false,
     "week6_closed": false
   },
-  "candidate": "week6-production-pipeline-current-not-approved-release",
+  "candidate": "week6-efd68db-post-delivery-documentation-review",
   "claim_classes": {
     "historical_scope": {
       "evidence_components": [
@@ -17,7 +17,8 @@
       ],
       "limitations": [
         "historical PASS cannot support a changed current candidate",
-        "later progress does not rewrite original failures"
+        "later progress does not rewrite original failures",
+        "the dated efd68db delivery record is bounded by ckb-spark-delivery-v1; no execution, signature or attestation is rebound to the later documentation commit"
       ],
       "summary": "Dated reports retain their original candidate, policy and outcome identity."
     },
@@ -67,7 +68,7 @@
         "current-candidate clean-room, worktree approval, CI download and package remain delivery requirements; third-party reproduction is deferred to recipient CKB",
         "this review alone closes only public_claims"
       ],
-      "summary": "The authoritative aggregate remains incomplete and does not claim Week6 or release completion."
+      "summary": "The prepublication aggregate consumed by the execution-evidence checker remains an incomplete historical record. The later efd68db delivery is documented separately by its exact signed release and final aggregate identities; this documentation review does not rerun or rebind those records."
     },
     "rocq_no_go": {
       "evidence_components": [
@@ -154,8 +155,8 @@
       "sha256": "00b696caac4ad0d794e52b3a424c4920aa025cd46dcbc79572e4dc9bce4a530e"
     },
     "docs/WEEK6_STATUS.md": {
-      "claim_paragraphs": 124,
-      "claim_paragraphs_sha256": "ede6cd6eb9393fbed72af2b1c6520a6967266c5aaaffaa2fb809190f374a91f0",
+      "claim_paragraphs": 129,
+      "claim_paragraphs_sha256": "27a499e4293177db07271fd48e8d0193ea1c3d86706cb27dc0dd1d205d0dd035",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -164,11 +165,12 @@
         "mismatch_scope",
         "maintainer_demo_scope",
         "source_output_identity",
-        "release_incomplete"
+        "release_incomplete",
+        "historical_scope"
       ],
       "classification": "current_assurance",
-      "review": "Reviewed 2026-09-29: b1be2fc passed its sixteen-stage VM and host validation and published only an evidence prerelease; CI 36495126442 failed fast because Sail was not initialized before source preflight. The revised workflow initializes both submodules, with a real nonrecursive Git clone regression for the prior failure and new setup. New-source VM/CI remains required, with no historical evidence rebinding. Prior cecd82e/d89c768 records remain historical; source-only preflight is not full public-claims acceptance. Exact source/output approval and formal signed publication are still outstanding, and CKB reproduction is unverified/post-delivery.",
-      "sha256": "c331f4cd6c0aeca6a57e7a5965a6f0983f31e09ac057478bb771c69d67c687f3"
+      "review": "Reviewed 2026-09-30 against immutable release 399743221, the exact efd68db tag/source snapshot, all three asset sizes/digests, approved ED25519 signer, CI 36553429859, operator-attested VM d2798510-c161-4650-8d4c-7b07eee9b33b, release record be85452c and final normal/optimized aggregates bad2abf9/9a21a6f6. Delivery completion is limited to ckb-spark-delivery-v1; third_party remains deferred_to_recipient with third_party_reproduced=false and no claim of CKB receipt or execution. Earlier incomplete and failed runs are explicitly historical. The documentation commit does not acquire efd68db execution, signature or attestation evidence. Conditional ADD, reviewed production-source overlay, TCB and Rocq NO-GO boundaries are unchanged. This review inventory is not a new execution-evidence or release-approval record.",
+      "sha256": "0bfd294ad9406a2afab97141b6db13171912f0f584bd80c17713ace56c841e4f"
     },
     "docs/architecture.md": {
       "claim_paragraphs": 17,
