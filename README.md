@@ -56,7 +56,7 @@ Lean 4.31.0，双侧导入入口为 `make proof-imports`，实测记录见
 直接连接 `execute_production` 与 `try_step`。
 `make proof-check BACKEND=lean` 已串联重新生成、来源/公理/显式前提审计及负向测试，
 输出条件性验收报告，详见 [proof-check 门禁](proof/lean/reports/PROOF_CHECK.md)。
-这不消除剩余合同，也不等于 `audit-release`。
+这不消除剩余合同，也不等于 `make -f scripts/release.mk audit` 的六槽聚合。
 
 固定配置下的 Sail→Lean 4 与 Sail→Rocq 模型生成入口均已验证可重现，且 **Lean 模型
 现在编译通过**(125 个 `.olean`)。`make proof-gen` 在生成之后会真正编译它生成的
@@ -225,14 +225,22 @@ artifacts/       失败案例格式；大体积本地生成物默认忽略
 sail-model/
   ckb_vm_config.json 叠加到 sail-riscv 默认配置的 override
 .github/
-  workflows/ci.yml 分层 CI：每次 PR 跑快速/差分作业，另有缓存和定时回归；尚非完整发布链
+  workflows/ci.yml       分层 CI：每次 PR 跑快速/差分作业，另有缓存和定时回归
+  workflows/release.yml  发布证据 intake：验证并 attest 全新 VM 的证据 bundle，供外部收集
 scripts/
   build_*/prepare_*/verify_*   工具链与模拟器构建、环境核验
   generate_*/configure_*       两侧证明模型生成与 Lake 工程配置
   check_*/public_decoder_*     证明门禁及其子门禁（路径与哈希被 policy 固定）
-  tests/                       门禁的单元与负向测试
-  probes/                      被门禁引用的边界探针
-  experiments/                 不被门禁引用的翻译器实验与回归审计脚本
+  clean_room.py / ephemeral_vm.py / evidence_bundle.py / ci_evidence.py
+                               全新 KVM guest 中的 11 阶段 clean-room 及其证据流转
+  runtime_evidence.py / audit_release.py / public_claims.py
+                               runtime 槽的产生与复验、六槽聚合、公开结论检查
+  release_package.py / source_capsule.py / fixed_inputs.py
+                               发布包的构建、记录与离线恢复
+  tests/                       门禁与验收脚本的单元与负向测试
+  probes/                      被证明门禁引用的三个边界探针
+docs/release/policy.json       版本、签名者、固定输入哈希、阶段清单与禁用短语的唯一政策文件
+docs/history/                  按日期保留的过程记录，措辞反映记录当时
 ```
 
 

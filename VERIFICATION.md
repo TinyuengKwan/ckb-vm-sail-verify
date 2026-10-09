@@ -2,45 +2,12 @@
 
 本文区分“当前可运行基线”和“六周 MVP 将交付的验收接口”。不存在的命令不会被描述成已经完成。
 
-**2026-09-28 当前进度：** 候选 `3294cfb` 的独立临时 VM、宿主验收、真实 CI 五任务和外部下载重放
-已有通过证据；证据 bundle 已预发布，不是正式交付包。本次修改聚合引用连接，并按所有者要求
-将第三方复现移至 CKB 官方接收后，不再阻塞星火计划交付。修改后必须另行冻结、重跑，不能将
-旧候选证据改绑。精确候选、哈希和运行链接见 [Week6 状态](docs/history/WEEK6_STATUS.md)。
-下文历史报告保留原来源；Week6 本次交付仍未关闭。
-
-### Week6 正式交付顺序（尚未完成）
-
-1. 冻结前由维护者确定版本号、profile A 的具体交付成员和发布签名身份/SSH 公钥；
-   写入 [外部验收政策](docs/release/external-acceptance-policy-v1.json)与
-   [发布信任清单](docs/release/release-allowed-signers)。
-   09-24 仓库所有者已[明确批准](docs/history/release/release-identity-approval-20260924.json)
-   `week6-0.1.0` / `A` 及发布者 `kwantinyueng@gmail.com` 的 Ed25519 公钥，已写入政策与发布信任清单。
-   第三方复现交由 CKB 官方接收后开展，交付前不要求复现者身份或公钥；
-   具体交付成员和最终输出差异仍待审核，不以身份批准替代。
-2. 在冻结前验证完整交付成员的安装与恢复方式、归档大小、覆盖和非目标。生产打包器
-   `scripts/week6_release_package.py build` 要求批准的身份及 `release-package-inputs-v2` 精确成员清单，
-   只产出未签名/未发布包。按 GitHub 的[单资产限制](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases)，
-   每个资产必须小于 2 GiB；不能以已有 VM bundle 小于限制推断完整正式包也满足。09-24 已明确采用
-   [同一不可变 release 双数据资产方案](docs/history/release/WEEK6_DUAL_ASSET_RESTORE.md)，另附主包签名。
-   主包签名绑定独立工具包，当前源码由新 capsule/恢复入口精确还原；最终生成物仍待审查。
-3. 冻结新候选并重新执行 VM 全链、宿主验收及对应 bundle；旧 bundle 不得改绑。完成
-   `.github/workflows/week6-release.yml` 五个任务后，使用 `scripts/week6_collect_ci.py` 收集外部下载、
-   双份重放和 attestation 证据。本地模拟不替代真实 CI 或外部收集。
-4. 对该候选实际生成的源码/输出身份及完整差异由仓库所有者或发布维护者明确批准；批准必须绑定
-   current-output 五件套，再用 `scripts/week6_review_materialize.py` 组合 v4 worktree envelope。
-   第 1 步的交付计划不能预先批准尚未产生的输出，Codex 的字节审查也不等于维护者批准。
-5. 仓库所有者已授权并启用
-   [release immutability](https://docs.github.com/en/code-security/how-tos/secure-your-supply-chain/establish-provenance-and-integrity/prevent-release-changes)。
-   09-24 授权后的只读 API `GET /repos/TinyuengKwan/ckb-vm-sail-verify/immutable-releases` 返回
-   `enabled=true`、`enforced_by_owner=false`。正式发布仍须先创建 draft，上传两个数据资产及批准身份生成的 SSH 签名，
-   核对资产后发布；不可变资产不能发布后再补签名。`scripts/week6_release_package.py record` 只读查询
-   实际 immutable release、独立下载并验签，不创建 release 或签名。现有证据预发布不是这一正式包。
-6. 以同一候选/源码快照聚合全部十二槽：十一项交付要求全部通过，第三方明确记为
-   `deferred_to_recipient`，才可在 `ckb-spark-delivery-v1` 范围关闭本次 Week6 交付。
-   `outstanding` 保留第三方未验证项，`delivery_outstanding` 必须为空；不得把交付完成写成第三方复现通过。
-7. 交付后由 CKB 官方按文档开展复现；这是所有者指定的后续安排，不是官方接收或执行的证明。
-   如将来接入现有签名报告验收入口，另行审批第三方身份/公钥并保留原候选、原发布身份；
-   本次不要求预登记，也不为等待第三方而阻塞交付。
+**现行验收流程**见 [docs/RELEASE.md](docs/RELEASE.md)：六个证据槽（runtime、lean、rocq、clean_room、
+release、third_party）、全新 KVM guest 中的 11 阶段 clean-room、所有者签名 tag 作为审批、单一政策文件
+[`docs/release/policy.json`](docs/release/policy.json)。`make -f scripts/release.mk audit` 聚合六槽；`make -f scripts/release.mk release-package` 构建
+未签名主包；`make -f scripts/release.mk restore` 让第三方从发布资产离线恢复。已发布的 `week6-0.1.0`（2026-09-30，候选 `efd68db`）
+按当时的十二槽流程验收，其记录保留在 [docs/history/](docs/history/README.md)，不按本文流程改写。
+`week6-0.2.0` 尚未冻结候选、尚未实跑、尚未发布。
 
 以下为按日期保留的实现及执行历史，不是上述剩余步骤的完成声明。
 
@@ -228,7 +195,7 @@ Sail 侧 `rv64d.v` 需要 `e_div`，而发布版 `rocq-sail-stdpp 0.20.2` 不提
 
 - 通用初态/取指/Sail 就绪条件、物理内存对应及平台 reset 可达性；已有具体 Sail 联合
   前提见证及公开 ADD 同码解码证明，不能再把这两项列为未完成；
-- `audit-release` 的全环境 clean-room、完整覆盖与发布证据验收（Week 6）；
+- `make -f scripts/release.mk audit` 的全环境 clean-room 与发布证据验收必须对每个新候选重新执行；
   已接入的条件性 `proof-check` 不替代这些工作。
 
 Week6 的逐项缺口和本轮实测状态见 [关闭清单](docs/history/WEEK6_STATUS.md)。
@@ -237,36 +204,36 @@ Week6 的逐项缺口和本轮实测状态见 [关闭清单](docs/history/WEEK6_
 不覆盖后文 2026-09-13 新正式主门禁、native、Rocq 及 v10 聚合的完成记录。
 旧报告的成功或失败范围不因后续进展而改写。
 
-新增[本地 runtime 证据入口](docs/history/release/RUNTIME_EVIDENCE.md)：
-`python3 scripts/probes/probe_release_runtime.py` 检查环境，在新 Cargo target 中构建
+新增[本地 runtime 证据入口](docs/history/release/RUNTIME_EVIDENCE.md)（2026-10 已并入
+`scripts/runtime_evidence.py`）：当时的探针检查环境，在新 Cargo target 中构建
 CLI，重跑 corpus/mutation 并从字节相同的复制产物逐案重放；独立重算 trace 和矩阵。
 本轮 32 个案例及全部复制重放通过，但此入口不重建 Sail emulator，不替代完整
-clean-room、CI 下载、第三方复现或完整 `audit-release` 验收。
+clean-room、CI 下载、第三方复现或完整 `make -f scripts/release.mk audit` 验收。
 
 另有[隔离基础重建入口与实测记录](docs/history/release/ISOLATED_FOUNDATION.md)：
-`python3 scripts/probes/probe_isolated_foundation.py` 将明确的 HEAD＋工作树快照复原到
+`scripts/probes/probe_isolated_foundation.py`（2026-10 已移除，记录保留）将明确的 HEAD＋工作树快照复原到
 三个独立 Git 副本，冷构建 Sail 模拟器/配置，再运行 Rust 测试及差分/mutation/复制重放。
 本轮 13 阶段通过且源码前后无漂移；它复用本机工具和缓存，未执行新 Lean/Rocq 链，
 不是全环境 clean-room。完整发布门槛仍见 Week6 清单。
 
 随后已完成 [Rust/Lean 独立安装](docs/history/release/ISOLATED_RUST_LEAN.md)：
-`python3 scripts/probes/probe_isolated_rust_lean.py` 在全新工具目录下载固定版本，
+`scripts/probes/probe_isolated_rust_lean.py`（2026-10 已移除，记录保留）在全新工具目录下载固定版本，
 核验工具身份及编译 smoke。20 阶段通过；它复用安装器/宿主系统，不安装其余翻译器，
 也不执行新 ADD 证明，不能替代同一候选下的完整环境与证明链验收。
 
 另已完成 [Rocq/OPAM 独立源码重建](docs/history/release/ISOLATED_ROCQ.md)：
-`python3 scripts/probes/probe_isolated_rocq.py` 在空 OPAM 根重建 21 个固定包，审计实际
+`scripts/probes/probe_isolated_rocq.py`（2026-10 已移除，记录保留）在空 OPAM 根重建 21 个固定包，审计实际
 编译器约束和包元数据，再用新 Rocq 复跑原 spike。13 个外层阶段与十阶段 NO-GO 复验通过；
 仍复用宿主工具、Aeneas 和既有 LLBC/Sail 输入，不是完整 clean-room 或额外 Rocq 证明。
 
 另已完成 [Sail 独立源码重建及身份核验](docs/history/release/ISOLATED_SAIL.md)：
-`python3 scripts/probes/probe_isolated_sail.py` 在新 OPAM 根重建 56 包，再独立编译
+`scripts/probes/probe_isolated_sail.py`（2026-10 已移除，记录保留）在新 OPAM 根重建 56 包，再独立编译
 固定 commit 的 Sail。18 阶段及 C / Lean 小型生成检查通过，但新执行文件哈希与
 现有证明政策不同，整体退出 2、要求身份审查，未自动采纳。小型生成物与旧工具一致
 不代表完整模型等价；该结果也不替代新工具下的完整提取/证明链或 clean-room。
 
 另已完成 [full-MIR 标准库独立重建](docs/history/release/ISOLATED_FULL_MIR.md)：
-`python3 scripts/probes/probe_isolated_full_mir.py` 使用独立安装的 nightly 和空 Cargo
+`scripts/probes/probe_isolated_full_mir.py`（2026-10 已移除，记录保留）使用独立安装的 nightly 和空 Cargo
 缓存构建，46 个库已物化为无外链 sysroot；因全部哈希不同于原批准库，外层返回 2，
 随后[真实公开 decoder / iterator 重提取](docs/history/release/FULL_MIR_REEXTRACTION.md) 的
 11 个阶段通过，两份生成 Lean 模型按既有源位置注释映射匹配原身份。外层仍返回 2，
@@ -358,17 +325,16 @@ RVFI-DII 会话必须从架构复位态开始，首包不是 `rvfi_order` 0 / `p
 
 以下接口是稳定验收面。`verify-smoke`、`verify-negative` 与 `proof-spike` 已实现
 并可直接验收；`proof-check BACKEND=lean` 已实现条件性 ADD 定理的严格生成/证明审计。
-`audit-release` 已有[聚合器与历史清单说明](docs/history/release/AUDIT_RELEASE.md)。v10 只代表
-旧 `7ced9f42…` 政策；当前 `b5bdc401…` 的本地清单和 v3 工作树记录位于 Git 忽略的
-`current-output-integration-zvlwq2MM` 证据目录。完整发布验收仍未完成；缺项时退出非零：
+`make -f scripts/release.mk audit` 是现行的六槽聚合入口（[发布与验收流程](docs/RELEASE.md)）；旧 `audit-release` 的
+十二槽聚合器及其历史清单说明保留在 [docs/history/](docs/history/release/AUDIT_RELEASE.md)。缺项时退出非零：
 
 ```bash
 make verify-smoke
 make verify-negative
 make proof-check BACKEND=lean
 make proof-spike
-make -f scripts/release.mk audit-release \
-  MANIFEST=artifacts/boundary-check/current-output-integration-zvlwq2MM/manifest.json
+make -f scripts/release.mk audit CANDIDATE=<commit> RUNTIME=<runtime report> LEAN=<lean report> ROCQ=<rocq report> \
+  CLEAN_ROOM=<ci record> RELEASE=<release record> OUT=<new dir>
 ```
 
 预期语义：
@@ -381,14 +347,9 @@ make -f scripts/release.mk audit-release \
   wrapper 合同已证明，但取指/初态与 Sail 前提未全部消除，完整指令覆盖不自动成为 `proved`；
 - `make proof-spike`：在新 profile 下执行 11 阶段，包括本次 Sail Rocq 生成、从已核验生产
   LLBC 重新翻译 Rust、显式双 OPAM 上下文及原具体 NO-GO/最小复现；须先完成主门禁生成阶段；
-- `audit-release`：目标是检查版本、哈希、覆盖、重放 artifact、占位符与保证边界。
-  当前本地清单引用独立验收后的完整 Lean、新 runtime/Rocq、完整 workspace 测试、
-  三项语义负测、真实演示和 v3 工作树部分记录；实际聚合六项验收通过，工作树仍因
-  最终交付范围/语义审批而 `incomplete`，其余五类发布义务缺失。v10 的 06:34 UTC
-  六项聚合仅保留历史身份。
-  两项配对输入有独立产物/有限最小化/重放证据，不声称同码 VM 缺陷。
-  `incomplete` 退出 2，不是发布 PASS。独立 Makefile 保持现有 Lean 冻结源码不变，
-  裸 `make audit-release` 尚未接入。
+- `audit`：读六份报告并重算能重算的部分，执行只读远端查询与签名检查；`passed` 要求六槽全部
+  verified 或第三方明确 `deferred`，且所有槽的源码快照等于当前检出。`incomplete` 退出 2，
+  `invalid` 退出 1；都不是发布 PASS。
 
 任一 runner error、空 trace、事件长度差异、字段差异或终止差异都不能返回 PASS。
 
@@ -564,6 +525,12 @@ artifact 中的十六进制程序与记录的案例不一致时直接报错，�
 本项目不证明完整 CKB-VM，也不覆盖 ASM/JIT、VERSION0/1、load/store 完整内存语义、MOP、A、ECALL/syscall、cycle accounting、并发/原子模型或整条 CKB 链安全性。
 
 ## 8. 持续集成
+
+发布证据由 `.github/workflows/release.yml` 处理：只在 `workflow_dispatch` 且 `candidate_ready=true`
+时运行，`fast` 作业跑公开结论检查、验收脚本测试与 `make check`/`make test`；`intake` 作业下载全新 VM
+产生的证据 bundle、按输入哈希校验、解包到精确候选检出并验证 clean-room 报告，然后 attest 这份 bundle
+的字节并上传；`replay` 作业在另一个 job 里重新下载、校验字节并用归档的二进制重放一个案例。
+attestation 证明的是 GitHub 上的打包，不是 VM 执行。外部收集与验收见 [docs/RELEASE.md](docs/RELEASE.md)。
 
 以下描述当前工作树中的 `.github/workflows/ci.yml` 配置，不是本候选的远端执行凭证。
 配置分两层：

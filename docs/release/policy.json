@@ -1,0 +1,109 @@
+{
+  "schema_version": 2,
+  "kind": "release-policy-v2",
+  "repository": "TinyuengKwan/ckb-vm-sail-verify",
+  "version": "week6-0.2.0",
+  "canonical_checkout": "/home/clair/tinyueng_workplace/ckb-vm-sail-verify",
+  "signer": {
+    "identity": "kwantinyueng@gmail.com",
+    "allowed_signers": "docs/release/release-allowed-signers",
+    "namespace": "ckb-vm-sail-release"
+  },
+  "third_party": {
+    "allowed_signers": "docs/release/third-party-allowed-signers",
+    "namespace": "ckb-vm-sail-week6",
+    "stages": [
+      "download-release",
+      "verify-package",
+      "restore-source",
+      "install-toolchain",
+      "run-rust-tests",
+      "run-runtime",
+      "run-lean",
+      "run-rocq",
+      "check-worktree",
+      "check-public-claims"
+    ]
+  },
+  "clean_room": {
+    "providers": ["independent-ephemeral-vm"],
+    "image": {
+      "name": "ubuntu-24.04-server-cloudimg-amd64.img",
+      "release": "release-20260911",
+      "sha256": "612b2c0cc1bc413a6cb8c38fd611794caf0f2b436c50013d8b3794db12ad7354"
+    },
+    "stages": [
+      "checkout",
+      "snapshot",
+      "install",
+      "configure-sail",
+      "regenerate",
+      "rust-tests",
+      "runtime",
+      "lean-kernel",
+      "rocq-spike",
+      "tree-clean",
+      "public-claims"
+    ],
+    "tools": ["rust", "sail", "aeneas", "charon", "lean", "rocq"],
+    "generated_roots": ["proof/lean/generated", "proof/rocq/generated", "sail-model/build"]
+  },
+  "fixed_inputs": {
+    "extra-installations.tar.xz": {
+      "size": 1801059088,
+      "sha256": "c8e8ca2797aeabcbee3935949f6ad6b622a40468d77a7f5d79a50b1854a67ff4"
+    },
+    "manifest.json": {
+      "sha256": "ac7b468e6715e6a4b956376a0ded0ee6e4d9cfc632d4323b439877916e74708e"
+    },
+    "rebuilt-decoder-candidate.tar.gz": {
+      "sha256": "1a81921b12215a87106ac2080c05de3f2bf9d51b9bb14bdb80a90ac8c05c58d5"
+    },
+    "cmake-downloads.tar.gz": {
+      "sha256": "51589032e8adc0aa6db1420633630e5d83cbbb0e094990d0484dd9f6fc8199c9"
+    },
+    "cmake-downloads-manifest.json": {
+      "sha256": "792223f4b9773e647805edc4b0b9e1a2064d1a2c498866d14c1a748f405217dd"
+    }
+  },
+  "ci": {
+    "workflow": ".github/workflows/release.yml",
+    "jobs": ["fast", "intake", "replay"],
+    "artifact_name_prefix": "release-evidence-",
+    "replay_case": "add-signed-overflow"
+  },
+  "package": {
+    "required_members": ["source/", "install/", "evidence/", "docs/", "SHA256SUMS", "MANIFEST.json"],
+    "tool_asset": "extra-installations.tar.xz",
+    "docs": [
+      "README.md",
+      "VERIFICATION.md",
+      "docs/coverage.md",
+      "docs/semantic-gaps.md",
+      "docs/methodology.md",
+      "docs/architecture.md",
+      "docs/RELEASE.md",
+      "docs/STATUS.md"
+    ]
+  },
+  "public_claims": {
+    "documents": [
+      "README.md",
+      "VERIFICATION.md",
+      "docs/coverage.md",
+      "docs/semantic-gaps.md",
+      "docs/methodology.md",
+      "docs/architecture.md",
+      "docs/RELEASE.md",
+      "docs/STATUS.md"
+    ],
+    "coverage_status_values": ["runtime-only", "conditional", "unsupported"],
+    "forbidden": [
+      "CKB-VM is formally verified.",
+      "CKB-VM 已经完成形式化验证。",
+      "Week6 is closed.",
+      "Week6 已关闭。",
+      "Rocq adds verified instruction coverage."
+    ]
+  }
+}

@@ -45,3 +45,11 @@
 `outstanding` 仍列出尚未验证的证据（含第三方），`delivery_outstanding` 只列交付阻塞项，
 `post_delivery` 单列交付后事项，`third_party_reproduced=false` 保持真实边界。
 若以后提供第三方报告，仍须严格验收，不能把无效报告当作延期而忽略。
+
+## 2026-10-09 所有者批准的验收简化
+
+验收机器按 [发布与验收流程](../RELEASE.md) 重做，适用于 `week6-0.2.0` 起的版本：证据槽从十二个
+减到六个（runtime、lean、rocq、clean_room、release、third_party），源码/输出审批改为所有者对候选
+commit 的 SSH 签名 tag，验证基础只有一种（读文件加只读远端查询），政策只有一个文件。上文 09-28
+段落描述的十二槽聚合器与 `ckb-spark-delivery-v1` 范围仅适用于已发布的 `week6-0.1.0`，原样保留为记录。
+第三方复现仍为交付后由 CKB 官方开展，缺省显示 `deferred`，不记为通过。Release gate 的各项要求不变。

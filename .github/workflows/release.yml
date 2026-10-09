@@ -1,0 +1,172 @@
+# Release evidence workflow (intake mode).
+#
+# The clean-room chain runs in an independent ephemeral VM (scripts/ephemeral_vm.py);
+# this workflow verifies, attests and re-uploads that evidence so the collector
+# (scripts/ci_evidence.py) can download it again from a different job. The
+# attestation covers the bundle bytes packaged here, not VM execution. Nothing
+# runs unless it is dispatched for an exact commit with candidate_ready=true.
+name: Release evidence
+
+on:
+  workflow_dispatch:
+    inputs:
+      candidate_commit:
+        description: Exact pushed candidate commit containing this workflow
+        required: true
+        type: string
+      candidate_ready:
+        description: Set only for a frozen candidate whose VM bundle is published
+        required: true
+        default: false
+        type: boolean
+      bundle_sha256:
+        description: >-
+          SHA-256 of the evidence bundle packed from the VM run of this exact
+          commit. It cannot be a literal here because the bundle binds the
+          source snapshot that contains this file.
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+  attestations: write
+
+concurrency:
+  group: release-evidence-${{ inputs.candidate_commit }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TERM_COLOR: never
+
+jobs:
+  fast:
+    name: fast
+    if: ${{ inputs.candidate_ready }}
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout exact candidate
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.candidate_commit }}
+          submodules: false
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reject a different commit
+        env:
+          EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
+        run: test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
+      - name: Checkout source submodules and apply the reviewed source baseline
+        run: |
+          git submodule update --init --recursive deps/ckb-vm deps/sail-riscv
+          make ckb-baseline-apply
+      - name: Public claims, acceptance script tests, Rust checks
+        run: |
+          python3 scripts/public_claims.py
+          for test in test_public_claims test_runtime_evidence test_audit_release test_clean_room \
+                      test_ephemeral_vm test_evidence_bundle test_ci_evidence test_release_package \
+                      test_source_capsule test_fixed_inputs test_ckb_source_baseline test_source_snapshot; do
+            python3 "scripts/tests/$test.py"
+            python3 -O "scripts/tests/$test.py"
+          done
+          make check
+          make test
+
+  intake:
+    name: intake
+    if: ${{ inputs.candidate_ready }}
+    needs: [fast]
+    runs-on: ubuntu-24.04
+    outputs:
+      artifact_name: ${{ steps.package.outputs.artifact_name }}
+      bundle_sha256: ${{ steps.package.outputs.bundle_sha256 }}
+    env:
+      BUNDLE_SHA256: ${{ inputs.bundle_sha256 }}
+      VM_EVIDENCE_URL: ${{ secrets.WEEK6_VM_EVIDENCE_URL }}
+    steps:
+      - name: Require a GitHub-hosted runner for the intake job itself
+        env:
+          RUNNER_ENVIRONMENT: ${{ runner.environment }}
+        run: test "$RUNNER_ENVIRONMENT" = github-hosted
+      - name: Checkout exact candidate recursively
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          ref: ${{ inputs.candidate_commit }}
+          submodules: recursive
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reject a different commit, apply the reviewed overlay, require the bundle URL
+        env:
+          EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
+        run: |
+          test "$(git rev-parse HEAD)" = "$EXPECTED_COMMIT"
+          make ckb-baseline-apply
+          test -n "$VM_EVIDENCE_URL"
+          printf '%s\n' "$BUNDLE_SHA256" | grep -Eq '^[0-9a-f]{64}$'
+      - name: Download the VM evidence bundle (URL never recorded)
+        run: |
+          mkdir intake
+          python3 - <<'PY'
+          import hashlib, os, sys, urllib.request
+          url, expected = os.environ["VM_EVIDENCE_URL"], os.environ["BUNDLE_SHA256"]
+          digest = hashlib.sha256()
+          try:
+              with urllib.request.urlopen(url, timeout=120) as source, open("intake/vm-evidence.tar.gz", "xb") as target:
+                  while block := source.read(1024 * 1024):
+                      digest.update(block); target.write(block)
+          except Exception:
+              sys.exit("vm evidence download failed")
+          sys.exit(0 if digest.hexdigest() == expected else "vm evidence bundle hash differs")
+          PY
+      - name: Unpack into the candidate checkout and validate the clean-room report
+        env:
+          EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
+        run: |
+          python3 scripts/evidence_bundle.py unpack \
+            --bundle intake/vm-evidence.tar.gz --bundle-sha256 "$BUNDLE_SHA256" \
+            --root "$GITHUB_WORKSPACE" --candidate "$EXPECTED_COMMIT"
+      - name: Name the artifact
+        id: package
+        env:
+          EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
+        run: |
+          echo "artifact_name=release-evidence-$EXPECTED_COMMIT" >> "$GITHUB_OUTPUT"
+          echo "bundle_sha256=$BUNDLE_SHA256" >> "$GITHUB_OUTPUT"
+      - name: Attest the exact bundle bytes (attests packaging on GitHub, not VM execution)
+        uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
+        with:
+          subject-path: ${{ github.workspace }}/intake/vm-evidence.tar.gz
+      - name: Upload the bundle for the distinct replay job and the external collector
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: ${{ steps.package.outputs.artifact_name }}
+          path: ${{ github.workspace }}/intake/vm-evidence.tar.gz
+          if-no-files-found: error
+          retention-days: 30
+
+  replay:
+    name: replay
+    if: ${{ inputs.candidate_ready }}
+    needs: [intake]
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Download in a distinct job and new destination
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: ${{ needs.intake.outputs.artifact_name }}
+          path: downloaded
+      - name: Verify bundle bytes and replay only the archived case with the archived binaries
+        env:
+          EXPECTED_SHA256: ${{ needs.intake.outputs.bundle_sha256 }}
+        run: |
+          test "$(sha256sum downloaded/vm-evidence.tar.gz | cut -d' ' -f1)" = "$EXPECTED_SHA256"
+          mkdir replay
+          tar -xzf downloaded/vm-evidence.tar.gz -C replay
+          clean=replay/artifacts/boundary-check/clean-room
+          chmod 755 "$clean/runtime/ckb-vm-sail-diff" "$clean/replay-inputs/sail_riscv_sim"
+          "$clean/runtime/ckb-vm-sail-diff" \
+            --sail-bin "$clean/replay-inputs/sail_riscv_sim" \
+            --sail-config "$clean/replay-inputs/ckb_vm_config.json" \
+            --replay "$clean/runtime/original/add-signed-overflow.json" \
+            --artifact-dir replay/result
