@@ -49,7 +49,7 @@ python3 scripts/tests/test_decoder_model_identity.py
 这是搬迁可行性证据，不是一次新的 Lean kernel 检查、完整 clean-room 或 release 通过。
 搬迁验证时原主门禁仍使用原 harness 位置及原始文件哈希。
 随后调用层/来源政策已完成迁移审计，完整证明门禁及独立证据复核已通过，见
-[正式迁移记录](../../../../../docs/release/PUBLIC_INPUT_MIGRATION.md)。
+[正式迁移记录](../../../../../docs/history/release/PUBLIC_INPUT_MIGRATION.md)。
 
 其余实际安装依赖已核查：
 
@@ -65,6 +65,6 @@ python3 scripts/tests/test_decoder_model_identity.py
 上述依赖已在新本地输入包中物化、安装并实际用于公开主模型和迭代器重提取，原目录不变。
 最新九阶段探针同时验证两份提取根，分别仅映射 373 / 20 处生成来源注释；
 搬迁验证没有修改原始模型、定理和当时的正式政策；后续政策迁移单独记录。
-安装命令、成功与失败证据见[输入包记录](../../../../../docs/release/DECODER_INPUTS.md)。
+安装命令、成功与失败证据见[输入包记录](../../../../../docs/history/release/DECODER_INPUTS.md)。
 正式门禁切换及重跑已完成；完整工具环境和发布仍未完成，见
-[Week6 清单](../../../../../docs/WEEK6_STATUS.md)。
+[Week6 清单](../../../../../docs/history/WEEK6_STATUS.md)。

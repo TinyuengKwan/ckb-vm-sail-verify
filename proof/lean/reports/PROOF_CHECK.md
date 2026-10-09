@@ -1,15 +1,15 @@
 # 条件性 ADD 证明验收门禁
 
-2026-09-13：[正式主工具入口迁移](../../../docs/release/FORMAL_MAIN_INTEGRATION.md)
+2026-09-13：[正式主工具入口迁移](../../../docs/history/release/FORMAL_MAIN_INTEGRATION.md)
 当时接入 `rebuilt-main-v1` 和政策 `7ced9f42…`，要求 28 主阶段、21 组 287 测试。
 新正式完整执行于 06:26 UTC 完成，06:29 UTC 独立验收通过：28 主阶段、287 测试、
 48 公开阶段及 68 公开定理。完整来源及归档见上述正式迁移记录。
 下文 24/236 等已完成报告保持历史身份，不归到新政策；本次通过也不关闭 Week6。
 
 当前政策为逐族案例修正后的 `b5bdc401…`，不是上述旧政策。
-[本轮完整正式链](../../../docs/release/FORMAL_FINAL_EXECUTION.md)于 22:21 UTC 完成并独立验收，
+[本轮完整正式链](../../../docs/history/release/FORMAL_FINAL_EXECUTION.md)于 22:21 UTC 完成并独立验收，
 同样为 28 主阶段、287 测试、48 公开阶段、68 定理；其 Lean/Rocq 报告已由
-[最终执行连接检查](../../../docs/release/WORKTREE_GENERATION_VALIDATOR.md#聚合中的最终执行连接)
+[最终执行连接检查](../../../docs/history/release/WORKTREE_GENERATION_VALIDATOR.md#聚合中的最终执行连接)
 绑定到同一生成记录。这不关闭完整工作树或 Week6，也不改写旧报告身份。
 
 入口：`make proof-check BACKEND=lean`。验收对象为
@@ -28,9 +28,9 @@
 报告哈希、归档和独立重验结果见 [完成审计](../decoder/COMPLETION_AUDIT.md)。
 
 2026-09-13 公开调用层已迁移至 v2 输入；首次全门禁因两处已证等价 map 的定义指纹
-漏迁移而失败。[精确修正](../../../docs/release/REBUILT_AUDIT_CORRECTION.md)后于
+漏迁移而失败。[精确修正](../../../docs/history/release/REBUILT_AUDIT_CORRECTION.md)后于
 01:15:28–02:03:45 UTC 完成新一轮完整门禁，退出 0 并独立验收通过；
-[成功归档](../../../docs/release/REBUILT_GATE_ACCEPTANCE.md)包含 24 主阶段、236 测试及 48 公开阶段，
+[成功归档](../../../docs/history/release/REBUILT_GATE_ACCEPTANCE.md)包含 24 主阶段、236 测试及 48 公开阶段，
 不是沿用历史 PASS。主定理/合同/公理不变，
 只迁移这两项已证等价定义及元数据引用；其余精确审计继续强制执行。
 

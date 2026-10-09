@@ -16,13 +16,13 @@ The initial migrated run completed on 2026-09-13 at 05:51:07 UTC: eleven stages,
 eight successful stages and three exact expected rejections; independent
 validation completed at 05:54:49 UTC. The result remains NO-GO with no extra
 proof coverage. The ten-stage reports below remain historical.
-See [formal integration](../../docs/release/FORMAL_MAIN_INTEGRATION.md).
+See [formal integration](../../docs/history/release/FORMAL_MAIN_INTEGRATION.md).
 
 That run retains its historical policy. The current `b5bdc401…` policy has a
-[new complete formal record](../../docs/release/FORMAL_FINAL_EXECUTION.md), sealed
+[new complete formal record](../../docs/history/release/FORMAL_FINAL_EXECUTION.md), sealed
 at 22:21 UTC: the eleven-stage Rocq result is independently validated and bound
 to the same generated identity as Lean. The
-[aggregate execution linkage](../../docs/release/WORKTREE_GENERATION_VALIDATOR.md#聚合中的最终执行连接)
+[aggregate execution linkage](../../docs/history/release/WORKTREE_GENERATION_VALIDATOR.md#聚合中的最终执行连接)
 checks the exact report references; NO-GO still adds no proof coverage.
 
 2026-09-11 hardening: this entry now calls `scripts/rocq_spike.py`. Missing either
@@ -59,7 +59,7 @@ SHA-256: `4cbcffd9c102714683d3b253103959d677450974532106d1b45dfd36b0ac6c2e`.
 The independent release validator rechecked all inputs, logs and exact rejections.
 Generation ran separately from the report's ten stages; this is not a newly
 installed whole toolchain or extra Rocq proof coverage. See the
-[local evidence refresh](../../docs/release/LOCAL_EVIDENCE_REFRESH.md).
+[local evidence refresh](../../docs/history/release/LOCAL_EVIDENCE_REFRESH.md).
 
 The check retranslates the production Rust LLBC. A Week6 clean-room must first
 regenerate that LLBC and the Sail Rocq sources: checking existing sources is not

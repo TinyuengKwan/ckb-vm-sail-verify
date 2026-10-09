@@ -114,7 +114,7 @@
   "documents": {
     "README.md": {
       "claim_paragraphs": 22,
-      "claim_paragraphs_sha256": "254defe1ee73f40e58217cafb7466c3566a066959f585943aaba0004d98e7646",
+      "claim_paragraphs_sha256": "f41dd07fb378db50057862e649419e7590c98e043e3115abd8584d8f64fda33f",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -127,11 +127,11 @@
       ],
       "classification": "current_assurance",
       "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "1a1c95089a8665685486db29c59b4ade7e039586c96b47afb7ab31518bacfbff"
+      "sha256": "1d1040ad300a26fb92ed6274e126dd22e3c15a4d194825690e1142a43f3dd460"
     },
     "VERIFICATION.md": {
       "claim_paragraphs": 67,
-      "claim_paragraphs_sha256": "a3c535bcf2a7f74977f9d8cf1e67967bd767678a356ad194220e95037378c5ea",
+      "claim_paragraphs_sha256": "b490a2e232a0d0d47577877f9a0b81ab7772330d45baf788e69d113aa036a7e0",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -144,7 +144,7 @@
       ],
       "classification": "current_assurance",
       "review": "Reviewed 2026-09-28: delivery order now separates eleven mandatory gates from post-delivery CKB reproduction. Owner signature, exact output approval, current VM/CI and immutable asset validation remain required. 3294cfb evidence is historical for the modified candidate, not a new-candidate pass.",
-      "sha256": "ad9f40b49e0db302714f69ab73b653bcd164255722790269670b1d54b8fb42b9"
+      "sha256": "2ca688e509dbf78d2c16f101746ca7f8f8965eda93c3a72591d445b19b29d17a"
     },
     "artifacts/README.md": {
       "claim_paragraphs": 0,
@@ -154,9 +154,9 @@
       "review": "Reviewed as format/navigation content without an empirical release assurance claim.",
       "sha256": "00b696caac4ad0d794e52b3a424c4920aa025cd46dcbc79572e4dc9bce4a530e"
     },
-    "docs/WEEK6_STATUS.md": {
-      "claim_paragraphs": 129,
-      "claim_paragraphs_sha256": "27a499e4293177db07271fd48e8d0193ea1c3d86706cb27dc0dd1d205d0dd035",
+    "docs/STATUS.md": {
+      "claim_paragraphs": 4,
+      "claim_paragraphs_sha256": "49d32ed3d47ff14fbf2ecc48889479bb31ea4cf53121bc68beec0b272c5198de",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -169,8 +169,8 @@
         "historical_scope"
       ],
       "classification": "current_assurance",
-      "review": "Reviewed 2026-09-30 against immutable release 399743221, the exact efd68db tag/source snapshot, all three asset sizes/digests, approved ED25519 signer, CI 36553429859, operator-attested VM d2798510-c161-4650-8d4c-7b07eee9b33b, release record be85452c and final normal/optimized aggregates bad2abf9/9a21a6f6. Delivery completion is limited to ckb-spark-delivery-v1; third_party remains deferred_to_recipient with third_party_reproduced=false and no claim of CKB receipt or execution. Earlier incomplete and failed runs are explicitly historical. The documentation commit does not acquire efd68db execution, signature or attestation evidence. Conditional ADD, reviewed production-source overlay, TCB and Rocq NO-GO boundaries are unchanged. This review inventory is not a new execution-evidence or release-approval record.",
-      "sha256": "0bfd294ad9406a2afab97141b6db13171912f0f584bd80c17713ace56c841e4f"
+      "review": "Reviewed 2026-10-09: a short current-state summary that points at the coverage matrix, semantic gaps and the dated history; it restates the week6-0.1.0 delivery scope (ckb-spark-delivery-v1, third_party_reproduced=false) and the in-progress acceptance simplification without adding any execution, release or proof claim.",
+      "sha256": "4e512ff168c822929bcefc1e74f34f82e89ab9e0fd36d3210d599d807c5f10f4"
     },
     "docs/architecture.md": {
       "claim_paragraphs": 17,
@@ -186,7 +186,7 @@
     },
     "docs/coverage.md": {
       "claim_paragraphs": 6,
-      "claim_paragraphs_sha256": "84c9b2235dff547c1bea6529e567bcd8b8b25c7e4202ba578ff31808b3960948",
+      "claim_paragraphs_sha256": "dd4a25dba1c3c5907c06c91ee2b7be2fd53a2a708d20f7f7f11f908ba57a7a02",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -194,7 +194,769 @@
       ],
       "classification": "current_assurance",
       "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "9e520ede87f0c8b14c2d9da948297088b2eeb172176c3085d4dcdc97ab303f47"
+      "sha256": "e5af0ae9593c4ed88fa615e46ae5706e28c9aa8294631442ebbe3c84eb3ce21c"
+    },
+    "docs/history/README.md": {
+      "classification": "historical_record",
+      "claims": [
+        "historical_scope"
+      ],
+      "review": "Reviewed 2026-10-09: an index explaining that the moved records are dated process notes whose wording reflects the time of writing; it makes no current claim.",
+      "sha256": "8012861c504ff6077a50113109d296560ff289942360f0007f9a373b6ad7b5f7",
+      "claim_paragraphs": 2,
+      "claim_paragraphs_sha256": "9594ca9258deb648742d93581d86eb16cb975e70cd5c835b7283a15f6a381058"
+    },
+    "docs/history/WEEK6_STATUS.md": {
+      "claim_paragraphs": 129,
+      "claim_paragraphs_sha256": "19189e87dfee21569a1a0337fa2bd20a3fd57d8c25741e9d136ca0efccb281f5",
+      "claims": [
+        "runtime_scope",
+        "lean_scope",
+        "rocq_no_go",
+        "rust_test_scope",
+        "mismatch_scope",
+        "maintainer_demo_scope",
+        "source_output_identity",
+        "release_incomplete",
+        "historical_scope"
+      ],
+      "classification": "current_assurance",
+      "review": "Reviewed 2026-09-30 against immutable release 399743221, the exact efd68db tag/source snapshot, all three asset sizes/digests, approved ED25519 signer, CI 36553429859, operator-attested VM d2798510-c161-4650-8d4c-7b07eee9b33b, release record be85452c and final normal/optimized aggregates bad2abf9/9a21a6f6. Delivery completion is limited to ckb-spark-delivery-v1; third_party remains deferred_to_recipient with third_party_reproduced=false and no claim of CKB receipt or execution. Earlier incomplete and failed runs are explicitly historical. The documentation commit does not acquire efd68db execution, signature or attestation evidence. Conditional ADD, reviewed production-source overlay, TCB and Rocq NO-GO boundaries are unchanged. This review inventory is not a new execution-evidence or release-approval record.",
+      "sha256": "ef999573ce224a7473a7fe7443aa6a83fa29e62e410fa466655d9ddf31558c14"
+    },
+    "docs/history/release/AENEAS_OPAM_DEPENDENCIES.md": {
+      "claim_paragraphs": 10,
+      "claim_paragraphs_sha256": "c7be07753cc0bf33e68abdbc4931228a5d7ac11b9eb3911598675a0d98ccd105",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "62c2167e03d5f325516079d0640669a9832032dc8768188e01e40aa2bdbbd2ce"
+    },
+    "docs/history/release/AUDIT_FIX_EVIDENCE_REFRESH.md": {
+      "claim_paragraphs": 10,
+      "claim_paragraphs_sha256": "68ef7ce228d4bfb0552bb867b59c0c02b26708cb2b3e293257e11373f1bba222",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "7aabc8f10af755399935bf640e12ee3a9b3e41577a34092fa20293f9f1045708"
+    },
+    "docs/history/release/AUDIT_RELEASE.md": {
+      "claim_paragraphs": 43,
+      "claim_paragraphs_sha256": "9601311ff26b5fbbb1506971759df639c3e479bafb245bd3831fcd41e85b38a1",
+      "claims": [
+        "source_output_identity",
+        "release_incomplete"
+      ],
+      "classification": "current_assurance",
+      "review": "Reviewed 2026-09-28: v10 adds explicit current-candidate CI-attested guest validation, never fallback after local failure; VM provenance remains operator-attested and GitHub attests packaging rather than VM execution. Approval binds exact source/output records; publication remains separately validated. Source-only freshness checks detect stale review inventories before expensive execution without closing any slot or relaxing the full gate. Eleven delivery requirements remain mandatory and third-party reproduction remains explicitly deferred. Older dated execution records are historical, not rebound.",
+      "sha256": "86fc5d4f702d96426c0b49b898f3621da221e7253cf74a501feb3ad0bd2bb174"
+    },
+    "docs/history/release/CI_READINESS.md": {
+      "claim_paragraphs": 2,
+      "claim_paragraphs_sha256": "42f399b5f6bf901fd1a96c905e1c8f993cb4c8251e0e2f0cc04366bfe8bbb8f5",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "66efff87af58e3cfde5a9a761f437148705dcf3d24a61320d6d02a926bdf0991"
+    },
+    "docs/history/release/CURRENT_OUTPUT_REVIEW.md": {
+      "claim_paragraphs": 9,
+      "claim_paragraphs_sha256": "9e9062ee81617222170405e9b556e54d903ff18f2b3d60937c0903764d3d8d29",
+      "claims": [
+        "source_output_identity",
+        "release_incomplete"
+      ],
+      "classification": "current_assurance",
+      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
+      "sha256": "20d6f4b3ece97f793e3075a1adf3d87a776af1ec8ac391ba4ebd3a183c391c2b"
+    },
+    "docs/history/release/DECODER_INPUTS.md": {
+      "claim_paragraphs": 11,
+      "claim_paragraphs_sha256": "8b99adf01cb633107e274cd0e44e131e4e8c44fd38a5e0c535c17acdf9aa6377",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "c9cde199d86e2d37749cb26e7f976337441ec0ac539b4104755825c6e663eb45"
+    },
+    "docs/history/release/EPHEMERAL_VM_STAGED_PROVENANCE_REVIEW.md": {
+      "claim_paragraphs": 12,
+      "claim_paragraphs_sha256": "3a1c81b5abf6be09438e48df848f0c9e0e4ca2bf50bd0a767e5b1d68034cbffd",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as the ephemeral-VM / staged-execution / provenance design review: it reports local regression results and a controller fix, admits that no guest was booted, nothing was pushed or dispatched, and keeps every external slot and Week6 open; provenance for the VM path is stated as operator-attested, not platform-signed.",
+      "sha256": "8301bbd63a90577b46a9de61074c932427eaf0f8ea20adacb92e8b40dd742bd4"
+    },
+    "docs/history/release/FINAL_SUPPORT_REFRESH.md": {
+      "claim_paragraphs": 4,
+      "claim_paragraphs_sha256": "31af0a306c2d857ecfe39b131418d356a682bf89fe695c19118995a222437b71",
+      "claims": [
+        "source_output_identity",
+        "release_incomplete",
+        "mismatch_scope",
+        "maintainer_demo_scope"
+      ],
+      "classification": "current_assurance",
+      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
+      "sha256": "1a86453755cf5e83f1425e26cea44ef30d41907a146941329f8bb070071bfb7a"
+    },
+    "docs/history/release/FIXED_CMAKE_CONFIGURATION.md": {
+      "claim_paragraphs": 11,
+      "claim_paragraphs_sha256": "6b112313928d535662ca195cb4148389994fb3f4f7336ad47ff5cc5455771db0",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "0ea31558c0e6d4f6b3825ceae1cda96c1fb5819d8c5e376bc7ccfdcdb7fb538b"
+    },
+    "docs/history/release/FIXED_CMAKE_DOWNLOADS.md": {
+      "claim_paragraphs": 4,
+      "claim_paragraphs_sha256": "ff0282e6997bfc1ddbde616df48c5ebed5da69324f4a0b58e485181d04e10166",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "0173fc01d8872eec844073550a712246d186ba2136352004f7aae729a8552b70"
+    },
+    "docs/history/release/FIXED_HOST_INPUT_REVIEW.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "5d9ec8bf5d0f047cc3b39ec8edfc59b7a773fcf0cfdd41853bba24d608c89ba7",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "4a9f41b82d0d503a25bf03afb361fcc977f61117e59438cd8814433ffee2de18"
+    },
+    "docs/history/release/FIXED_INSTALL_BUNDLE.md": {
+      "claim_paragraphs": 14,
+      "claim_paragraphs_sha256": "52b4de5581e8f7155a5c972a826b229c733f0f48342459c8c5c0678fcc361fa4",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "a6b768392c872a77f7884cf74435909cc05cb8f6d46dced6704a906937856d2a"
+    },
+    "docs/history/release/FIXED_SOURCE_CAPSULE.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "9417e11e0cafe0e8d37e2650d96c5741355f2c785a71e77851f397c9dfbc2261",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "f667044530bf6e7e819e40edb341dd8fb59068e400ba1caf5961ca0633463758"
+    },
+    "docs/history/release/FORMAL_DELTA_REVIEW.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "e04441e358b81ebb665ea517a28e27880daed096aa5900ceed3f62c270520e34",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "88a8a562498449ef9456d302f4e010417d453f01246df196dc0b6709382833fc"
+    },
+    "docs/history/release/FORMAL_FINAL_EXECUTION.md": {
+      "claim_paragraphs": 7,
+      "claim_paragraphs_sha256": "2c1aa87e7366711d4c37ae759aa54dfcc320b8238c5f4bbcd285ac436d1ef29e",
+      "claims": [
+        "source_output_identity",
+        "release_incomplete",
+        "lean_scope",
+        "rocq_no_go"
+      ],
+      "classification": "current_assurance",
+      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
+      "sha256": "60cdec80301f7be23458b5d68014c8f38c9be9197942f820695aa88d8099a5c0"
+    },
+    "docs/history/release/FORMAL_MAIN_INTEGRATION.md": {
+      "claim_paragraphs": 23,
+      "claim_paragraphs_sha256": "e2cd0e14a8ae1dfdaadcb75c0d6b410a467633c71bd9f8757541c4b8b5ebf391",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "026221ba08c75de916e65e0bae24a09989717b7e5c0756497e8535bb5aada614"
+    },
+    "docs/history/release/FULL_MIR_REEXTRACTION.md": {
+      "claim_paragraphs": 5,
+      "claim_paragraphs_sha256": "f7503c1353c561ed101540c00f37ab35ce534385cc73750623e651ea254d231c",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "265844499973e53ec0aad7c5d6b1324edc726197d9001e33fbb36b98bbbcc03d"
+    },
+    "docs/history/release/GENERATED_DELTA_REVIEW.md": {
+      "claim_paragraphs": 7,
+      "claim_paragraphs_sha256": "fe47773abadec9284de96a715cc19328e8d8a0203e0963a4a8bc0c6b7eb544d6",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "2cc9288283a9d08fc5d1f1aed4f7ee22e274e5b7cf58a039dfd6324bd677355f"
+    },
+    "docs/history/release/GENERATED_OUTPUT_INVENTORY.md": {
+      "claim_paragraphs": 13,
+      "claim_paragraphs_sha256": "d4cd6dbfbdf5a40992d35f3bf30587c8bfe558fa9976111a6fb5e41edf01202a",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "586ead7292cf4d642159651f632ac54faf353d72b34c036b9624c32554510493"
+    },
+    "docs/history/release/GENERATION_EXECUTION_RECORD.md": {
+      "claim_paragraphs": 12,
+      "claim_paragraphs_sha256": "352b65cd2f120eed74df85f31f818206e67d4029bca1e8c83d269e4b5e4c3169",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "750c4a20d2ae73229c6a377ad756971fbbc7868b35b5ddd96f1127d567a00858"
+    },
+    "docs/history/release/INSTALL_DISTRIBUTION_REVIEW.md": {
+      "claim_paragraphs": 10,
+      "claim_paragraphs_sha256": "0b8b93ae891917ae86cdbf9f15e2766eaeb15e2c3927633163dfcaeb3213c311",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "5428d76663048ca18f40fec7e8ce5eb3552785f6234fb9f6427a5fff696c99cc"
+    },
+    "docs/history/release/ISOLATED_AENEAS.md": {
+      "claim_paragraphs": 10,
+      "claim_paragraphs_sha256": "21672365033c58bc8f8c9f3f3b3b55c3cff4ed071d3a8fe6825d29e4cff9e2ea",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "475f28c7e2f44f6c14511c1e5be35e9faddc547e4264dd3a86d0892c8e8656fc"
+    },
+    "docs/history/release/ISOLATED_CHARON.md": {
+      "claim_paragraphs": 7,
+      "claim_paragraphs_sha256": "44d7a96f120c26cc5c6f42e40a64fa9cf828caa60377b989589551da1dd9d42d",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "de5b06483c6217d4e4a85bbad0fe9f5520a739e8da4f6f8e927c16aac8138d8a"
+    },
+    "docs/history/release/ISOLATED_FOUNDATION.md": {
+      "claim_paragraphs": 11,
+      "claim_paragraphs_sha256": "1e8f5b05ba178c43b79630922b6c8452734f1480d53bab20a23e28a150dcc6af",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "c4f415e4326a331adfd687d3d46c0c55040c99fb2cee81894dbbe5e756701e92"
+    },
+    "docs/history/release/ISOLATED_FULL_MIR.md": {
+      "claim_paragraphs": 6,
+      "claim_paragraphs_sha256": "a8f8d38aeab1b84628fae107eac75078323c34963bd7b72b4e0c70ab1e808430",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "6d821c8ebb9b53182ce076f6a5650bb6cef3d5a4f7d04e93f6a5b49a935a76a4"
+    },
+    "docs/history/release/ISOLATED_ROCQ.md": {
+      "claim_paragraphs": 13,
+      "claim_paragraphs_sha256": "ee1f4f19ab804015405437da8837d3417d76eeab0232bd1ee1038bb2ca859c55",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "196ffb66ba1d9a4c3886cf761db20da64614f57dacb45ce486faf4c02005e032"
+    },
+    "docs/history/release/ISOLATED_RUST_LEAN.md": {
+      "claim_paragraphs": 12,
+      "claim_paragraphs_sha256": "c3926c36df4e10a5b474c3db36467469cd5377ca0378d6addaa02b2445c875c2",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "6547d921b9b45663b9c51ac1bc2eb9bad55f208e6a2a58f5ebe7f649cae3084f"
+    },
+    "docs/history/release/ISOLATED_SAIL.md": {
+      "claim_paragraphs": 15,
+      "claim_paragraphs_sha256": "6ba8c1292e0750b502ced5576204fd7a1ddf2008cc646bf0bbef4ae104dcd2f3",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "6e35ad2a6966fa31411b4ad03e55b4cb7adf5db02a922545e366a80de636ce59"
+    },
+    "docs/history/release/LOCAL_EVIDENCE_REFRESH.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "512c9e2d59f6890670332541021cf50a80d4d447ebf94843a74feab34cf1fb6f",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "b94112345788c179a4fdb27ef21b0b16e0e2ad2c3090371eac0c91d8d1998c5c"
+    },
+    "docs/history/release/LOWER_MAP_EQUIVALENCE.md": {
+      "claim_paragraphs": 11,
+      "claim_paragraphs_sha256": "b27ccb0ea57e35729f374d619f5cdbb82c8b72493a008965e6c16009b645ad9a",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "ac3dcac44d841e3421b71027c130c6235c4e68b97876ac95d85356766e4c656a"
+    },
+    "docs/history/release/LOWER_MODEL_REGENERATION.md": {
+      "claim_paragraphs": 15,
+      "claim_paragraphs_sha256": "03d87ff7eec7ab8949a20b657cbcfe8f83ea5e157764a12562de60b5e6b2ad1d",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "22266a293575ce9702350c48b144492d7373b181dc6cf88ae99f86bb9cf69016"
+    },
+    "docs/history/release/LOWER_ORIGINAL_NEGATIVES.md": {
+      "claim_paragraphs": 9,
+      "claim_paragraphs_sha256": "99e3cb27288b9bd5ba97a1a62748598591b7ea333279c76dee72d560b460c7d1",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "6c96b6182c03dd12315d095d28cd70009f4781dc3c4af0d5e889e0b63b653cfb"
+    },
+    "docs/history/release/LOWER_SYSROOT_DIFFERENCE.md": {
+      "claim_paragraphs": 6,
+      "claim_paragraphs_sha256": "d3fc6af5eb886c0701293c3e9eca9505375f48491b761becb8d10c66a51dc685",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "d5b221e92e6bfb0caf1b377fcfcd6fded206c283779293cb557a467604c2ef72"
+    },
+    "docs/history/release/LXD_WRAPPER_SIDE_EFFECT.md": {
+      "claim_paragraphs": 4,
+      "claim_paragraphs_sha256": "9bb2e421f6a139faccd8d035d4408acfd8bed62910e4a207655bf4d1479fe595",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "5b4624f5834a57973bff95a920a1f45d7d197ec460dc6a6e9c2b38d67cc1e1e9"
+    },
+    "docs/history/release/MAINTAINER_DEMO.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "10064c29a121bd8c9575647312d0856ae18f5288b49fa52392897fff42eb9757",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "80eb57148ca21f9f70c897385e5575d8b223f66e15bc43bcd1c25648dc23861c"
+    },
+    "docs/history/release/MISMATCH_MINIMIZATION.md": {
+      "claim_paragraphs": 18,
+      "claim_paragraphs_sha256": "5ac953673f151e98fa89407d03f5b09f842fb078c90b54146ff89471f91c04cf",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "929f4cd939e9b7a801b241c40f097d43c439b8597f08d2d1756d3cd3a25c745e"
+    },
+    "docs/history/release/PAIRED_NEGATIVES.md": {
+      "claim_paragraphs": 7,
+      "claim_paragraphs_sha256": "75be1576b15eab4e6314a4bca73e5a374008496d213b1c23a1159b30cec058b3",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "767c66a814047c26f5e4638ae92dd0f00426859e0566cf692515a89d624755b5"
+    },
+    "docs/history/release/PUBLIC_CLAIMS_FINAL.md": {
+      "claim_paragraphs": 7,
+      "claim_paragraphs_sha256": "eff7cfe38221cf75fc7eae5058c6758d2f44b5d5d2167b2db2cae45ad3277ac5",
+      "claims": [
+        "runtime_scope",
+        "lean_scope",
+        "rocq_no_go",
+        "rust_test_scope",
+        "mismatch_scope",
+        "maintainer_demo_scope",
+        "source_output_identity",
+        "release_incomplete"
+      ],
+      "classification": "current_assurance",
+      "review": "Reviewed 2026-09-28: public-claim review does not replace delivery evidence or CKB post-delivery reproduction. Current delivery gaps and deferred third-party status are separate; dated component counts and reports retain their original evidence identities.",
+      "sha256": "62ebccf4707669af80c8044fe3995502dac4ced088d56a5220aa5f458adcbde6"
+    },
+    "docs/history/release/PUBLIC_CLAIMS_REVIEW.md": {
+      "claim_paragraphs": 6,
+      "claim_paragraphs_sha256": "64123878ac10746f5f44f97d248aaa49016c103b03fa22a846d0ead4b74edb28",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "2de252decbd499993cb4774fca61a51c5898148e1eaca52920fb552567bebdac"
+    },
+    "docs/history/release/PUBLIC_INPUT_MIGRATION.md": {
+      "claim_paragraphs": 7,
+      "claim_paragraphs_sha256": "39b21fed605ac4091db0efa8542474dea04a26a9353d61abbeacd23a750aa5b1",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "e526398b983567db32b4509c63a9cf4e1d09d7265e899f9ce72bcc6542e2db44"
+    },
+    "docs/history/release/REBUILT_AUDIT_CORRECTION.md": {
+      "claim_paragraphs": 11,
+      "claim_paragraphs_sha256": "cc5a6482f44ef4cf702ccc827084205c0c295474dcd5a3456420afda8e2080d1",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "2e4d17dadef5b37b80bde8e395c9436fb64ab118cb827fa1217b3eddefe781d3"
+    },
+    "docs/history/release/REBUILT_BORROW_QUALIFICATION.md": {
+      "claim_paragraphs": 6,
+      "claim_paragraphs_sha256": "a2e0bf0ac02854a36db9db227636294709f057de6b64ec760753c20042d83227",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "8e4a8ac98161186bfff33b08ca1131c32dec8f5a4565a83f0faf2fa8da5c88fa"
+    },
+    "docs/history/release/REBUILT_CHARON_DIAGNOSTICS.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "1b0a2845b5a90183fed5426a5141db6469795f59385915cca3bcfe9d91ef826e",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "1c0447dd62003ef93b417998a812206a6b50007f8ce7aac67cef90a27a187698"
+    },
+    "docs/history/release/REBUILT_CHARON_UI.md": {
+      "claim_paragraphs": 12,
+      "claim_paragraphs_sha256": "bffa1d7d9b5effc23aca5a0d93caadf525afba2aa09f60394c497b0c8456956b",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "5678ff59de70f93d8e42913626e2756e1bff6788c71ec3d3d4b788e6735fe12f"
+    },
+    "docs/history/release/REBUILT_EXTRACTION_CHAIN.md": {
+      "claim_paragraphs": 7,
+      "claim_paragraphs_sha256": "8b8d14d6078879e3d8bb5cc301c2831c3dbcce8a24986daff33baaed2d284f32",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "efeb4de0cd089cdc2692a506b4fd7ca0f26b32e9c124514731b5caed3df06b2a"
+    },
+    "docs/history/release/REBUILT_FNPTR_QUALIFICATION.md": {
+      "claim_paragraphs": 9,
+      "claim_paragraphs_sha256": "33874dfd1e3584a4b2aa01be274640f7c06dd5a2d8c299441de71311351bad9c",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "d9192608faf02220f9d1b95fc1eb3c67130ab9bea999ac0c6d99fea7ab70ae83"
+    },
+    "docs/history/release/REBUILT_GATE_ACCEPTANCE.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "4f2912d88b72efc45db21f98cb288d27f6ca42f93365201d4b800a08518fc38b",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "98c342475c47bfbb1cafb24d803851f6d2552f0c640ff6e84244379ce5fd8d63"
+    },
+    "docs/history/release/REBUILT_GATE_MIGRATION.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "ecb5ed3ca8f01d9f1f35a96d3027a92401fcea8c46739f3dc3cee7fdb7a7c684",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "7b50ac3cfa36422260b31f838d45ef55e8446eb6d7da63025750810ea6fb00bf"
+    },
+    "docs/history/release/REBUILT_GUARD_QUALIFICATION.md": {
+      "claim_paragraphs": 9,
+      "claim_paragraphs_sha256": "ae710fa9d04f555056686041142bb2259523ac338ce119a727e9553d05e5bd83",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "9fd72da7dacca3b7b3e81ceb8ac0965d7149ef2c0bc44f8109b31346d4263218"
+    },
+    "docs/history/release/REBUILT_INPUT_ADMISSION.md": {
+      "claim_paragraphs": 9,
+      "claim_paragraphs_sha256": "16a34d73ff4e2f2f163579994e055c20a8b16c2121ab78400421cbaf1dcab2fa",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "deda627fed1ae25f2ad255f00ba392754a586c700e57fcf33d30859350bf141a"
+    },
+    "docs/history/release/REBUILT_INPUT_CANDIDATE.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "7d67c1a74613893ad1ff08cf0a3456de2f230e5c9d615d9d93a2cfaa485ad425",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "52c5d1dfbd0a47a994159698ce9ab8aeda1a8a54c2a31d03d8a9a0195dab12a9"
+    },
+    "docs/history/release/REBUILT_INPUT_REEXTRACTION.md": {
+      "claim_paragraphs": 9,
+      "claim_paragraphs_sha256": "d74681e5b0f8ced89f14a7d9a3583bff33825ec07de0d8aa551340cab8acba3b",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "743f4e486a602f7cd61140065ffa6699b356076de9a93fe71db75705a22f3fde"
+    },
+    "docs/history/release/REBUILT_LOOP_QUALIFICATION.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "a4e9b6e517546ffb61b06b480d545bf38c21eaf14a06515993d8372bdd3e5fc3",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "4e2082c7339a1232f9118afe10d7b3b57c0cba7147008d739a707abda6ab0f5a"
+    },
+    "docs/history/release/REBUILT_MAIN_CANDIDATE.md": {
+      "claim_paragraphs": 38,
+      "claim_paragraphs_sha256": "edb598be5398c2ab7a093725c8fb38bb867101ed006473c6a44d6dc64671b520",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "c928b6d05e4c082b35c153c5237222f752779c122bb1763fb0af06e76603b056"
+    },
+    "docs/history/release/REBUILT_PRODUCTION_RUST.md": {
+      "claim_paragraphs": 9,
+      "claim_paragraphs_sha256": "ad13cbb219acb3325af90e0a3c6932c52f10095c3a45bf95999e0aeb2414fa38",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "f2e09084118d2fa90803fc115ef416bcea67a4ece32045c4a082b858d35ac5fd"
+    },
+    "docs/history/release/REBUILT_PUBLIC_KERNEL.md": {
+      "claim_paragraphs": 11,
+      "claim_paragraphs_sha256": "0cdfb26e0f774b46e7c73e4aa8edf4a48d42362b5c3741f4364799423b168b01",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "b3757dd1be6e0c359bd8fa23e5b0ca91f5b2b209934566941d6f01700c7fc003"
+    },
+    "docs/history/release/REBUILT_SAIL_CPP.md": {
+      "claim_paragraphs": 11,
+      "claim_paragraphs_sha256": "1b3e98f317d6da589883aa8dae28d9560dd0cad4afaf602089ecb1b6519360d0",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "93f704acc61550a7ed8aa98c88c63c53acab81fd0321db2a51ced6be1f9035a8"
+    },
+    "docs/history/release/REBUILT_SAIL_RUNTIME.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "6bfaca5c4fb33f629f376f0f6ecae18cda07b2e4dc46a410cc32c166894fb366",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "79e5e2daede4467112361cc16e131a1b2cfdd99ad56818d09bf504104d06af1d"
+    },
+    "docs/history/release/RUNTIME_EVIDENCE.md": {
+      "claim_paragraphs": 7,
+      "claim_paragraphs_sha256": "c126651bf70ad8525b9a425c1eb8900a3430a803456d794871cc5af91198b8a0",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "ed3f945e36e1704740fea1de0163b0b34a8fc1db8c8825671b7a7222f6211453"
+    },
+    "docs/history/release/RUST_TESTS.md": {
+      "claim_paragraphs": 4,
+      "claim_paragraphs_sha256": "4313204b5b2e63d316403ce8081c7f901975929de97997fb2b6d3c9406cfa700",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "2087075a646279af4d73af6f447f900b2d1689da49ca7d2f768647ec138851e3"
+    },
+    "docs/history/release/SAIL_CPP_CORRESPONDENCE.md": {
+      "claim_paragraphs": 7,
+      "claim_paragraphs_sha256": "0fea2a6a6671869e593eea9024b965a0c6dca48102df0559c7e732f4f6473be3",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "5651ab44fed54db3e3a24c1dd371838fb8a80951e2c6deeaee5d7beedc798272"
+    },
+    "docs/history/release/SAIL_INSTALL_MIGRATION.md": {
+      "claim_paragraphs": 6,
+      "claim_paragraphs_sha256": "76605f86e750039119c1708b4382567d9f7212a4365c0e7b38e72f4ff707e4df",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "24bebc530863a913d79fc296994d9d98aeb72aea698ad0cea5659453e64c180d"
+    },
+    "docs/history/release/SAIL_MODEL_IDENTITY.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "99559c3ffab2d8c5ddcc2bd19fb44850a78e5946cfd17d75d95442e455874304",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "6954b4ec67bff6d620fc4645074288f893c12fb6586e631a005d2ce310753b05"
+    },
+    "docs/history/release/SAIL_STALE_GENERATED_FILE.md": {
+      "claim_paragraphs": 10,
+      "claim_paragraphs_sha256": "1d346d8c573719d99b8c5bca90475d39e9ef66cd4a724ee41f0c8983e6136df9",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "2135639d2d847f180c2037d3305e3a12f96a08f6e221e490f6ec8b86e001a1d4"
+    },
+    "docs/history/release/UNIFIED_FIXED_RESTORE.md": {
+      "claim_paragraphs": 10,
+      "claim_paragraphs_sha256": "7511ffa30c58b9000c59194d19e69bf9efdc81b0b448f5ac7ea8f7dfbd9bb509",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "44c1aa02b1cbc274f5a86475d913a68a56d490dd4e3397e442d9bb891faa5fec"
+    },
+    "docs/history/release/V2_LOCAL_EVIDENCE_REFRESH.md": {
+      "claim_paragraphs": 10,
+      "claim_paragraphs_sha256": "603cee05434bf559b919b6816c8b31dcf6aae43e3ecec2069d0c3998e2358043",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "a565f06a4fa28e6b0b4d997ee19edb2b3abbbb67f84a304207a27186986458a9"
+    },
+    "docs/history/release/WEEK6_DUAL_ASSET_RESTORE.md": {
+      "claim_paragraphs": 7,
+      "claim_paragraphs_sha256": "bdadda91d7646b461f1c68047b6f111c4f6479c8b78e41422305595ed521f66e",
+      "claims": [
+        "source_output_identity",
+        "release_incomplete",
+        "historical_scope",
+        "lean_scope",
+        "rocq_no_go"
+      ],
+      "classification": "technical_boundary",
+      "review": "Reviewed 2026-09-28: same immutable release two-data-asset layout and owner signature remain mandatory; third-party reproduction is deferred to recipient CKB and no pre-delivery reproducer key is needed. Restoration or local tests do not establish official reproduction, new candidate execution or delivery completion.",
+      "sha256": "1e78aa8b78fb8f0a75c5d449825b6e988ce6050528510b233a7e2bfa5bf92e40"
+    },
+    "docs/history/release/WEEK6_RUNTIME_FLOOR.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "3414b4ee715da2b454df81b81d6311b0d7c47328392b838be70a37db5e23862e",
+      "claims": [
+        "source_output_identity",
+        "release_incomplete",
+        "runtime_scope",
+        "rust_test_scope"
+      ],
+      "classification": "current_assurance",
+      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
+      "sha256": "1b028608cb067878c83f6247178f933e39545853f5f1beb626cc2de15ffc5110"
+    },
+    "docs/history/release/WORKTREE_DELTA_REVIEW.md": {
+      "claim_paragraphs": 8,
+      "claim_paragraphs_sha256": "6ac26500c45c65a0b20fff50d4b206961584e6af5f41d96f4fcba6ce6d9212a1",
+      "claims": [
+        "historical_scope"
+      ],
+      "classification": "historical_record",
+      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
+      "sha256": "babcb9616ec0f13aca6f6835ea73a81130f9b97aa5aac007ea0b3ac5b854ae3a"
+    },
+    "docs/history/release/WORKTREE_GENERATION_VALIDATOR.md": {
+      "claim_paragraphs": 19,
+      "claim_paragraphs_sha256": "ad578b7f3f2d310f45c2b7d99d17c0383dec21f36a68ee91e7c11134d13142ad",
+      "claims": [
+        "source_output_identity",
+        "release_incomplete"
+      ],
+      "classification": "current_assurance",
+      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
+      "sha256": "87fc869ed94c0bf9099777092ca6fba1ce3cab08583159ec563197f6dc58b6f6"
+    },
+    "docs/history/release/WORKTREE_SOURCE_VALIDATOR.md": {
+      "claim_paragraphs": 17,
+      "claim_paragraphs_sha256": "d97527ae8c4500c67e12fb4db45bbf50e5c0eb197fc49376654761788612b8f3",
+      "claims": [
+        "source_output_identity",
+        "release_incomplete"
+      ],
+      "classification": "current_assurance",
+      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
+      "sha256": "fd6fc803007f50f640d1ebe276a15597770793819c63d502e32fe062281e6e1d"
     },
     "docs/methodology.md": {
       "claim_paragraphs": 17,
@@ -278,743 +1040,9 @@
       "review": "Reviewed 2026-09-28: explicit owner scope amendment moves third-party reproduction to CKB after delivery without claiming recipient acceptance or execution. Eleven delivery requirements remain mandatory, with separate evidence gaps and post-delivery reporting. Normative requirements are not execution evidence.",
       "sha256": "909f161abd933e53b2896e7adc3a1990e0edad72f3a5c4e736b46bb48981687a"
     },
-    "docs/release/AENEAS_OPAM_DEPENDENCIES.md": {
-      "claim_paragraphs": 10,
-      "claim_paragraphs_sha256": "d78ae27502a64ea6222be5db015d6addbb52c98c8d16910899c9f968dde93826",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "93efbd8cfab4fae21aa2a938fbcfd54557d960c90a6c8aae558ddf10146b3ae3"
-    },
-    "docs/release/AUDIT_FIX_EVIDENCE_REFRESH.md": {
-      "claim_paragraphs": 10,
-      "claim_paragraphs_sha256": "0128f6efb65d694197250ac6279108e0649edf262d97f2fb97ccaf95bb2f8e61",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "d9cafcefea512e4d65a9b6c76dbe8648fcdc4be3df3df6d653622b4b8a51a15f"
-    },
-    "docs/release/AUDIT_RELEASE.md": {
-      "claim_paragraphs": 43,
-      "claim_paragraphs_sha256": "2675491b6603a666d8e753873ad0442137e741774b08107910f0cdd44296d997",
-      "claims": [
-        "source_output_identity",
-        "release_incomplete"
-      ],
-      "classification": "current_assurance",
-      "review": "Reviewed 2026-09-28: v10 adds explicit current-candidate CI-attested guest validation, never fallback after local failure; VM provenance remains operator-attested and GitHub attests packaging rather than VM execution. Approval binds exact source/output records; publication remains separately validated. Source-only freshness checks detect stale review inventories before expensive execution without closing any slot or relaxing the full gate. Eleven delivery requirements remain mandatory and third-party reproduction remains explicitly deferred. Older dated execution records are historical, not rebound.",
-      "sha256": "0bc8381d8acae991fde85605fa6d4c8bdf02f172fecc9886002b6712894752b6"
-    },
-    "docs/release/CI_READINESS.md": {
-      "claim_paragraphs": 2,
-      "claim_paragraphs_sha256": "42f399b5f6bf901fd1a96c905e1c8f993cb4c8251e0e2f0cc04366bfe8bbb8f5",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "68258e87841e5668ed24b90551e3a9637dd69b819182c70ebd2f583bdf454e82"
-    },
-    "docs/release/CURRENT_OUTPUT_REVIEW.md": {
-      "claim_paragraphs": 9,
-      "claim_paragraphs_sha256": "02cce228723da48f1b2a008734ec31668a0a7395478780bac2d496714f7ac633",
-      "claims": [
-        "source_output_identity",
-        "release_incomplete"
-      ],
-      "classification": "current_assurance",
-      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "f25860ee5a4ca0ee49fcd6f7266faad9f7125a7d3c54605d78a87184ca582d8f"
-    },
-    "docs/release/DECODER_INPUTS.md": {
-      "claim_paragraphs": 11,
-      "claim_paragraphs_sha256": "d007334436fa74db8ba7b2900e44247512751300554efe5487dba56ad287ef01",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "94cb089e68a9dd28be7b1a23e21b928a3338a4b2ec79160eeb4a540d9fee2762"
-    },
-    "docs/release/EPHEMERAL_VM_STAGED_PROVENANCE_REVIEW.md": {
-      "claim_paragraphs": 12,
-      "claim_paragraphs_sha256": "42bca83ae31c0586fc9ed43eb70bb14da4acfd5891d8fd3ea62b50d37b5d6318",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as the ephemeral-VM / staged-execution / provenance design review: it reports local regression results and a controller fix, admits that no guest was booted, nothing was pushed or dispatched, and keeps every external slot and Week6 open; provenance for the VM path is stated as operator-attested, not platform-signed.",
-      "sha256": "bec70ba13879443215395c4e41da908782e84750e6f3d20e46b3886ef492fc27"
-    },
-    "docs/release/FINAL_SUPPORT_REFRESH.md": {
-      "claim_paragraphs": 4,
-      "claim_paragraphs_sha256": "5cf687b12ba5586183123a1361988ee161f4f3385ecb99cf724bc91c34ad4ddc",
-      "claims": [
-        "source_output_identity",
-        "release_incomplete",
-        "mismatch_scope",
-        "maintainer_demo_scope"
-      ],
-      "classification": "current_assurance",
-      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "b3f0b08d8a8c9267927b58e44bd66005a5b3c006d59534ec93324b4c8a0d6a5d"
-    },
-    "docs/release/FIXED_CMAKE_CONFIGURATION.md": {
-      "claim_paragraphs": 11,
-      "claim_paragraphs_sha256": "1256aa4a4f2727cb2615038cb196defcf8add610fcf5a5ae0eb2376ead094eb2",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "fa6f765735857949026f376a7b48fe7592a7589e343ced97220439f23a300b22"
-    },
-    "docs/release/FIXED_CMAKE_DOWNLOADS.md": {
-      "claim_paragraphs": 4,
-      "claim_paragraphs_sha256": "189a63120117e7d3c558e033e0be69f91f149a2b664609e31961c64f9fdcea72",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "143781ddda44e2e18472f98a9f882e139321b38b8c74fb8989f312eafba92789"
-    },
-    "docs/release/FIXED_HOST_INPUT_REVIEW.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "86a288fac84d826fb48928c1eb71584a5ddd361b4b08c9d9a70a13f5dabf1fe6",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "06a2f38a000587401db6dab0d94a203650ac11d80fdc819f865ec078ae3ea790"
-    },
-    "docs/release/FIXED_INSTALL_BUNDLE.md": {
-      "claim_paragraphs": 14,
-      "claim_paragraphs_sha256": "e0faf61c844eaaa02148e05b5c0984bd6322f1185aacada7c6fd0e627ada2ffd",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "c6e5f5bbc686498bcd4905abba886d2559e51463c15ce6063498359024cc0952"
-    },
-    "docs/release/FIXED_SOURCE_CAPSULE.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "2a4282562e3630adbf8446481cf79664e6dbb2c7e70a5eec1c672bc902d98d1b",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "ee12a6c8fc6883be51d191cb2c6dd5a114f343627f9ee17df49ca688dd1fb86b"
-    },
-    "docs/release/FORMAL_DELTA_REVIEW.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "89fbc9ae22edfa273c810e6492e8b6655d4750b24198cb272967de3773cda784",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "0b8886aba5ca13d2801475d1fe44290b9dfb5a336076edf467270748f35a3422"
-    },
-    "docs/release/FORMAL_FINAL_EXECUTION.md": {
-      "claim_paragraphs": 7,
-      "claim_paragraphs_sha256": "5de6f709e82c227703d3923a446ce5a4888e11c91285b130b745c6dc524e280a",
-      "claims": [
-        "source_output_identity",
-        "release_incomplete",
-        "lean_scope",
-        "rocq_no_go"
-      ],
-      "classification": "current_assurance",
-      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "500d67a135fe60ec7a6c729041f5e784c60f73a10e9df48a3d6d284de3e5ad0e"
-    },
-    "docs/release/FORMAL_MAIN_INTEGRATION.md": {
-      "claim_paragraphs": 23,
-      "claim_paragraphs_sha256": "d07f5ab49cc451baa91e37e78ce8c6add496b489643ef6df5f011cff6e3d62e5",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "48800cf7704fc9f004d04afa452aefbd7ecff132c23cc5c47b20b4dceedcd93e"
-    },
-    "docs/release/FULL_MIR_REEXTRACTION.md": {
-      "claim_paragraphs": 5,
-      "claim_paragraphs_sha256": "39d0b46e784eafd5d5a0d4eb652c544b966420bdf329fb6a8457ed422eac7e12",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "8dcbecbb76cc7362b7c5ea164cde5677abf6dd84a9b04674d9e257e1ed04d3d8"
-    },
-    "docs/release/GENERATED_DELTA_REVIEW.md": {
-      "claim_paragraphs": 7,
-      "claim_paragraphs_sha256": "d2eefb9ffc11bdbbc7a1a27344ea503ee887969cf8befed0cffca2a4f4c34d02",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "7e2a307a030fd89114ec74c72b6f9deb423b715c6d475fbc73ea457eb527de07"
-    },
-    "docs/release/GENERATED_OUTPUT_INVENTORY.md": {
-      "claim_paragraphs": 13,
-      "claim_paragraphs_sha256": "37ee4524c4f9b9cb2bf78a126f4023969a404ed180bca9de4cf0a1564a2896af",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "cd1e9541d914a32189037c96f854c5c61e91583f256b717a0189a750a5eacca0"
-    },
-    "docs/release/GENERATION_EXECUTION_RECORD.md": {
-      "claim_paragraphs": 12,
-      "claim_paragraphs_sha256": "d63275d43d78d1aee3b58c29c97c31058ef2c1f6dca6d75282456d1bb58b72c5",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "3ca2776ee2e6fce96c7d44ec0ec831b9848cbffb7cfe0814ddaf1411ef594de0"
-    },
-    "docs/release/INSTALL_DISTRIBUTION_REVIEW.md": {
-      "claim_paragraphs": 10,
-      "claim_paragraphs_sha256": "bbeea2956a3ea12a7353c7ff1b6e9b5d7504076efda61b53ef4164c98c01f3ab",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "649309b51b59d08c4e04007273a9e84003db6890519c3c626949c727360cf22c"
-    },
-    "docs/release/ISOLATED_AENEAS.md": {
-      "claim_paragraphs": 10,
-      "claim_paragraphs_sha256": "37b83fecc161150b078f27b5feb8b149a141f666d99f42336c2a34088cd25286",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "4f8f99954c00ec57ea69631f17f4c403df297cfc8a4c4c805e13271cb9d71644"
-    },
-    "docs/release/ISOLATED_CHARON.md": {
-      "claim_paragraphs": 7,
-      "claim_paragraphs_sha256": "45e0758d2645683977cc747fa18d7871e5ce765700e99a55fb172d8a34090dde",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "6e00738bd53d3e7c7391bd36380f991fdeb662b0b9d560b417cebcddafd9501d"
-    },
-    "docs/release/ISOLATED_FOUNDATION.md": {
-      "claim_paragraphs": 11,
-      "claim_paragraphs_sha256": "dc21bb78ef13c2e8123e870c458720cb67248eaad3388225d007ee349de8957b",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "59997c1ef16e48fd72a31a9717cdb2e3731a83ca85cc42531ff620822a4e214d"
-    },
-    "docs/release/ISOLATED_FULL_MIR.md": {
-      "claim_paragraphs": 6,
-      "claim_paragraphs_sha256": "a8f8d38aeab1b84628fae107eac75078323c34963bd7b72b4e0c70ab1e808430",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "c5de42e76aa16aec59d61c1108bb05dac3721a20ea4c38c9ca66834964bbadee"
-    },
-    "docs/release/ISOLATED_ROCQ.md": {
-      "claim_paragraphs": 13,
-      "claim_paragraphs_sha256": "ce178e671148777758522566d0c74a6faaa600c60e7533555de9476853179157",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "b1098bd41366dd74266b12de6df08ee98e35bb195859bce5f1a239ef049e8965"
-    },
-    "docs/release/ISOLATED_RUST_LEAN.md": {
-      "claim_paragraphs": 12,
-      "claim_paragraphs_sha256": "3cfd492e5b6abab72b3e7e9aec0bc42b7c487dc03565b3dc39e804d84ec631c0",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "1ac4da2ddd4e63dcfe3321a7001e3874913d96df6c3e9b5e297044ae6ce05f1c"
-    },
-    "docs/release/ISOLATED_SAIL.md": {
-      "claim_paragraphs": 15,
-      "claim_paragraphs_sha256": "2f3072dd07eacaadc02c3b597116d465b9a70c27e20ecd2f8a6f20cec07bdfb9",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "385ccd33be1a26ddd7f58ad0920ccb5de22970ede0ddc987cff8680bc7ade0f9"
-    },
-    "docs/release/LOCAL_EVIDENCE_REFRESH.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "111d08c743e84d2e9c0dcabeedce421fe3d0ee629d2544ad94199538de9040eb",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "88062dbc160a0238ab3e7e3eb8fd1a8274912b3378378392cd0ba4a571771381"
-    },
-    "docs/release/LOWER_MAP_EQUIVALENCE.md": {
-      "claim_paragraphs": 11,
-      "claim_paragraphs_sha256": "8a91936e98b4b3384032590c7a42e911d47700358a2956decebf87353ccf654e",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "b80d354ea715f8b0991c433df1dceb78779c2f495716ab9e60994d0d3599c4c9"
-    },
-    "docs/release/LOWER_MODEL_REGENERATION.md": {
-      "claim_paragraphs": 15,
-      "claim_paragraphs_sha256": "4c10df267b57a733cbe8549d9143ccb15a72e9d31f1aadae23363507e171d0b4",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "b244568591bc165646bc1641863c59d6a3f6b934e5d294285cdda2a8b69c0f14"
-    },
-    "docs/release/LOWER_ORIGINAL_NEGATIVES.md": {
-      "claim_paragraphs": 9,
-      "claim_paragraphs_sha256": "b171a85c67803656fbd27fd83a8060e7815d42f941a1748ca9a747739252ba30",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "da076edfb0a6fb420c9a146662b6d0d0a879c0ce03418731210e73718efeebcb"
-    },
-    "docs/release/LOWER_SYSROOT_DIFFERENCE.md": {
-      "claim_paragraphs": 6,
-      "claim_paragraphs_sha256": "c187f35a79cbcda07ce9aef625239bddead34c23ac1d4ad5255a67874062ade5",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "43ba93f8a6294beb3b677f5c22e658cf5a52b56e41be1738d9d4b4ad6b41a482"
-    },
-    "docs/release/LXD_WRAPPER_SIDE_EFFECT.md": {
-      "claim_paragraphs": 4,
-      "claim_paragraphs_sha256": "9bb2e421f6a139faccd8d035d4408acfd8bed62910e4a207655bf4d1479fe595",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "5b4624f5834a57973bff95a920a1f45d7d197ec460dc6a6e9c2b38d67cc1e1e9"
-    },
-    "docs/release/MAINTAINER_DEMO.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "081d532fc05c4bde0b8cbfac97dfab0db1cdc3cc6d90f954740e5efe85b6fa04",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "f831a9b4e62bafe6444756992d466b8c8b3b11c958c66cf467bf5c81eaefdb87"
-    },
-    "docs/release/MISMATCH_MINIMIZATION.md": {
-      "claim_paragraphs": 18,
-      "claim_paragraphs_sha256": "12e717593891e5f40b67e4a843f50b37e56f18d9f27c449d2c4f64513760c4e2",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "5042f2fc84c801913af07e741312842e2fba05d753d9cb69493f4c6214d18b27"
-    },
-    "docs/release/PAIRED_NEGATIVES.md": {
-      "claim_paragraphs": 7,
-      "claim_paragraphs_sha256": "22e5f49617993e444045c3d5f2fd0eb80bbd3c4d03e4bf347108a6f8c521484f",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "17aa9cd3bbca96d1a9a1cf2de56f6207903a24c78a4fca838d612f3ca40bfffd"
-    },
-    "docs/release/PUBLIC_CLAIMS_FINAL.md": {
-      "claim_paragraphs": 7,
-      "claim_paragraphs_sha256": "d73dd628685a09baf2ea1656f7ad18969cadbc3bd149f1e1b37e8a948655f136",
-      "claims": [
-        "runtime_scope",
-        "lean_scope",
-        "rocq_no_go",
-        "rust_test_scope",
-        "mismatch_scope",
-        "maintainer_demo_scope",
-        "source_output_identity",
-        "release_incomplete"
-      ],
-      "classification": "current_assurance",
-      "review": "Reviewed 2026-09-28: public-claim review does not replace delivery evidence or CKB post-delivery reproduction. Current delivery gaps and deferred third-party status are separate; dated component counts and reports retain their original evidence identities.",
-      "sha256": "a1c18a8204714a51b6b557a6950c08d3194acd3133dbadd81b914593cdb64539"
-    },
-    "docs/release/PUBLIC_CLAIMS_REVIEW.md": {
-      "claim_paragraphs": 6,
-      "claim_paragraphs_sha256": "8b2979f351ece1d86a007697e43fd6dad8053b0de82a15f6bafe3d529ddea4ec",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "983170aa411290ebf5b0988d439232e9670fd8e73e22fe7d3b35d179d6f6e999"
-    },
-    "docs/release/PUBLIC_INPUT_MIGRATION.md": {
-      "claim_paragraphs": 7,
-      "claim_paragraphs_sha256": "1bf1224325a705085159deb3ab221e340b70fdc2d55b8de056e2af79c5bc880c",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "253b279f23c53ca655863056bc290d6f403bd57df198c2cbd67ffce72a75a54a"
-    },
-    "docs/release/REBUILT_AUDIT_CORRECTION.md": {
-      "claim_paragraphs": 11,
-      "claim_paragraphs_sha256": "a0afaeabcf0d226106a334f6cc6fcc1040056500157b99f6dabd7e3fe6721674",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "b0be79359907284bf974b7953019594b6c5d35e478374897fe31634c45572d78"
-    },
-    "docs/release/REBUILT_BORROW_QUALIFICATION.md": {
-      "claim_paragraphs": 6,
-      "claim_paragraphs_sha256": "9d3f4b32ed7e8713a9870936abc5cee1952cfaf4fe156373d25c905d4a7dbcd9",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "1f875863df7bcdcc716325c4eb61a8522d2b565caa274241be407d576376d62e"
-    },
-    "docs/release/REBUILT_CHARON_DIAGNOSTICS.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "9fd4d5015e54cbf5921653c022b749e482a2b311499c2bcd402ebd52735f6fa0",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "578db8d1bd2673bb1b61192ed455834218dcbd4696c360ce81b9a44cfaa29f87"
-    },
-    "docs/release/REBUILT_CHARON_UI.md": {
-      "claim_paragraphs": 12,
-      "claim_paragraphs_sha256": "05b4bf20cebfa1422875767bcfba28c1d73e4c208217475b380d55c9e0000adc",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "eb6be62a638995181aadce20b9194d0bbaee0d791d07a0fe02290b0855c25d55"
-    },
-    "docs/release/REBUILT_EXTRACTION_CHAIN.md": {
-      "claim_paragraphs": 7,
-      "claim_paragraphs_sha256": "a5cb3e1b42eaa64af3aecbdacb48ec96df84cd55f0d8b195c318467d5f577a91",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "95849451e34588179b05399750ef05fc3ad1706db7021780a25aa98ce1fd783b"
-    },
-    "docs/release/REBUILT_FNPTR_QUALIFICATION.md": {
-      "claim_paragraphs": 9,
-      "claim_paragraphs_sha256": "d0cc2fcde67691933c93a095d76b711952b8f660af9b4a4b6bf9edf906a53d13",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "7d60bcceaef070dce03c9af33492dadeed6638e85d20dc7a257309abac1fd9bf"
-    },
-    "docs/release/REBUILT_GATE_ACCEPTANCE.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "680b2300c78792747a76fdebfdd929b3a00d17f8e33924f955e4d1a7c9df0d45",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "78b78762d500141551b4774687492571377b5a3c5a0d0349700b986fc6fb64ea"
-    },
-    "docs/release/REBUILT_GATE_MIGRATION.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "9a9567005a1f1e9c80ab441177382c4786f706ee4fd0646539ee51f19d691a9e",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "1723ed349f331c3491dc8adf0a00a147ac81a919a61ad4815792fd5d6711614d"
-    },
-    "docs/release/REBUILT_GUARD_QUALIFICATION.md": {
-      "claim_paragraphs": 9,
-      "claim_paragraphs_sha256": "63bb6e88d8a2c95b10e5fff2e2094a8c0025d94d79d0f25f89fd9ca32b554e86",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "43d1fea35d2414b73d2813adcba01ad55e26139292e79a05f959eeb584a7cc51"
-    },
-    "docs/release/REBUILT_INPUT_ADMISSION.md": {
-      "claim_paragraphs": 9,
-      "claim_paragraphs_sha256": "70b6c045bf4e9af8ae63ec715303d15d39224d84a7cdb93f0204e12f1706e8ef",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "4a7ff880d6bd34e481bf21394c569267c1507209959422faeaaed4ecfe60d737"
-    },
-    "docs/release/REBUILT_INPUT_CANDIDATE.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "6155c58a7f7178e391fbe74313c7fe1f11083d0900734b58151633b369a3c738",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "0be34353781524c87b8a37f810fa5c46c9bfd87f09229aec1c562e22e8553afa"
-    },
-    "docs/release/REBUILT_INPUT_REEXTRACTION.md": {
-      "claim_paragraphs": 9,
-      "claim_paragraphs_sha256": "f0b6cfa1dd0cc1514cce3ae00ce7743782e75589f1849c92023c0572b9ff2bfc",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "c75d3f437df0f038a87057b31fa930b4a3bd685b878e11aa138441a0f67bb474"
-    },
-    "docs/release/REBUILT_LOOP_QUALIFICATION.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "5e90f34a17dec8218bac44b7c6c7f58d7e25b6d80e8ebbdb34e567071817d7de",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "a284265e86951bd1bc7ac90fbe619db3eeace9df846e3687444281b545f313b9"
-    },
-    "docs/release/REBUILT_MAIN_CANDIDATE.md": {
-      "claim_paragraphs": 38,
-      "claim_paragraphs_sha256": "b1a76e5a33bcc8e4e8aab4cafd85b40d0d4816125426eeb55be1776120298755",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "868a0d8ea4cd1c894adeb146b096d1fc65267095bbcb4a5bf623f250e5aff301"
-    },
-    "docs/release/REBUILT_PRODUCTION_RUST.md": {
-      "claim_paragraphs": 9,
-      "claim_paragraphs_sha256": "8d6e6da49262c7dc6fd5b594e386a19bb5a9d0d300e34ad64f9d76b8a1c50341",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "fbd8f997476a11dc1679ee657ced20096db4b06e20c0ee942a811fdeaf20e70a"
-    },
-    "docs/release/REBUILT_PUBLIC_KERNEL.md": {
-      "claim_paragraphs": 11,
-      "claim_paragraphs_sha256": "66f7c93d5f2a2af65c52084a7aa7065cbba494fe19fd8aef46b378742bd725ae",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "383b9f41fbbcaa22b56a577e90e7f72af2bba2d05a72cdad2a24c42ea2e3002b"
-    },
-    "docs/release/REBUILT_SAIL_CPP.md": {
-      "claim_paragraphs": 11,
-      "claim_paragraphs_sha256": "17589feee0bd52fab6dbe61868eadfddef0e2a75bb2d0ad5875f69ef6a6f8b59",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "f3a51ed5bb8e45523f3b336e190e33fd47410c59a7e4d30d26c6a256dc6f5261"
-    },
-    "docs/release/REBUILT_SAIL_RUNTIME.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "1d3e23d4d73148f89abb55dfc3e1541385965784731dcf51dc946f27058a9fe9",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "27a8f52115127a96c57c365e8c67a09f5fb4f197cc74194d5d3144cf7b86ec68"
-    },
-    "docs/release/RUNTIME_EVIDENCE.md": {
-      "claim_paragraphs": 7,
-      "claim_paragraphs_sha256": "c126651bf70ad8525b9a425c1eb8900a3430a803456d794871cc5af91198b8a0",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "2a0d56d7904e7d67cd651c92a5645b76f28a90cbbeb331214691ab66b6ae4ccd"
-    },
-    "docs/release/RUST_TESTS.md": {
-      "claim_paragraphs": 4,
-      "claim_paragraphs_sha256": "4b7e0f137d294e69405073acbbbcd8b98a2471f87ef530dcb879acc93597c98d",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "5e5e5001295907ee71a3869c3b4c30255845c778afe63ba2ccfd3e763f44447c"
-    },
-    "docs/release/SAIL_CPP_CORRESPONDENCE.md": {
-      "claim_paragraphs": 7,
-      "claim_paragraphs_sha256": "4d0afe57a6332bf6dc3e1bf0dd9123a3149fd6fef5b7bddf19431ed2b02fb19b",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "52ead08e511d4e112c9f2543c98b3b3b9d83264a80ae85e05b120d491d8f8a0c"
-    },
-    "docs/release/SAIL_INSTALL_MIGRATION.md": {
-      "claim_paragraphs": 6,
-      "claim_paragraphs_sha256": "29c7b41597adda23abc49ba16e4cfa12da76cebd65e5cf6c7d971685c135e637",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "b0a0f5d44790bd27aafc88909c94ebe4929544c732501e70d13b043dbd1ce277"
-    },
-    "docs/release/SAIL_MODEL_IDENTITY.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "455fea0ad80c0f896febc75b98a59fc7c2f1b2c4fe3a9e1b1bba0b1d83a02c55",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "e280c82e96420060370e8eb06b8af541a2813b9bfbd1d3b13a93fc20258d299e"
-    },
-    "docs/release/SAIL_STALE_GENERATED_FILE.md": {
-      "claim_paragraphs": 10,
-      "claim_paragraphs_sha256": "f4971f7778c4a3baf3ce33e0611f10c08c751e7283dd3f283f97ca6de8afef1e",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "293350deacb7bd2fde5b3fe266c6c11f8ec437a4af5cf292e79a362550569ef8"
-    },
-    "docs/release/UNIFIED_FIXED_RESTORE.md": {
-      "claim_paragraphs": 10,
-      "claim_paragraphs_sha256": "4105e1b039eb67523d5da1133a0c3d761c4c9c93a8baf33e1aed1436bf78d7ac",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "eaf5c4ad4fdd9fa4e057d216e9fbcd6bc3c9cd667d2c382ce3b1aa3243ac1b75"
-    },
-    "docs/release/V2_LOCAL_EVIDENCE_REFRESH.md": {
-      "claim_paragraphs": 10,
-      "claim_paragraphs_sha256": "7d47ee7f760aa42772b7a3dee3a3b8fea151e743628ef8612856c08bcedeb3cd",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "c391e949461d2d8ea10103f09cbff960808864c102b1f0682fdbae6a30511fe3"
-    },
-    "docs/release/WEEK6_DUAL_ASSET_RESTORE.md": {
-      "claim_paragraphs": 7,
-      "claim_paragraphs_sha256": "bdadda91d7646b461f1c68047b6f111c4f6479c8b78e41422305595ed521f66e",
-      "claims": [
-        "source_output_identity",
-        "release_incomplete",
-        "historical_scope",
-        "lean_scope",
-        "rocq_no_go"
-      ],
-      "classification": "technical_boundary",
-      "review": "Reviewed 2026-09-28: same immutable release two-data-asset layout and owner signature remain mandatory; third-party reproduction is deferred to recipient CKB and no pre-delivery reproducer key is needed. Restoration or local tests do not establish official reproduction, new candidate execution or delivery completion.",
-      "sha256": "1e78aa8b78fb8f0a75c5d449825b6e988ce6050528510b233a7e2bfa5bf92e40"
-    },
-    "docs/release/WEEK6_RUNTIME_FLOOR.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "28d69a316d2de63e402324368b2d2f7aaf937828e0a9747419c2277147343409",
-      "claims": [
-        "source_output_identity",
-        "release_incomplete",
-        "runtime_scope",
-        "rust_test_scope"
-      ],
-      "classification": "current_assurance",
-      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "443b8dc0f20fb57355ea75d502dd16d71a2473b90119fc56da3ff40cc2cadbf5"
-    },
-    "docs/release/WORKTREE_DELTA_REVIEW.md": {
-      "claim_paragraphs": 8,
-      "claim_paragraphs_sha256": "51cee793f23584164c22de5b4b263806acaaafedf02966f90353063b3c23e836",
-      "claims": [
-        "historical_scope"
-      ],
-      "classification": "historical_record",
-      "review": "Reviewed as an identity- and time-scoped historical record; no old PASS is attributed to the current candidate.",
-      "sha256": "fca7bcca30c75a1c57093015dbc73d3f3739023bc43613775ad4859a2d8503dc"
-    },
-    "docs/release/WORKTREE_GENERATION_VALIDATOR.md": {
-      "claim_paragraphs": 19,
-      "claim_paragraphs_sha256": "5dc7ba207aee0a69f1e153240eec247ddabc804a20a401f3b8e0c2b41924bd4f",
-      "claims": [
-        "source_output_identity",
-        "release_incomplete"
-      ],
-      "classification": "current_assurance",
-      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "665eaf598b87d005ea77ef1604602a83e6a100aa58f28f90d9161c4f1879e70d"
-    },
-    "docs/release/WORKTREE_SOURCE_VALIDATOR.md": {
-      "claim_paragraphs": 17,
-      "claim_paragraphs_sha256": "6bf4680219a623d3fdfb6c24e3677d59dad22e34d25da21c50eb99aebc1ec0fb",
-      "claims": [
-        "source_output_identity",
-        "release_incomplete"
-      ],
-      "classification": "current_assurance",
-      "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "3eb0e1170e8500d66bf0621ab167242e93e87329613d218acdaeb7ca9f36dc21"
-    },
     "docs/semantic-gaps.md": {
       "claim_paragraphs": 3,
-      "claim_paragraphs_sha256": "7b18a4c6fdbacb1371b865452268e4c9cc3d58ac80c3a74a781ad617109ee5be",
+      "claim_paragraphs_sha256": "44f09ec44db84b88b81a178c98a0a1c24da115bbbba938fcab7c83da378386c5",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -1027,7 +1055,7 @@
       ],
       "classification": "current_assurance",
       "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "90676f29b5ac52f1b67eee76dc63733bd70c834065211a27608fb376ff39bd4c"
+      "sha256": "79ddb5785c9974f84efd8b1c9813561df365d69f6333eea8f212ad0504f1989b"
     },
     "proof/README.md": {
       "claim_paragraphs": 2,
@@ -1168,7 +1196,7 @@
     },
     "proof/lean/decoder/toolchain/fnptr-experimental/README.md": {
       "claim_paragraphs": 11,
-      "claim_paragraphs_sha256": "53e36a92898bd79cdb97c44136d2ed6d5e468edcac12e71a671ce3024ebeca39",
+      "claim_paragraphs_sha256": "13057daffc08305dee98de76d3596d517743359262c8de282dcada9247a40346",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -1177,7 +1205,7 @@
       ],
       "classification": "technical_boundary",
       "review": "Reviewed for technical scope and non-goals; it is not standalone release completion evidence.",
-      "sha256": "95a56148b3b4a44f113736ff42f06870bd1d698a9e9d405b1a273b71d6c6e65b"
+      "sha256": "8041ba3a07bb33ae0543f1ffb8d62037921531daec5bf916380c0abb3fbd9597"
     },
     "proof/lean/decoder/toolchain/full-entry/README.md": {
       "claim_paragraphs": 24,
@@ -1207,7 +1235,7 @@
     },
     "proof/lean/decoder/toolchain/public-harness/README.md": {
       "claim_paragraphs": 6,
-      "claim_paragraphs_sha256": "cced60b03e83957789c55b4a98101cd48db1e5da4b80da6c740a03418b38729f",
+      "claim_paragraphs_sha256": "e7a1ee748159b8970ee80cd13d206d0acc917da3863a1188c8d241b6e487bb4b",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -1216,7 +1244,7 @@
       ],
       "classification": "technical_boundary",
       "review": "Reviewed for technical scope and non-goals; it is not standalone release completion evidence.",
-      "sha256": "8b814f69017105791a8eafa7282adb37cac35b7a4c2629bd13269fa9a639e78f"
+      "sha256": "ef563ab2f99ea63dbf24fa0a1addf8930f18e3c211a70a40f173fedce578e21e"
     },
     "proof/lean/extraction/ADOPTION.md": {
       "claim_paragraphs": 11,
@@ -1280,7 +1308,7 @@
     },
     "proof/lean/reports/PROOF_CHECK.md": {
       "claim_paragraphs": 16,
-      "claim_paragraphs_sha256": "fa03af77af8c4cf1a77c3123747306444efc7586231550f67d7f15b760d9d239",
+      "claim_paragraphs_sha256": "585ad95c46cfd3407e7cfe9167fbbb05a9100cb532a45f5b8a6cda5b1554a667",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -1289,7 +1317,7 @@
       ],
       "classification": "current_assurance",
       "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "5700b7c469041dd48daf8bc44333f03b58b2eb8b5322d6e39ef74ef63ffa6320"
+      "sha256": "05d65acd871f5796ed34d19554e2993c932a33d5099406cf1bed46800c6165ed"
     },
     "proof/lean/reports/WEEK5_EXIT.md": {
       "claim_paragraphs": 12,
@@ -1324,7 +1352,7 @@
     },
     "proof/rocq/SPIKE.md": {
       "claim_paragraphs": 5,
-      "claim_paragraphs_sha256": "7b8be60d3dd4b8c490a47187f41269d330b32da664c37ad9f3bc7a287d25ee9f",
+      "claim_paragraphs_sha256": "e79852308ef852e89a4d200a83e86c57cf68f37f401e05ea1ee3fbfd3f4ae23b",
       "claims": [
         "runtime_scope",
         "lean_scope",
@@ -1333,7 +1361,7 @@
       ],
       "classification": "current_assurance",
       "review": "Reviewed as a current candidate summary; only mapped evidence classes and their listed limitations are accepted.",
-      "sha256": "2e217388de777c1d79424b4e5deb40bc83b51905b26c281391fe4acadc420e43"
+      "sha256": "98003701811c084f2c37facd3943f84071dc84474f3d200e15fe3f865c7a72da"
     },
     "sail-model/README.md": {
       "claim_paragraphs": 5,

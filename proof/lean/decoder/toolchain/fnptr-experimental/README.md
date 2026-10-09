@@ -4,7 +4,7 @@
 decoder 的状态。原工具后来已按 RV64 ADD / MOP-off 范围正式采纳，公开 decoder 与
 生产 ADD 的条件性连接已接入 `proof-check`；当前边界见
 [Verification Guide](../../../../../VERIFICATION.md)。新源码重建工具的资格审查另在
-[Week6 清单](../../../../../docs/WEEK6_STATUS.md)中推进，尚未采纳。
+[Week6 清单](../../../../../docs/history/WEEK6_STATUS.md)中推进，尚未采纳。
 本目录原 16 条局部回归仍不证明其普通标准库模型中 opaque 的迭代入口；后续 full-MIR
 证明链是不同的提取配置和证据，不能混为同一报告。
 

@@ -5,7 +5,7 @@
 **2026-09-28 当前进度：** 候选 `3294cfb` 的独立临时 VM、宿主验收、真实 CI 五任务和外部下载重放
 已有通过证据；证据 bundle 已预发布，不是正式交付包。本次修改聚合引用连接，并按所有者要求
 将第三方复现移至 CKB 官方接收后，不再阻塞星火计划交付。修改后必须另行冻结、重跑，不能将
-旧候选证据改绑。精确候选、哈希和运行链接见 [Week6 状态](docs/WEEK6_STATUS.md)。
+旧候选证据改绑。精确候选、哈希和运行链接见 [Week6 状态](docs/history/WEEK6_STATUS.md)。
 下文历史报告保留原来源；Week6 本次交付仍未关闭。
 
 ### Week6 正式交付顺序（尚未完成）
@@ -13,7 +13,7 @@
 1. 冻结前由维护者确定版本号、profile A 的具体交付成员和发布签名身份/SSH 公钥；
    写入 [外部验收政策](docs/release/external-acceptance-policy-v1.json)与
    [发布信任清单](docs/release/release-allowed-signers)。
-   09-24 仓库所有者已[明确批准](docs/release/release-identity-approval-20260924.json)
+   09-24 仓库所有者已[明确批准](docs/history/release/release-identity-approval-20260924.json)
    `week6-0.1.0` / `A` 及发布者 `kwantinyueng@gmail.com` 的 Ed25519 公钥，已写入政策与发布信任清单。
    第三方复现交由 CKB 官方接收后开展，交付前不要求复现者身份或公钥；
    具体交付成员和最终输出差异仍待审核，不以身份批准替代。
@@ -21,7 +21,7 @@
    `scripts/week6_release_package.py build` 要求批准的身份及 `release-package-inputs-v2` 精确成员清单，
    只产出未签名/未发布包。按 GitHub 的[单资产限制](https://docs.github.com/en/repositories/releasing-projects-on-github/about-releases)，
    每个资产必须小于 2 GiB；不能以已有 VM bundle 小于限制推断完整正式包也满足。09-24 已明确采用
-   [同一不可变 release 双数据资产方案](docs/release/WEEK6_DUAL_ASSET_RESTORE.md)，另附主包签名。
+   [同一不可变 release 双数据资产方案](docs/history/release/WEEK6_DUAL_ASSET_RESTORE.md)，另附主包签名。
    主包签名绑定独立工具包，当前源码由新 capsule/恢复入口精确还原；最终生成物仍待审查。
 3. 冻结新候选并重新执行 VM 全链、宿主验收及对应 bundle；旧 bundle 不得改绑。完成
    `.github/workflows/week6-release.yml` 五个任务后，使用 `scripts/week6_collect_ci.py` 收集外部下载、
@@ -44,12 +44,12 @@
 
 以下为按日期保留的实现及执行历史，不是上述剩余步骤的完成声明。
 
-2026-09-13 22:21 UTC 状态：[当前 `b5bdc401…` 政策的完整正式链](docs/release/FORMAL_FINAL_EXECUTION.md)
+2026-09-13 22:21 UTC 状态：[当前 `b5bdc401…` 政策的完整正式链](docs/history/release/FORMAL_FINAL_EXECUTION.md)
 已完成实跑及独立验收：主门禁 28 阶段/287 测试、公开子链 48 阶段/68 定理，
-Rocq 含新 Sail 生成的 11 阶段 NO-GO（无额外证明）。[配套负测/演示及新六项聚合](docs/release/FINAL_SUPPORT_REFRESH.md)
+Rocq 含新 Sail 生成的 11 阶段 NO-GO（无额外证明）。[配套负测/演示及新六项聚合](docs/history/release/FINAL_SUPPORT_REFRESH.md)
 已于 22:35 UTC 完成，整体仍 incomplete。
-[46,651 项正式输出差异说明及复验](docs/release/FORMAL_DELTA_REVIEW.md)已完成，
-并已[接入新工作树部分验收聚合](docs/release/WORKTREE_GENERATION_VALIDATOR.md#正式链记录分支)。
+[46,651 项正式输出差异说明及复验](docs/history/release/FORMAL_DELTA_REVIEW.md)已完成，
+并已[接入新工作树部分验收聚合](docs/history/release/WORKTREE_GENERATION_VALIDATOR.md#正式链记录分支)。
 六项证据接受、工作树部分未完成、五项缺失；后续增量、最终范围及六类发布义务仍未完成。
 后续 `43218a71…` 候选已实际关闭当时的 `public_claims` 槽；外部验收器的新源码修订
 又使该报告只保留为已实跑历史身份，待新最终源码冻结后重验。`audit-release` v8
@@ -207,7 +207,7 @@ Sail 侧 `rv64d.v` 需要 `e_div`，而发布版 `rocq-sail-stdpp 0.20.2` 不提
 
 `make verify-smoke` 当前源码运行 33 个注入案例（ADD 13、ADDI 10、BEQ 10），并把每个
 案例的 artifact 写到 `artifacts/corpus/`。此前 32 项 / 395 步的历史实跑中 BEQ 只有 9 项，
-未满足 Week6 逐族最低数；[新案例与来源修正](docs/release/WEEK6_RUNTIME_FLOOR.md)的完整实跑
+未满足 Week6 逐族最低数；[新案例与来源修正](docs/history/release/WEEK6_RUNTIME_FLOOR.md)的完整实跑
 及独立验收现已通过：33 项 / 398 步、194 次适用 mutation、33 次复制输入重放。
 
 `make verify-negative` 的语义：
@@ -231,118 +231,118 @@ Sail 侧 `rv64d.v` 需要 `e_div`，而发布版 `rocq-sail-stdpp 0.20.2` 不提
 - `audit-release` 的全环境 clean-room、完整覆盖与发布证据验收（Week 6）；
   已接入的条件性 `proof-check` 不替代这些工作。
 
-Week6 的逐项缺口和本轮实测状态见 [关闭清单](docs/WEEK6_STATUS.md)。
+Week6 的逐项缺口和本轮实测状态见 [关闭清单](docs/history/WEEK6_STATUS.md)。
 
 以下是按推进顺序保留的阶段性记录；其中“尚未采纳/尚待执行”指对应报告产生时的状态，
 不覆盖后文 2026-09-13 新正式主门禁、native、Rocq 及 v10 聚合的完成记录。
 旧报告的成功或失败范围不因后续进展而改写。
 
-新增[本地 runtime 证据入口](docs/release/RUNTIME_EVIDENCE.md)：
+新增[本地 runtime 证据入口](docs/history/release/RUNTIME_EVIDENCE.md)：
 `python3 scripts/probes/probe_release_runtime.py` 检查环境，在新 Cargo target 中构建
 CLI，重跑 corpus/mutation 并从字节相同的复制产物逐案重放；独立重算 trace 和矩阵。
 本轮 32 个案例及全部复制重放通过，但此入口不重建 Sail emulator，不替代完整
 clean-room、CI 下载、第三方复现或完整 `audit-release` 验收。
 
-另有[隔离基础重建入口与实测记录](docs/release/ISOLATED_FOUNDATION.md)：
+另有[隔离基础重建入口与实测记录](docs/history/release/ISOLATED_FOUNDATION.md)：
 `python3 scripts/probes/probe_isolated_foundation.py` 将明确的 HEAD＋工作树快照复原到
 三个独立 Git 副本，冷构建 Sail 模拟器/配置，再运行 Rust 测试及差分/mutation/复制重放。
 本轮 13 阶段通过且源码前后无漂移；它复用本机工具和缓存，未执行新 Lean/Rocq 链，
 不是全环境 clean-room。完整发布门槛仍见 Week6 清单。
 
-随后已完成 [Rust/Lean 独立安装](docs/release/ISOLATED_RUST_LEAN.md)：
+随后已完成 [Rust/Lean 独立安装](docs/history/release/ISOLATED_RUST_LEAN.md)：
 `python3 scripts/probes/probe_isolated_rust_lean.py` 在全新工具目录下载固定版本，
 核验工具身份及编译 smoke。20 阶段通过；它复用安装器/宿主系统，不安装其余翻译器，
 也不执行新 ADD 证明，不能替代同一候选下的完整环境与证明链验收。
 
-另已完成 [Rocq/OPAM 独立源码重建](docs/release/ISOLATED_ROCQ.md)：
+另已完成 [Rocq/OPAM 独立源码重建](docs/history/release/ISOLATED_ROCQ.md)：
 `python3 scripts/probes/probe_isolated_rocq.py` 在空 OPAM 根重建 21 个固定包，审计实际
 编译器约束和包元数据，再用新 Rocq 复跑原 spike。13 个外层阶段与十阶段 NO-GO 复验通过；
 仍复用宿主工具、Aeneas 和既有 LLBC/Sail 输入，不是完整 clean-room 或额外 Rocq 证明。
 
-另已完成 [Sail 独立源码重建及身份核验](docs/release/ISOLATED_SAIL.md)：
+另已完成 [Sail 独立源码重建及身份核验](docs/history/release/ISOLATED_SAIL.md)：
 `python3 scripts/probes/probe_isolated_sail.py` 在新 OPAM 根重建 56 包，再独立编译
 固定 commit 的 Sail。18 阶段及 C / Lean 小型生成检查通过，但新执行文件哈希与
 现有证明政策不同，整体退出 2、要求身份审查，未自动采纳。小型生成物与旧工具一致
 不代表完整模型等价；该结果也不替代新工具下的完整提取/证明链或 clean-room。
 
-另已完成 [full-MIR 标准库独立重建](docs/release/ISOLATED_FULL_MIR.md)：
+另已完成 [full-MIR 标准库独立重建](docs/history/release/ISOLATED_FULL_MIR.md)：
 `python3 scripts/probes/probe_isolated_full_mir.py` 使用独立安装的 nightly 和空 Cargo
 缓存构建，46 个库已物化为无外链 sysroot；因全部哈希不同于原批准库，外层返回 2，
-随后[真实公开 decoder / iterator 重提取](docs/release/FULL_MIR_REEXTRACTION.md) 的
+随后[真实公开 decoder / iterator 重提取](docs/history/release/FULL_MIR_REEXTRACTION.md) 的
 11 个阶段通过，两份生成 Lean 模型按既有源位置注释映射匹配原身份。外层仍返回 2，
 等待正式资格采纳，未替换正式输入、独立重建翻译器或执行新 ADD 证明。
 
-完整 Sail 重生成另发现[历史文件残留](docs/release/SAIL_STALE_GENERATED_FILE.md)：
+完整 Sail 重生成另发现[历史文件残留](docs/history/release/SAIL_STALE_GENERATED_FILE.md)：
 旧固定编译器的干净输出不含政策中已有的 `Specialization.lean`，其余 162 项一致。
 原比较入口因此失败；隔离清理后的主 kernel / 导入环境审计已通过，原主根 137 项依赖不变。
 候选工具的 Lean / Rocq 原始输出相同，但 C++ 两文件不同，整项比较仍失败，未采纳新工具。
-后续[受限 C++ 标记对应审查](docs/release/SAIL_CPP_CORRESPONDENCE.md)已将 642 个字段
+后续[受限 C++ 标记对应审查](docs/history/release/SAIL_CPP_CORRESPONDENCE.md)已将 642 个字段
 建立全局一一映射，对应类型和头文件顺序一致，所有方法区域及间隙均有覆盖。
 这不改写原始比较失败，也不替代宏/名称绑定审查、实际候选 C++ 编译和运行差分。
-后续[候选完整模拟器冷构建](docs/release/REBUILT_SAIL_CPP.md)已完成 10 阶段：新目录中
+后续[候选完整模拟器冷构建](docs/history/release/REBUILT_SAIL_CPP.md)已完成 10 阶段：新目录中
 实际生成及编译完整 C++ 模型，新物化配置与原绑定配置相同。
-[新模拟器的实际双端差分](docs/release/REBUILT_SAIL_RUNTIME.md)随后完成 38 阶段，
+[新模拟器的实际双端差分](docs/history/release/REBUILT_SAIL_RUNTIME.md)随后完成 38 阶段，
 32 个案例、188 项适用 mutation、32 个复制输入实际重放通过并独立复核。
 原始生成字节差异和工具准入边界保持明确，未替换正式政策或原批准门禁报告。
 不得把旧文件补回新模型或直接刷新哈希来掩盖这个复现缺口。
-随后已按隔离 kernel 证据接入[精确安装及单文件政策迁移](docs/release/SAIL_INSTALL_MIGRATION.md)，
+随后已按隔离 kernel 证据接入[精确安装及单文件政策迁移](docs/history/release/SAIL_INSTALL_MIGRATION.md)，
 在该次运行中保留原批准工具和公开政策，完整主/公开 proof-check 已通过并独立复核：
 22 个主阶段、206 项回归及 47 个公开子阶段通过；这不采纳候选 Sail 工具。
 
-另已完成 [Charon 双版本独立源码重建](docs/release/ISOLATED_CHARON.md)：分别以原提交和
+另已完成 [Charon 双版本独立源码重建](docs/history/release/ISOLATED_CHARON.md)：分别以原提交和
 已批准公开补丁，在独立源码、空 Cargo 缓存及 target 中构建，18 阶段和两侧提取 smoke 通过。
 四个新二进制哈希不同于批准工具，外层返回 2；尚未采纳或用于完整生产资格/证明链。
-[Aeneas 的锁定 OPAM 依赖环境](docs/release/AENEAS_OPAM_DEPENDENCIES.md) 已完成 116 包源码重建
-及元数据收尾审计；[Aeneas 双版本源码／模型核验](docs/release/ISOLATED_AENEAS.md) 的
+[Aeneas 的锁定 OPAM 依赖环境](docs/history/release/AENEAS_OPAM_DEPENDENCIES.md) 已完成 116 包源码重建
+及元数据收尾审计；[Aeneas 双版本源码／模型核验](docs/history/release/ISOLATED_AENEAS.md) 的
 20 个阶段通过，三份完整 Lean 生成物匹配。但复用原 LLBC，尚未将新工具连接为完整提取链，
 外层返回 2、未正式采纳；既有 visitors 版本与上游声明约束的差异继续显式记录。
 
-后续 [新工具联合生产提取](docs/release/REBUILT_EXTRACTION_CHAIN.md) 已实际连接新 Charon、
+后续 [新工具联合生产提取](docs/history/release/REBUILT_EXTRACTION_CHAIN.md) 已实际连接新 Charon、
 Aeneas 和 full-MIR，在同一源码快照中重提取并翻译三份模型，20 阶段通过。
 主模型原始字节相同，公开 decoder / iterator 按既有来源注释映射匹配，未复译旧 LLBC。
 完整资格回归、下层模型准入和新 kernel 链仍待完成；此结果不自动采纳新工具。
 
-新工具的 [435 项 Charon UI 对照](docs/release/REBUILT_CHARON_UI.md)随后完成；433 项
+新工具的 [435 项 Charon UI 对照](docs/history/release/REBUILT_CHARON_UI.md)随后完成；433 项
 实际执行的两侧退出码相同，但仍有金样不符和各 24 项命令失败，不能记作全量通过。
-后续[独立诊断报告](docs/release/REBUILT_CHARON_DIAGNOSTICS.md)已逐项复核 24 对失败并
+后续[独立诊断报告](docs/history/release/REBUILT_CHARON_DIAGNOSTICS.md)已逐项复核 24 对失败并
 重放历史 26 对分类；明确披露旧报告脚本哈希与当前 Git 版本不同，不据此假定历史源码
 身份相同，也不将缺失标准库或 Miri 的环境失败改为 PASS。
-[下层模型重生成](docs/release/LOWER_MODEL_REGENERATION.md)已补建仅含 join-recovery
+[下层模型重生成](docs/history/release/LOWER_MODEL_REGENERATION.md)已补建仅含 join-recovery
 补丁的第三种 Aeneas，并完成三份实际提取及严格合流负测。字段模型原始字节一致，
 工厂/最小模型的 `Option.map` 函数体不同，既有身份检查不符，不能作为纯路径差异放行。
-后续[显式 sysroot 对照](docs/release/LOWER_SYSROOT_DIFFERENCE.md)已重现该最小模型差异，
-[map 等价与原 raw 定理候选检查](docs/release/LOWER_MAP_EQUIVALENCE.md)也已通过：4 条等价、
+后续[显式 sysroot 对照](docs/history/release/LOWER_SYSROOT_DIFFERENCE.md)已重现该最小模型差异，
+[map 等价与原 raw 定理候选检查](docs/history/release/LOWER_MAP_EQUIVALENCE.md)也已通过：4 条等价、
 9 条字段及 15 条原 raw 定理，类型/公理集合不变，仅两处 map 定义不同；两个负测正确拒绝。
-随后[原字段/raw 负测与生产工厂运行检查](docs/release/LOWER_ORIGINAL_NEGATIVES.md)的 17 阶段完成：
+随后[原字段/raw 负测与生产工厂运行检查](docs/history/release/LOWER_ORIGINAL_NEGATIVES.md)的 17 阶段完成：
 四类错误结果、两类 False 前提和严格合流均按预期拒绝；新构建检查器通过全部 32,768 个
 ADD 编码、196,608 次非 ADD 邻域及 32,768 次目标寄存器变异检查。
 此项复用主模型/支持库编译缓存，原政策仍拒绝候选，未完成新公开 decoder 全链、
 全套资格回归或工具采纳，不是完整 `proof-check` 新 PASS。
 
-新工具的 [borrow 资格回归](docs/release/REBUILT_BORROW_QUALIFICATION.md)随后完成：两个原
+新工具的 [borrow 资格回归](docs/history/release/REBUILT_BORROW_QUALIFICATION.md)随后完成：两个原
 Rust 用例实际重提取、模型字节一致，九条定理及 False／错误回边负测通过，并证明变异
-实际错误轨迹。[fnptr 资格回归](docs/release/REBUILT_FNPTR_QUALIFICATION.md)也已完成
+实际错误轨迹。[fnptr 资格回归](docs/history/release/REBUILT_FNPTR_QUALIFICATION.md)也已完成
 22 阶段，原 16 条局部定理与七项负测通过；普通标准库模型中的 opaque 迭代入口边界不变。
-[循环清理回归](docs/release/REBUILT_LOOP_QUALIFICATION.md)也已由新双版本 Charon 重提取，
-原四条定理与错误结果负测通过。[guard 回归](docs/release/REBUILT_GUARD_QUALIFICATION.md)
+[循环清理回归](docs/history/release/REBUILT_LOOP_QUALIFICATION.md)也已由新双版本 Charon 重提取，
+原四条定理与错误结果负测通过。[guard 回归](docs/history/release/REBUILT_GUARD_QUALIFICATION.md)
 随后完成 15 阶段，原全输入等价证明、具体反例及错误等式负测通过；四组限定回归均已
 完成独立复核，但不构成一般编译器正确性证明。这四项明确复用支持编译缓存。另行启动的
-[公开候选源码级 kernel 重建](docs/release/REBUILT_PUBLIC_KERNEL.md)现已完成第六轮 66 阶段：
+[公开候选源码级 kernel 重建](docs/history/release/REBUILT_PUBLIC_KERNEL.md)现已完成第六轮 66 阶段：
 1,865 项主构建、主/下层/公开审计及错误公开结论、False 前提负测通过，最终来源复核
 无漂移。前五轮失败记录保留；本轮不复用项目/支持编译缓存，外层退出 2、待准入。
 不能据此宣称新工具已采纳或完整 clean-room 已完成。
 
-候选工具已另行整理为[待准入输入包](docs/release/REBUILT_INPUT_CANDIDATE.md)：92 个文件，
+候选工具已另行整理为[待准入输入包](docs/history/release/REBUILT_INPUT_CANDIDATE.md)：92 个文件，
 含 7 个新工具执行文件、46 个新 full-MIR 库、实际模型/LLBC 和七类资格报告。
 归档、全新目录解包及包外固定清单校验已完成；10 项回归测试通过。
 这不是对 `public-v1` 的覆盖，原 v1 加载器明确拒绝候选格式。
-后续[包内实际重提取](docs/release/REBUILT_INPUT_REEXTRACTION.md)已完成 51 阶段：
+后续[包内实际重提取](docs/history/release/REBUILT_INPUT_REEXTRACTION.md)已完成 51 阶段：
 恢复八个工具源码树，六个根全部重提取，四份模型全文件一致、两份通过既有源码位置
-身份规则，原严格模式负测正确拒绝。随后 [v2 输入准入政策及安装入口](docs/release/REBUILT_INPUT_ADMISSION.md)
+身份规则，原严格模式负测正确拒绝。随后 [v2 输入准入政策及安装入口](docs/history/release/REBUILT_INPUT_ADMISSION.md)
 已接受固定新身份并保留资格限制；实际安装/加载通过，15 项新增测试及相关 89 项测试
-在普通模式和 `-O` 下通过。后续[公开主调用层及下层政策迁移](docs/release/REBUILT_GATE_MIGRATION.md)
+在普通模式和 `-O` 下通过。后续[公开主调用层及下层政策迁移](docs/history/release/REBUILT_GATE_MIGRATION.md)
 已完成代码和静态审查；00:14:51 UTC 启动的首次门禁失败记录保留，修正后
-[完整重跑及独立验收](docs/release/REBUILT_GATE_ACCEPTANCE.md)于 02:03–02:08 UTC 完成。
+[完整重跑及独立验收](docs/history/release/REBUILT_GATE_ACCEPTANCE.md)于 02:03–02:08 UTC 完成。
 这属于旧主政策的历史证据，不是当前发布包。
 
 生产调用图提取和源码关联已建立；Rocq 双侧生成/导入尝试及 NO-GO 报告已存在。
@@ -358,7 +358,7 @@ RVFI-DII 会话必须从架构复位态开始，首包不是 `rvfi_order` 0 / `p
 
 以下接口是稳定验收面。`verify-smoke`、`verify-negative` 与 `proof-spike` 已实现
 并可直接验收；`proof-check BACKEND=lean` 已实现条件性 ADD 定理的严格生成/证明审计。
-`audit-release` 已有[聚合器与历史清单说明](docs/release/AUDIT_RELEASE.md)。v10 只代表
+`audit-release` 已有[聚合器与历史清单说明](docs/history/release/AUDIT_RELEASE.md)。v10 只代表
 旧 `7ced9f42…` 政策；当前 `b5bdc401…` 的本地清单和 v3 工作树记录位于 Git 忽略的
 `current-output-integration-zvlwq2MM` 证据目录。完整发布验收仍未完成；缺项时退出非零：
 
@@ -395,13 +395,13 @@ make -f scripts/release.mk audit-release \
 `proof-check` 要求两侧实际编译及指定定理的 kernel 检查成功，具体流程与
 原内部定理 137 项与公开解码步骤 158 项的审计边界见 [门禁说明](proof/lean/reports/PROOF_CHECK.md)。报告在
 `artifacts/proof-check/report.json`，失败不能沿用先前 PASS。
-2026-09-13 起当前主入口要求先[安装 v2 输入](docs/release/REBUILT_INPUT_ADMISSION.md)到
+2026-09-13 起当前主入口要求先[安装 v2 输入](docs/history/release/REBUILT_INPUT_ADMISSION.md)到
 `artifacts/decoder-inputs/rebuilt-v2`，以及固定的包外 Rust/Lean、Aeneas OPAM 和 Sail 安装；
 Rocq 还需要独立的私有 Rocq 安装。没有旧实验目录或 v1 工具回退。
-原 [公开 v2 门禁迁移](docs/release/REBUILT_GATE_ACCEPTANCE.md)已经完成；
-[正式主工具迁移后的完整门禁](docs/release/FORMAL_MAIN_INTEGRATION.md)也已于 06:26 UTC
+原 [公开 v2 门禁迁移](docs/history/release/REBUILT_GATE_ACCEPTANCE.md)已经完成；
+[正式主工具迁移后的完整门禁](docs/history/release/FORMAL_MAIN_INTEGRATION.md)也已于 06:26 UTC
 退出 0，06:29 UTC 独立验收通过（28 主阶段/287 测试/48 公开阶段/68 公开定理）。
-2026-09-11 的 `public-v1` [迁移记录](docs/release/PUBLIC_INPUT_MIGRATION.md)
+2026-09-11 的 `public-v1` [迁移记录](docs/history/release/PUBLIC_INPUT_MIGRATION.md)
 是已归档历史基线；包安装和条件性门禁均不等于完整环境 clean-room 或 Week6 发布。
 
 当前安装报告及其引用的私有安装树位于 `artifacts/boundary-check/`，均为 Git 忽略输入。
@@ -409,20 +409,20 @@ Rocq 还需要独立的私有 Rocq 安装。没有旧实验目录或 v1 工具�
 精确来源已可由冻结归档在本机恢复，但完整安装方案与同一候选下的 clean-room 实跑仍待完成；
 同版本但身份不同的工具必须经过审查，不自动刷新政策使之通过。
 
-[安装分发核验](docs/release/INSTALL_DISTRIBUTION_REVIEW.md)已另行确认六组安装约 8.27 GB，
+[安装分发核验](docs/history/release/INSTALL_DISTRIBUTION_REVIEW.md)已另行确认六组安装约 8.27 GB，
 固定报告仍含被正式入口直接使用的绝对路径，且安装目录哈希不覆盖全部 OPAM 控制状态。
 新目录中的 Sail 前缀小模型生成通过，只是一个组件的搬迁 smoke；不能代替整套分发或 clean-room。
-后续 [固定安装补充包](docs/release/FIXED_INSTALL_BUNDLE.md)已完成字节往返和独立验收，
-[同快照源码归档](docs/release/FIXED_SOURCE_CAPSULE.md)也已实际离线递归复原。
-[交付准备清单](docs/release/fixed-input-handoff-20260913-v1.json)连接源码、安装与批准 decoder 包；
-[统一恢复入口](docs/release/UNIFIED_FIXED_RESTORE.md)已从这三类归档完成本机新目录暂存，
+后续 [固定安装补充包](docs/history/release/FIXED_INSTALL_BUNDLE.md)已完成字节往返和独立验收，
+[同快照源码归档](docs/history/release/FIXED_SOURCE_CAPSULE.md)也已实际离线递归复原。
+[交付准备清单](docs/history/release/fixed-input-handoff-20260913-v1.json)连接源码、安装与批准 decoder 包；
+[统一恢复入口](docs/history/release/UNIFIED_FIXED_RESTORE.md)已从这三类归档完成本机新目录暂存，
 并由恢复副本安装及校验 decoder 输入。该入口不运行正式解析器或证明链；原安装报告的
 绝对路径未重写，已有生产目录会被拒绝覆盖。仍不是完整空机器 bootstrap、固定绝对路径
 的新环境全链或发布完成；恢复脚本是冻结候选之外的单独辅助代码。
-[宿主前置条件静态记录](docs/release/FIXED_HOST_INPUT_REVIEW.md)另已完成 ELF/宿主文件观察，
+[宿主前置条件静态记录](docs/history/release/FIXED_HOST_INPUT_REVIEW.md)另已完成 ELF/宿主文件观察，
 但库名候选、文件哈希不证明实际装载或 ABI 兼容。冷构建所需的四项 CMake 下载内容已
-[另行保存](docs/release/FIXED_CMAKE_DOWNLOADS.md)，并完成独立新目录的
-[实际 CMake 冷配置与 GMP 构建](docs/release/FIXED_CMAKE_CONFIGURATION.md)及独立验收；
+[另行保存](docs/history/release/FIXED_CMAKE_DOWNLOADS.md)，并完成独立新目录的
+[实际 CMake 冷配置与 GMP 构建](docs/history/release/FIXED_CMAKE_CONFIGURATION.md)及独立验收；
 尚未接入正式构建路径或旧交付清单，不替代完整新环境生成和证明链。
 `check_proof_model.sh` 是构建状态核对器，对符合记录的 `blocked` 也返回 0；
 因此新门禁不调用该状态核对器，而是运行严格构建和 Lean 环境导出审计，
@@ -527,7 +527,7 @@ artifact 中的十六进制程序与记录的案例不一致时直接报错，�
 
 自动分类只产出 `match`、`unclassified_mismatch`、`runner_error` 与 `unsupported`。
 把 mismatch 判成 CKB 候选缺陷、配置差异还是 adapter 缺陷仍然是人工判断。
-本轮新增[最小化工具与真实 trap 差异记录](docs/release/MISMATCH_MINIMIZATION.md)：
+本轮新增[最小化工具与真实 trap 差异记录](docs/history/release/MISMATCH_MINIMIZATION.md)：
 按长度穷举原输入的非空有序子序列，重新执行两端并保留观察特征；预算耗尽或执行错误
 不报告最小化成功。它不自动确认根因，不将 unsupported 差异转为 PASS。
 
@@ -594,7 +594,7 @@ CI 在编译器缓存未命中时安装 OPAM、创建 switch 并运行 `build_sa
 正常执行到检查步骤时，比对总报告字节一致，并用下载到的一个案例 artifact 执行重放。
 “CI artifact 能在本地用一条命令重放”是关于上传出去的字节的断言，所以要用那些
 字节验证。步骤存在不表示某次运行已执行到该步，更不代表 32 个案例均从下载包重放。
-最近保存的[只读来源核验](docs/release/CI_READINESS.md)发生于 2026-09-13 05:12 UTC：
+最近保存的[只读来源核验](docs/history/release/CI_READINESS.md)发生于 2026-09-13 05:12 UTC：
 当时本地 HEAD 的运行数为 0，查询到的成功运行属于旧提交；该次核验未下载 artifact。
 未查询此后远端状态，不能把该历史观察写成当前远端仍然没有新运行。当前候选的完整
 Lean/Rocq/release CI 和真实下载重放证据仍未提供。

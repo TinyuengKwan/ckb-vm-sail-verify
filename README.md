@@ -9,20 +9,20 @@
 接入主门禁，首次集成实跑已通过。它从同一个原始 ADD 字连接双方执行，保留取指/初态边界，
 不扩展到 MOP-on 或所有 ISA/configuration。
 
-2026-09-13 更新：上述首次集成属于历史基线；[新正式主工具迁移](docs/release/FORMAL_MAIN_INTEGRATION.md)
+2026-09-13 更新：上述首次集成属于历史基线；[新正式主工具迁移](docs/history/release/FORMAL_MAIN_INTEGRATION.md)
 已于 06:26 UTC 完成正式门禁，并于 06:29 UTC 通过独立验收：28 个主阶段、287 项测试、
-48 个公开阶段和 68 个公开定理。[v10 本地聚合](docs/release/AUDIT_RELEASE.md)于 06:34 UTC 完成，
+48 个公开阶段和 68 个公开定理。[v10 本地聚合](docs/history/release/AUDIT_RELEASE.md)于 06:34 UTC 完成，
 Lean、runtime、Rust tests、Rocq NO-GO、负测与演示六项验收通过，六类发布义务仍缺失；
 这不是 Week6 发布完成，也不扩大指令覆盖。
 
-后续[Week6 案例门槛修正](docs/release/WEEK6_RUNTIME_FLOOR.md)：旧 BEQ 仅 9 项，未满足
+后续[Week6 案例门槛修正](docs/history/release/WEEK6_RUNTIME_FLOOR.md)：旧 BEQ 仅 9 项，未满足
 每族至少 10 项要求。已补第十个 BEQ 并加强门禁；33 项新 corpus 的完整实跑及独立验收已通过。
 主政策仅更新 corpus 来源为 `b5bdc401…`，旧完整 Lean/Rocq 验收保留历史身份。
-[该政策下的完整正式链及独立验收](docs/release/FORMAL_FINAL_EXECUTION.md)已于 22:21 UTC 完成：
-Lean 28/287/48/68、Rocq 11 阶段 NO-GO；[当前负测/演示及新聚合](docs/release/FINAL_SUPPORT_REFRESH.md)
+[该政策下的完整正式链及独立验收](docs/history/release/FORMAL_FINAL_EXECUTION.md)已于 22:21 UTC 完成：
+Lean 28/287/48/68、Rocq 11 阶段 NO-GO；[当前负测/演示及新聚合](docs/history/release/FINAL_SUPPORT_REFRESH.md)
 于 22:35 UTC 完成六项验收、整体仍 incomplete。
-[46,651 项正式输出差异说明及复验](docs/release/FORMAL_DELTA_REVIEW.md)已完成；
-[新工作树部分验收聚合](docs/release/WORKTREE_GENERATION_VALIDATOR.md#正式链记录分支)也已完成：
+[46,651 项正式输出差异说明及复验](docs/history/release/FORMAL_DELTA_REVIEW.md)已完成；
+[新工作树部分验收聚合](docs/history/release/WORKTREE_GENERATION_VALIDATOR.md#正式链记录分支)也已完成：
 六项证据接受、工作树部分未完成、五项缺失。后续增量、最终范围及发布义务仍待完成。
 
 用官方 Sail RISC-V 模型验证 CKB-VM 指令语义的工程化项目。项目采用两条相互校验、但不混淆结论的链路：
@@ -31,6 +31,8 @@ Lean 28/287/48/68、Rocq 11 阶段 NO-GO；[当前负测/演示及新聚合](doc
 - 形式化证明：从生产执行路径抽取可验证的纯 Rust 语义内核，以 Charon/Aeneas → Lean 4 和 Sail → Lean 4 为主证明路径；Rocq/Coq 保留为同后端兼容性 spike。
 
 ## 当前状态
+
+现行状态摘要见 [docs/STATUS.md](docs/STATUS.md)；下文为各阶段建立时的说明，过程记录在 [docs/history/](docs/history/README.md)。
 
 运行时差分闭环已经建立并接入 CI（Week 3）。`crates/sail-runner/src/dii.rs`
 实现了二进制 RVFI-DII 客户端，`crates/ckb-runner/src/injection.rs` 用同一条指令
@@ -44,7 +46,7 @@ PC = `0x80000000`），不经过 ELF loader 与平台栈；这不是一般平台
 字段，任何一类在整个语料中没有被覆盖都算失败。仓库中的 CI 配置为两层：快速检查与
 差分层均由 PR 触发，差分层依赖快速检查成功；模拟器缓存未命中时安排冷构建而不跳过。
 这是工作流定义，不是当前候选的 CI 完成证据；本轮 CI 缺口见
-[带时间戳的来源核验](docs/release/CI_READINESS.md)。
+[带时间戳的来源核验](docs/history/release/CI_READINESS.md)。
 
 上述数字是运行时证据。证明轨已有 Rust/Sail 两侧 Lean 生成物；共同工具链固定为
 Lean 4.31.0，双侧导入入口为 `make proof-imports`，实测记录见
@@ -188,7 +190,7 @@ make proof-step
 生成脚本。它需要已准入的 v2 输入包及包外私有 Rust/Lean、Aeneas OPAM、Sail 安装；
 这些安装与报告位于 Git 忽略目录，**普通 clone 不会带来这些前提**。
 新 clone 的完整工具分发/安装和文档复现仍属 Week6 未关闭条款，不能靠更改政策哈希跳过。
-具体已实跑范围与当前安装身份见 [正式迁移记录](docs/release/FORMAL_MAIN_INTEGRATION.md)
+具体已实跑范围与当前安装身份见 [正式迁移记录](docs/history/release/FORMAL_MAIN_INTEGRATION.md)
 和 [Verification Guide](VERIFICATION.md)。
 
 Rust 工具链由 `rust-toolchain.toml` 固定为 1.97.1（`Cargo.toml` 声明的 MSRV
