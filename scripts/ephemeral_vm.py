@@ -287,14 +287,19 @@ def evidence_members(archive):
             if member.isdir():
                 continue
             boundary = canonical + CLEAN_ROOM_OUT.rsplit("/", 1)[0] + "/"
-            require(not any(part in EXCLUDED_EVIDENCE_PARTS for part in name.split("/")),
-                    "downloaded inputs and build caches are not evidence: " + name)
+            excluded = any(part in EXCLUDED_EVIDENCE_PARTS for part in name.split("/"))
             if name.startswith(boundary):
                 top = name[len(boundary):].split("/", 1)[0]
                 require(not top.startswith(RESTORED_ROOT_PREFIXES),
                         "guest evidence member inside a restored installation root: " + name)
-                require(top == CLEAN_ROOM_OUT.rsplit("/", 1)[1] or name.endswith(DIAGNOSTIC_SUFFIXES),
-                        "guest evidence member outside allowed prefixes: " + name)
+                if top == CLEAN_ROOM_OUT.rsplit("/", 1)[1]:
+                    # The guest's find prunes these; their presence means the contract broke.
+                    require(not excluded, "downloaded inputs and build caches are not evidence: " + name)
+                else:
+                    # Diagnostics from other generators: small text files only, never caches.
+                    require(name.endswith(DIAGNOSTIC_SUFFIXES), "guest evidence member outside allowed prefixes: " + name)
+                    if excluded:
+                        continue
                 target = ("evidence", name[len(canonical):])
             elif name.startswith(run):
                 target = ("guest", name[len(run):])

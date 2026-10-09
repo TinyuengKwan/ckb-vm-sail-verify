@@ -393,9 +393,12 @@ def check(path):
     common.linked(out, "ckb-vm-sail-diff", report["binary_sha256"])
     binary = report["stages"][2]["argv"][0]
     for stage_row, name in zip(report["stages"][3:], ids):
-        require(stage_row["argv"] == [binary, "--json", "--sail-bin", SAIL_BIN, "--sail-config", CONFIG, "--replay",
-                                     str(out / "relocated" / (name + ".json")), "--artifact-dir", str(out / "replays" / name)],
-                "replay command changed: " + name)
+        argv = stage_row["argv"]
+        # The run may have happened under another root (a guest); compare the
+        # command shape and the output-relative paths, not the absolute prefix.
+        require(len(argv) == 10 and argv[:7] == [binary, "--json", "--sail-bin", SAIL_BIN, "--sail-config", CONFIG, "--replay"] and
+                Path(argv[7]).parts[-2:] == ("relocated", name + ".json") and argv[8] == "--artifact-dir" and
+                Path(argv[9]).parts[-2:] == ("replays", name), "replay command changed: " + name)
     require([r["case_id"] for r in report["replays"]] == ids, "replay inventory")
     for row in report["replays"]:
         name = row["case_id"]

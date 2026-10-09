@@ -195,6 +195,11 @@ class EphemeralVmTests(unittest.TestCase):
             inputs = archive("inputs.tar", {CANONICAL + "/artifacts/boundary-check/" + excluded: b"x", RUN + "/exit-code": b"0\n"})
             with self.assertRaisesRegex(RuntimeError, "not evidence"):
                 MODULE.evidence_members(inputs)
+        # Another generator's cargo cache fingerprint is a diagnostic-looking .json; it is skipped, not fatal.
+        cache = archive("cache.tar", {CANONICAL + "/artifacts/boundary-check/public-check-x/cargo-target/debug/f.json": b"{}",
+                                      CANONICAL + "/artifacts/boundary-check/clean-room/report.json": b"{}", RUN + "/exit-code": b"0\n"})
+        self.assertEqual(set(MODULE.evidence_members(cache).values()),
+                         {("evidence", "artifacts/boundary-check/clean-room/report.json"), ("guest", "exit-code")})
         for package in ["rustup", "jq", "m4", "bzip2", "curl", "gawk", "patch", "xz-utils", "build-essential",
                         "bsdutils", "libgmp-dev", "zlib1g", "libzstd1", "libatomic1"]:
             self.assertIn(package, MODULE.GUEST_PACKAGES)
