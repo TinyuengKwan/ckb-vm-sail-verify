@@ -104,15 +104,18 @@ jobs:
           make ckb-baseline-apply
           test -n "$VM_EVIDENCE_URL"
           printf '%s\n' "$BUNDLE_SHA256" | grep -Eq '^[0-9a-f]{64}$'
-      - name: Download the VM evidence bundle (URL never recorded)
+      - name: Download the VM evidence bundle outside the workspace (URL never recorded)
+        # The checkout must stay byte-identical to the candidate: an untracked
+        # file inside it would change the source snapshot the bundle is bound to.
         run: |
-          mkdir intake
+          mkdir "$RUNNER_TEMP/intake"
           python3 - <<'PY'
           import hashlib, os, sys, urllib.request
           url, expected = os.environ["VM_EVIDENCE_URL"], os.environ["BUNDLE_SHA256"]
           digest = hashlib.sha256()
           try:
-              with urllib.request.urlopen(url, timeout=120) as source, open("intake/vm-evidence.tar.gz", "xb") as target:
+              with urllib.request.urlopen(url, timeout=120) as source, \
+                      open(os.path.join(os.environ["RUNNER_TEMP"], "intake/vm-evidence.tar.gz"), "xb") as target:
                   while block := source.read(1024 * 1024):
                       digest.update(block); target.write(block)
           except Exception:
@@ -124,7 +127,7 @@ jobs:
           EXPECTED_COMMIT: ${{ inputs.candidate_commit }}
         run: |
           python3 scripts/evidence_bundle.py unpack \
-            --bundle intake/vm-evidence.tar.gz --bundle-sha256 "$BUNDLE_SHA256" \
+            --bundle "$RUNNER_TEMP/intake/vm-evidence.tar.gz" --bundle-sha256 "$BUNDLE_SHA256" \
             --root "$GITHUB_WORKSPACE" --candidate "$EXPECTED_COMMIT"
       - name: Name the artifact
         id: package
@@ -136,12 +139,12 @@ jobs:
       - name: Attest the exact bundle bytes (attests packaging on GitHub, not VM execution)
         uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
         with:
-          subject-path: ${{ github.workspace }}/intake/vm-evidence.tar.gz
+          subject-path: ${{ runner.temp }}/intake/vm-evidence.tar.gz
       - name: Upload the bundle for the distinct replay job and the external collector
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: ${{ steps.package.outputs.artifact_name }}
-          path: ${{ github.workspace }}/intake/vm-evidence.tar.gz
+          path: ${{ runner.temp }}/intake/vm-evidence.tar.gz
           if-no-files-found: error
           retention-days: 30
 
