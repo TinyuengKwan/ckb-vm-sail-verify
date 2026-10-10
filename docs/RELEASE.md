@@ -79,6 +79,15 @@ runtime → lean-kernel → rocq-spike → tree-clean（`git status --porcelain`
    `ckb-vm-sail-release` 下签署该文件，两者一并放入报告目录并填入报告的 `authorization` 字段。
    信任名单不进源码树：候选的源码快照因此保持不变，聚合器用受跟踪的发布者公钥验证所有者的授权，
    再用该名单验证复现者的声明，之后该槽转为 verified。
+7. 验收时用**当前 main 的聚合器**，以 `--root` 指向**保持原样的候选检出**，并把第三方报告加入清单：
+   ```sh
+   python3 <main>/scripts/audit_release.py --root <候选检出> --candidate C \
+     --runtime … --lean … --rocq … --clean-room … --release … --third-party <报告>/report.json --out <新目录>
+   ```
+   不能在 main 自己的检出里聚合旧证据（快照不同），也不能把新脚本复制进候选检出（会改变其快照）。
+   候选里冻结的聚合器版本可能早于本步所需的验证逻辑；聚合器只从 `--root` 读取政策、证据和签名者
+   信任根，所以新版脚本配旧候选是受支持的组合。已对 `week6-0.2.0` 验证：主分支聚合器加
+   `--root` 对冻结候选重算，结论与候选自带聚合器一致。
 
 Rocq 阶段的预期结果是 NO-GO 及其最小复现；复现成功意味着得到同样的 NO-GO，不是得到证明。
 Lean 阶段验证的是生产关联的条件性 ADD 步精化定理，显式前提见 [覆盖矩阵](coverage.md) 与
