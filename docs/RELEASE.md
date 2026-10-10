@@ -47,10 +47,11 @@ runtime → lean-kernel → rocq-spike → tree-clean（`git status --porcelain`
    ```
 3. **发布 bundle** 为 prerelease 资产，把其 URL 放入仓库 secret `WEEK6_VM_EVIDENCE_URL`，以
    `candidate_commit=C`、`candidate_ready=true`、`bundle_sha256=<哈希>` dispatch `release.yml`。
-4. **收集 CI**：`python3 scripts/ci_evidence.py collect --run-id <id> --candidate C --out artifacts/boundary-check/ci-<id>`
+4. **收集 CI**：`python3 scripts/ci_evidence.py --run-id <id> --candidate C --out artifacts/boundary-check/ci-<id>`
    （在 evidence root 内运行，需要 `gh` 登录）。
 5. **签 tag**（所有者）：`git -c gpg.format=ssh -c user.signingkey=~/.ssh/<key>.pub tag -s <version> C && git push origin <version>`。
-6. **构建主包**：`make -f scripts/release.mk release-package CANDIDATE=C INPUTS=<五个固定输入所在目录> EVIDENCE=<证据目录> OUT=<新目录>`。
+6. **构建主包**：`make -f scripts/release.mk release-package CANDIDATE=C INPUTS=<五个固定输入所在目录> EVIDENCE=<证据目录> OUT=<新目录>`；
+   `OUT` 必须位于候选检出的 `artifacts/boundary-check/` 之下，最终聚合只引用检出内的记录。
 7. **签主包**（所有者）：`ssh-keygen -Y sign -f ~/.ssh/<key> -n ckb-vm-sail-release <主包>`。
 8. **发布**：以 tag `<version>` 创建 draft release，上传主包、`.sig`、`extra-installations.tar.xz`，核对三者的
    大小与 SHA-256 后 publish。仓库已开启不可变发布，发布后不能增删资产。
