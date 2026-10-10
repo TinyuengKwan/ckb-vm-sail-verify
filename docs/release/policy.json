@@ -10,7 +10,6 @@
     "namespace": "ckb-vm-sail-release"
   },
   "third_party": {
-    "allowed_signers": "docs/release/third-party-allowed-signers",
     "namespace": "ckb-vm-sail-week6",
     "stages": [
       "download-release",
@@ -26,7 +25,9 @@
     ]
   },
   "clean_room": {
-    "providers": ["independent-ephemeral-vm"],
+    "providers": [
+      "independent-ephemeral-vm"
+    ],
     "image": {
       "name": "ubuntu-24.04-server-cloudimg-amd64.img",
       "release": "release-20260911",
@@ -45,8 +46,19 @@
       "tree-clean",
       "public-claims"
     ],
-    "tools": ["rust", "sail", "aeneas", "charon", "lean", "rocq"],
-    "generated_roots": ["proof/lean/generated", "proof/rocq/generated", "sail-model/build"]
+    "tools": [
+      "rust",
+      "sail",
+      "aeneas",
+      "charon",
+      "lean",
+      "rocq"
+    ],
+    "generated_roots": [
+      "proof/lean/generated",
+      "proof/rocq/generated",
+      "sail-model/build"
+    ]
   },
   "fixed_inputs": {
     "extra-installations.tar.xz": {
@@ -68,12 +80,23 @@
   },
   "ci": {
     "workflow": ".github/workflows/release.yml",
-    "jobs": ["fast", "intake", "replay"],
+    "jobs": [
+      "fast",
+      "intake",
+      "replay"
+    ],
     "artifact_name_prefix": "release-evidence-",
     "replay_case": "add-signed-overflow"
   },
   "package": {
-    "required_members": ["source/", "install/", "evidence/", "docs/", "SHA256SUMS", "MANIFEST.json"],
+    "required_members": [
+      "source/",
+      "install/",
+      "evidence/",
+      "docs/",
+      "SHA256SUMS",
+      "MANIFEST.json"
+    ],
     "tool_asset": "extra-installations.tar.xz",
     "docs": [
       "README.md",
@@ -97,7 +120,11 @@
       "docs/RELEASE.md",
       "docs/STATUS.md"
     ],
-    "coverage_status_values": ["runtime-only", "conditional", "unsupported"],
+    "coverage_status_values": [
+      "runtime-only",
+      "conditional",
+      "unsupported"
+    ],
     "forbidden": [
       "CKB-VM is formally verified.",
       "CKB-VM 已经完成形式化验证。",

@@ -316,7 +316,7 @@ def check_third_party(path, candidate, root):
     directory, report, policy = path.parent, read(path), common.load_policy(root)
     cfg = policy["third_party"]
     common.fields(report, {"schema_version", "kind", "status", "candidate", "performer", "source_snapshot_sha256", "release_id",
-                           "stages", "statement", "signature", "boundaries"}, "third-party report")
+                           "stages", "statement", "signature", "authorization", "boundaries"}, "third-party report")
     require(same(report["schema_version"], 2) and report["kind"] == "third-party-reproduction-v2" and
             report["status"] == "passed" and report["candidate"] == candidate, "third-party identity/status")
     performer = report["performer"]
@@ -330,11 +330,20 @@ def check_third_party(path, candidate, root):
     require(value == {"schema_version": 2, "kind": "third-party-reproduction-statement-v2", "candidate": candidate,
                       "performer": performer, "source_snapshot_sha256": report["source_snapshot_sha256"],
                       "release_id": report["release_id"], "result": "passed"}, "third-party statement differs")
+    # The third-party trust list is not a tracked file (that would change the
+    # frozen source snapshot); it travels with the report and must be signed by
+    # the release signer, whose key is the tracked trust root.
+    authorization = report["authorization"]
+    common.fields(authorization, {"signers", "signature"}, "third-party authorization")
+    signers = common.reference(directory, authorization["signers"], "third-party signers")
+    owner_signature = common.reference(directory, authorization["signature"], "third-party authorization signature")
+    common.verify_ssh_signature(Path(root) / policy["signer"]["allowed_signers"], policy["signer"]["identity"],
+                                policy["signer"]["namespace"], owner_signature, signers, "third-party authorization")
     signature = common.reference(directory, report["signature"], "third-party signature")
-    common.verify_ssh_signature(Path(root) / cfg["allowed_signers"], performer["identity"], cfg["namespace"], signature,
-                                statement, "third-party")
+    common.verify_ssh_signature(signers, performer["identity"], cfg["namespace"], signature, statement, "third-party")
     return {"performer": performer, "stages": len(report["stages"]), "release_id": report["release_id"],
-            "source_snapshot_sha256": report["source_snapshot_sha256"], "independent": True}
+            "source_snapshot_sha256": report["source_snapshot_sha256"], "independent": True,
+            "authorized_by": policy["signer"]["identity"]}
 
 
 VALIDATORS = {"runtime": check_runtime, "lean": check_lean, "rocq": check_rocq, "clean_room": check_clean_room,

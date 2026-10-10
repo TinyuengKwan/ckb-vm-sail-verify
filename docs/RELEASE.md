@@ -18,9 +18,9 @@
 | `runtime` | VM 内 `runtime_evidence.py tests` 与 `run`：全部 Rust 测试、ADD/ADDI/BEQ 语料差分、6 类 mutation 矩阵、每个案例从字节相同的复制产物重放 | 重开每个 artifact 重算比较与 mutation；三族各 ≥ 10 案例；强制引擎测试全部执行 |
 | `lean` | VM 内 `make proof-check BACKEND=lean` | 报告绑定当前 `step-policy.json`；每阶段退出 0；公理集合等于政策 allowlist 且无 `sorryAx`；边界哈希一致 |
 | `rocq` | VM 内 `make proof-spike` | 结论 NO-GO；三个预期拒绝阶段的编译错误与记录的两处阻塞逐字匹配；无基础设施失败 |
-| `clean_room` | `ephemeral_vm.py` 启动固定镜像的全新 KVM guest，`clean_room.py` 跑 11 阶段；host 写 `vm-provenance.json`；bundle 经 workflow intake 任务 attest；`ci_evidence.py collect` 外部收集 | 11 阶段退出 0、源码快照等于当前检出、生成后 tracked 文件无改动、6 个工具身份；VM 记录绑定报告且磁盘已销毁；CI run 成功、attestation 覆盖 bundle 字节、两次独立下载相同、归档报告与本地逐字节相同、归档二进制重放通过 |
+| `clean_room` | `ephemeral_vm.py` 启动固定镜像的全新 KVM guest，`clean_room.py` 跑 11 阶段；host 写 `vm-provenance.json`；bundle 经 workflow intake 任务 attest；`ci_evidence.py` 外部收集 | 11 阶段退出 0、源码快照等于当前检出、生成后 tracked 文件无改动、6 个工具身份；VM 记录绑定报告且磁盘已销毁；CI run 成功、attestation 覆盖 bundle 字节、两次独立下载相同、归档报告与本地逐字节相同、归档二进制重放通过 |
 | `release` | 所有者签 tag、签主包、发布不可变 release；`release_package.py record` | `git verify-tag` 对仓库 allowed_signers 且 tag 指向候选；主包 SSH 签名；manifest 与成员清单一致；三个资产的大小与摘要与实时 API 一致、`immutable=true`；下载副本与本地相同；源码胶囊快照等于当前检出 |
-| `third_party` | CKB 官方按本文复现后交回签名声明 | 缺省 `deferred`；提供时验签名、候选、快照、十阶段退出码 |
+| `third_party` | CKB 官方按本文复现后交回签名声明；所有者用发布密钥签署复现者的信任名单，随报告提交，不进源码树 | 缺省 `deferred`；提供时先验所有者对信任名单的签名，再验复现者对声明的签名、候选、快照、十阶段退出码 |
 
 聚合结果：`passed` 要求六槽全部 verified，或 `third_party` 为 deferred；任何 verified 槽记录的源码
 快照必须相同且等于当前检出。`incomplete`（退出 2）表示有槽缺失；`invalid`（退出 1）表示某份报告
@@ -73,8 +73,12 @@ runtime → lean-kernel → rocq-spike → tree-clean（`git status --porcelain`
 5. 用自己的 SSH 密钥在命名空间 `ckb-vm-sail-week6` 下签署声明文件
    `{"schema_version": 2, "kind": "third-party-reproduction-statement-v2", "candidate": C, "performer": {...},
    "source_snapshot_sha256": …, "release_id": …, "result": "passed"}`，连同报告（`third-party-reproduction-v2`，
-   含十个阶段的 argv/cwd/退出码/日志）和公钥交回。仓库所有者把身份与公钥写入
-   `docs/release/third-party-allowed-signers` 后，聚合器才会验收该槽。
+   含十个阶段的 argv/cwd/退出码/日志）和公钥交回。
+6. 仓库所有者审核后，把复现者身份与公钥写成一行 allowed_signers
+   （`<identity> namespaces="ckb-vm-sail-week6" ssh-ed25519 …`），用发布密钥在命名空间
+   `ckb-vm-sail-release` 下签署该文件，两者一并放入报告目录并填入报告的 `authorization` 字段。
+   信任名单不进源码树：候选的源码快照因此保持不变，聚合器用受跟踪的发布者公钥验证所有者的授权，
+   再用该名单验证复现者的声明，之后该槽转为 verified。
 
 Rocq 阶段的预期结果是 NO-GO 及其最小复现；复现成功意味着得到同样的 NO-GO，不是得到证明。
 Lean 阶段验证的是生产关联的条件性 ADD 步精化定理，显式前提见 [覆盖矩阵](coverage.md) 与

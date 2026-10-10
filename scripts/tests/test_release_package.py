@@ -61,6 +61,7 @@ class ReleasePackageTests(unittest.TestCase):
                        "fixed_inputs": pins, "clean_room": {"generated_roots": []},
                        "package": {"required_members": ["source/", "install/", "evidence/", "docs/", "SHA256SUMS", "MANIFEST.json"],
                                    "tool_asset": "extra-installations.tar.xz", "docs": ["README.md", "docs/coverage.md"]},
+                       "third_party": {"namespace": "ckb-vm-sail-week6",                                        "stages": ["download-release", "verify-package", "restore-source"]},
                        "public_claims": {"documents": ["README.md"], "coverage_status_values": [], "forbidden": ["x"]}}
         (self.root / "docs/release").mkdir(parents=True)
         (self.root / "docs/release/policy.json").write_bytes(common.json_bytes(self.policy))
@@ -164,6 +165,50 @@ class ReleasePackageTests(unittest.TestCase):
         (self.root / "docs/release/release-allowed-signers").write_text("# nobody\n")
         with patch.object(common, "query_json", return_value=remote), self.assertRaisesRegex(RuntimeError, "signer|signature"):
             audit.check_release(self.out / "report.json", self.candidate, self.root)
+
+    def test_third_party_slot_needs_owner_signed_trust_list_not_a_tracked_file(self):
+        snapshot = package.source_snapshot.capture(self.root)["snapshot_sha256"]
+        performer_key = self.base / "performer-key"
+        subprocess.run(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(performer_key)], check=True)
+        out = self.base / "third-party"
+        out.mkdir()
+        performer = {"identity": "reproducer@example.invalid", "name": "R", "affiliation": "CKB", "independent": True, "maintainer": False}
+        statement = out / "statement.json"
+        statement.write_bytes(common.json_bytes({"schema_version": 2, "kind": "third-party-reproduction-statement-v2",
+                                                 "candidate": self.candidate, "performer": performer,
+                                                 "source_snapshot_sha256": snapshot, "release_id": 777, "result": "passed"}))
+        subprocess.run(["ssh-keygen", "-Y", "sign", "-f", str(performer_key), "-n", "ckb-vm-sail-week6", str(statement)],
+                       check=True, capture_output=True)
+        signers = out / "allowed-signers"
+        signers.write_text('reproducer@example.invalid namespaces="ckb-vm-sail-week6" ' + performer_key.with_suffix(".pub").read_text())
+        subprocess.run(["ssh-keygen", "-Y", "sign", "-f", str(self.key), "-n", "ckb-vm-sail-release", str(signers)],
+                       check=True, capture_output=True)
+        stages = []
+        policy = common.load_policy(self.root)
+        for name in policy["third_party"]["stages"]:
+            (out / (name + ".stdout")).write_text("ok\n")
+            (out / (name + ".stderr")).write_text("")
+            stages.append({"name": name, "argv": ["make", name], "cwd": ".", "exit_code": 0,
+                           "stdout": common.ref(out, out / (name + ".stdout")), "stderr": common.ref(out, out / (name + ".stderr"))})
+        report = {"schema_version": 2, "kind": "third-party-reproduction-v2", "status": "passed", "candidate": self.candidate,
+                  "performer": performer, "source_snapshot_sha256": snapshot, "release_id": 777, "stages": stages,
+                  "statement": common.ref(out, statement), "signature": common.ref(out, Path(str(statement) + ".sig")),
+                  "authorization": {"signers": common.ref(out, signers), "signature": common.ref(out, Path(str(signers) + ".sig"))},
+                  "boundaries": {}}
+        (out / "report.json").write_bytes(common.json_bytes(report))
+        result = audit.check_third_party(out / "report.json", self.candidate, self.root)
+        self.assertEqual((result["independent"], result["authorized_by"]), (True, "fixture@example.invalid"))
+        # The owner's authorization is what admits the key: without it the performer's own signature means nothing.
+        Path(str(signers) + ".sig").write_bytes(b"not a signature")
+        report["authorization"]["signature"] = common.ref(out, Path(str(signers) + ".sig"))
+        (out / "report.json").write_bytes(common.json_bytes(report))
+        with self.assertRaisesRegex(RuntimeError, "authorization signature"):
+            audit.check_third_party(out / "report.json", self.candidate, self.root)
+        # The maintainer cannot be the third party.
+        report["performer"] = {**performer, "identity": "fixture@example.invalid"}
+        (out / "report.json").write_bytes(common.json_bytes(report))
+        with self.assertRaisesRegex(RuntimeError, "not independent"):
+            audit.check_third_party(out / "report.json", self.candidate, self.root)
 
 
 if __name__ == "__main__":
